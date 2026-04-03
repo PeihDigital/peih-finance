@@ -1389,6 +1389,16 @@
       <div class="popover-item" onclick="alert('Tuỳ chỉnh ngày đang phát triển')">Tuỳ chỉnh</div>
     </div>
   </div>
+  </div> <div id="aiNoteModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: rgba(0,0,0,0.6); z-index: 1500; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s;">
+    <div style="background-color: var(--bg-card); width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s;">
+      <div style="font-weight: bold; font-size: 16px; margin-bottom: 15px; text-align: center; color: var(--text-main);">Chi tiết hoá đơn</div>
+      <textarea id="aiNoteEditor" style="width: 100%; height: 150px; background-color: var(--form-bg); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); padding: 12px; font-size: 14px; outline: none; resize: none; line-height: 1.5;"></textarea>
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button onclick="closeAiNoteModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--btn-outline); background: transparent; color: var(--text-main); font-weight: bold; cursor: pointer;">Huỷ</button>
+        <button onclick="saveAiNoteModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #007aff; color: #fff; font-weight: bold; cursor: pointer;">Lưu</button>
+      </div>
+    </div>
+  </div>
   <script>
     // --- APP LOGIC ---
     function handleLogin() {
@@ -1916,7 +1926,7 @@
               action: "PARSE_RECEIPT", 
               image: base64Data,
               mimeType: file.type,
-              config: appConfig, // Gửi cấu hình Ví/Nhóm lên để AI tự map
+              config: appConfig, 
               currency: document.getElementById('aiCurrencySelect').value 
             }),
             headers: { "Content-Type": "text/plain;charset=utf-8" }
@@ -1927,7 +1937,6 @@
             const selectedCurrency = document.getElementById('aiCurrencySelect').value;
             const newTxs = Array.isArray(data.data) ? data.data : [data.data];
             
-            // Đẩy giao dịch đọc được từ ảnh vào danh sách kết quả AI
             newTxs.forEach(tx => {
               aiParsedResults.push({ ...tx, currency: tx.currency || selectedCurrency });
             });
@@ -2028,13 +2037,15 @@
           <div class="ai-card">
             <div class="ai-card-header" onclick="toggleAiEdit(${index})">
               <div class="ai-checkbox checked" onclick="event.stopPropagation(); toggleAiCheck(this)"></div>
-              <div style="flex: 1; margin-left: 15px;">
-                <div style="font-weight: 700; font-size: 16px; color: var(--text-main); display: flex; align-items: center;">
+              
+              <div style="flex: 1; min-width: 0; margin-left: 15px; padding-right: 10px;">
+                <div style="font-weight: 700; font-size: 16px; color: var(--text-main); display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                   ${warningIcon} ${tx.category.split(' - ').pop()}
                 </div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${tx.wallet} • ${tx.note || "Ghi chú trống"}</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.wallet} • ${tx.note || "Ghi chú trống"}</div>
               </div>
-              <div style="text-align: right;">
+
+              <div style="text-align: right; flex-shrink: 0;">
                 <div class="queue-amount ${colorClass}" style="font-size: 17px;">${sign}${parseInt(tx.amount).toLocaleString()}</div>
                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">${tx.currency || currentCurrency}</div>
               </div>
@@ -2061,7 +2072,7 @@
               <div class="form-row" style="padding: 12px 0;" onclick="currentAiEditIndex=${index}; openCategoryModal();">
                 <div class="row-left"><span class="ai-label-mini">Nhóm</span></div>
                 <div class="ai-input-sleek" style="display:flex; align-items:center; justify-content:flex-end; gap:8px;">
-                  <span>${tx.category}</span>
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.category}</span>
                   <span class="arrow" style="font-size:14px;">›</span>
                 </div>
               </div>
@@ -2074,11 +2085,12 @@
                 </div>
               </div>
 
-              <div class="form-row" style="padding: 12px 0; align-items: center;">
+              <div class="form-row" style="padding: 12px 0; align-items: center;" onclick="openAiNoteModal(${index})">
                 <div class="row-left"><span class="ai-label-mini">Ghi chú</span></div>
-                <textarea class="ai-input-sleek" rows="1" style="resize: none; text-align: right; font-family: inherit; overflow: hidden; line-height: 1.5; padding: 6px 10px;"
-                          oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
-                          onchange="aiParsedResults[${index}].note = this.value">${tx.note || ""}</textarea>
+                <div class="ai-input-sleek" style="display:flex; align-items:center; justify-content:flex-end; gap:8px; overflow: hidden;">
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; color: var(--text-muted);">${tx.note || "Không có ghi chú"}</span>
+                  <span class="arrow" style="font-size:14px; flex-shrink: 0;">›</span>
+                </div>
               </div>
 
               <div class="form-row" style="border-bottom: none; padding: 12px 0;">
@@ -2105,7 +2117,42 @@
       element.classList.toggle('checked');
       updateAiButtons();
     }
+    let activeNoteEditIndex = null;
 
+    function openAiNoteModal(index) {
+      activeNoteEditIndex = index;
+      const modal = document.getElementById('aiNoteModal');
+      const editor = document.getElementById('aiNoteEditor');
+      
+      editor.value = aiParsedResults[index].note || "";
+      modal.style.display = 'flex';
+      
+      // Hiệu ứng mượt mà
+      setTimeout(() => {
+        modal.style.opacity = '1';
+        modal.children[0].style.transform = 'scale(1)';
+        editor.focus();
+      }, 10);
+    }
+
+    function closeAiNoteModal() {
+      const modal = document.getElementById('aiNoteModal');
+      modal.style.opacity = '0';
+      modal.children[0].style.transform = 'scale(0.95)';
+      
+      setTimeout(() => {
+        modal.style.display = 'none';
+        activeNoteEditIndex = null;
+      }, 200);
+    }
+
+    function saveAiNoteModal() {
+      if (activeNoteEditIndex !== null) {
+        aiParsedResults[activeNoteEditIndex].note = document.getElementById('aiNoteEditor').value;
+        renderAiList(activeNoteEditIndex); 
+      }
+      closeAiNoteModal();
+    }
     function updateAiButtons() {
       const checkedBoxes = document.querySelectorAll('.ai-checkbox.checked');
       const btnAll = document.getElementById('btnAiAddAll');
