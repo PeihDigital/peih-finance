@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Peih Finance">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Peih Finance</title>
@@ -1268,6 +1264,15 @@
         </div>
       </div>
       <div id="aiInputSection" style="display: none; flex-direction: column; flex: 1;">
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+          <button onclick="document.getElementById('receiptInput').click()" style="flex: 1; background-color: var(--form-bg); color: var(--text-main); border: 1px dashed var(--border-color); padding: 12px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            Chụp / Tải ảnh hoá đơn
+          </button>
+          <input type="file" id="receiptInput" accept="image/*" capture="environment" style="display: none;" onchange="handleReceiptUpload(event)">
+        </div>
+
         <div class="form-container" style="padding: 15px;">
           <textarea id="aiPromptInput" placeholder="VD: Sáng ăn phở 40k, trưa đổ xăng 50k bằng thẻ Suica..." style="width: 100%; height: 100px; background: transparent; border: none; color: var(--input-text); font-size: 15px; outline: none; resize: none;"></textarea>
           
@@ -1891,7 +1896,55 @@
         renderAiList();
       }
     }
+    async function handleReceiptUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
+      const btn = document.querySelector('button[onclick*="receiptInput"]');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = "Đang phân tích ảnh... ✨";
+      btn.disabled = true;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Data = e.target.result.split(',')[1];
+        
+        try {
+          const response = await fetch(GAS_WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ 
+              action: "PARSE_RECEIPT", 
+              image: base64Data,
+              mimeType: file.type,
+              config: appConfig, // Gửi cấu hình Ví/Nhóm lên để AI tự map
+              currency: document.getElementById('aiCurrencySelect').value 
+            }),
+            headers: { "Content-Type": "text/plain;charset=utf-8" }
+          });
+          const data = await response.json();
+          
+          if (data.status === "success") {
+            const selectedCurrency = document.getElementById('aiCurrencySelect').value;
+            const newTxs = Array.isArray(data.data) ? data.data : [data.data];
+            
+            // Đẩy giao dịch đọc được từ ảnh vào danh sách kết quả AI
+            newTxs.forEach(tx => {
+              aiParsedResults.push({ ...tx, currency: tx.currency || selectedCurrency });
+            });
+            renderAiList();
+          } else {
+            alert("Lỗi đọc hoá đơn: " + data.message);
+          }
+        } catch (err) {
+          alert("Lỗi đường truyền khi quét!");
+        }
+        
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        event.target.value = "";
+      };
+      reader.readAsDataURL(file);
+    }
     function switchInputMode(mode) {
       document.getElementById('btnModeNumpad').classList.remove('active');
       document.getElementById('btnModeAi').classList.remove('active');
