@@ -1972,7 +1972,7 @@
         reader.readAsDataURL(file);
         reader.onload = () => resolve({
           base64: reader.result.split(',')[1],
-          mimeType: file.type
+          mimeType: file.type || 'image/jpeg' 
         });
         reader.onerror = error => reject(error);
       });
