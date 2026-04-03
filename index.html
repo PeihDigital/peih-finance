@@ -1028,6 +1028,58 @@
     .popover-item:last-child { border-bottom: none; }
     .popover-item:active { background: rgba(255, 255, 255, 0.1); }
     [data-theme="light"] .popover-item:active { background: rgba(0, 0, 0, 0.05); }
+    .segment-slider {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 0;
+      background-color: var(--border-color);
+      z-index: 0;
+    }
+    .mode-btn, .type-btn {
+      position: relative;
+      z-index: 1;
+      transition: color 0.3s;
+    }
+    .mode-btn.active, .type-btn.active {
+      background-color: transparent !important;
+      color: var(--text-main);
+    }
+    .pending-images-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .image-preview-wrapper {
+      position: relative;
+      width: 70px;
+      height: 70px;
+    }
+    .image-preview-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .btn-remove-img {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff3b30;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -1140,7 +1192,7 @@
         <div class="total-amount">Cài đặt</div>
       </div>
       <div class="section-title">GIAO DIỆN</div>
-      <div class="transaction-type-segment" style="margin-bottom: 20px;">
+      <div class="transaction-type-segment" id="themeToggle" style="margin-bottom: 20px;">
         <div class="type-btn" id="btnThemeLight" onclick="setThemePreference('light')">Sáng</div>
         <div class="type-btn" id="btnThemeDark" onclick="setThemePreference('dark')">Tối</div>
         <div class="type-btn" id="btnThemeAuto" onclick="setThemePreference('auto')">Tự động</div>
@@ -1182,23 +1234,26 @@
 
   <div id="addTransactionModal" class="modal-overlay">
     <div class="modal-content">
-      
-      <div class="modal-header">
-        <button class="btn-cancel" onclick="closeAddModal()">Huỷ</button>
-        <div class="mode-toggle">
-          <div class="mode-btn active" id="btnModeNumpad" onclick="switchInputMode('manual')">THỦ CÔNG</div>
-          <div class="mode-btn" id="btnModeAi" onclick="switchInputMode('ai')">PHÂN TÍCH ✨</div>
-        </div>
-        <div style="width: 60px;"></div>
+
+      <div class="modal-header" style="position: relative; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-top: 10px;">
+        <button class="btn-cancel" onclick="closeAddModal()" style="margin: 0; z-index: 10;">Huỷ</button>
+        <h2 class="modal-title" style="position: absolute; width: 100%; text-align: center; margin: 0; left: 0; z-index: 5; font-size: 20px;">Thêm Giao Dịch</h2>
+        <div style="width: 60px; z-index: 10;"></div>
       </div>
 
-      <h2 class="modal-title">Thêm Giao Dịch</h2>
+      <div style="display: flex; justify-content: center; margin-bottom: 25px;">
+        <div class="mode-toggle" id="topModeToggle">
+          <div class="mode-btn active" id="btnModeNumpad" onclick="switchInputMode('manual')">THỦ CÔNG</div>
+          <div class="mode-btn" id="btnModeAi" onclick="switchInputMode('ai')">PHÂN TÍCH ✨</div>
+          <div class="mode-btn" id="btnModeSplit" onclick="switchInputMode('split')">CHIA TIỀN 🍕</div>
+        </div>
+      </div>
 
       <div id="manualInputSection" style="display: flex; flex-direction: column; flex: 1;">
-        <div class="transaction-type-segment">
-          <div class="type-btn active" onclick="changeMainType('Khoản chi')">Khoản chi</div>
-          <div class="type-btn" onclick="changeMainType('Khoản thu')">Khoản thu</div>
-          <div class="type-btn" onclick="changeMainType('Vay/Nợ')">Vay/Nợ</div>
+        <div class="transaction-type-segment" id="manualTypeToggle">
+          <div class="type-btn active" onclick="changeMainType('Khoản chi', this)">Khoản chi</div>
+          <div class="type-btn" onclick="changeMainType('Khoản thu', this)">Khoản thu</div>
+          <div class="type-btn" onclick="changeMainType('Vay/Nợ', this)">Vay/Nợ</div>
         </div>
 
         <div class="form-container">
@@ -1220,7 +1275,7 @@
             </select>
             <div class="amount-input-wrapper">
               <span class="amount-label">Số tiền</span>
-              <input type="number" class="amount-input" value="" placeholder="0" inputmode="decimal">
+              <input type="text" class="amount-input" value="" placeholder="0" inputmode="numeric" oninput="formatCurrency(this)">
             </div>
           </div>
 
@@ -1274,24 +1329,30 @@
       </div>
       <div id="aiInputSection" style="display: none; flex-direction: column; flex: 1;">
         
-        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-          <button onclick="document.getElementById('receiptInput').click()" style="flex: 1; background-color: var(--form-bg); color: var(--text-main); border: 1px dashed var(--border-color); padding: 12px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-            Chụp ảnh hoá đơn
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; height: 43px;">
+          <button onclick="document.getElementById('receiptInput').click()" style="flex: 1; background-color: var(--form-bg); color: var(--text-main); border: 1px dashed var(--border-color); border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; margin: 0; padding: 0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            Thêm ảnh
           </button>
-          <input type="file" id="receiptInput" accept="image/*" multiple style="display: none;" onchange="handleReceiptUpload(event)">
+          <input type="file" id="receiptInput" accept="image/*" multiple style="display: none;" onchange="handleImageSelection(event)">
+          
+          <button id="btnStartAiProcess" onclick="processAllImages()" style="flex: 1; background-color: #007aff; color: #fff; border: none; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; display: none; margin: 0; padding: 0;">
+            Phân tích ảnh (0) ✨
+          </button>
         </div>
+
+        <div id="pendingImages" class="pending-images-container" style="min-height: 0;"></div>
 
         <div class="form-container" style="padding: 15px;">
           <textarea id="aiPromptInput" placeholder="VD: Sáng ăn phở 40k, trưa đổ xăng 50k bằng thẻ Suica..." style="width: 100%; height: 100px; background: transparent; border: none; color: var(--input-text); font-size: 15px; outline: none; resize: none;"></textarea>
           
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-            <select id="aiCurrencySelect" class="currency-select" style="margin-top: 0;" onchange="syncAiCurrencies(this.value)">
+            <select id="aiCurrencySelect" class="currency-select" style="margin-top: 0;">
               <option value="VND">VND</option>
               <option value="JPY">JPY</option>
               <option value="USD">USD</option>
             </select>
-            <button id="btnAiParse" onclick="parseAIPrompt()" style="background: #007aff; color: #fff; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; cursor: pointer;">Phân tích ✨</button>
+            <button id="btnAiParse" onclick="parseAIPrompt()" style="background: #007aff; color: #fff; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; cursor: pointer;">Phân tích✨</button>
           </div>
         </div>
 
@@ -1302,10 +1363,95 @@
           <button id="btnAiAddSelected" class="btn-save-batch" style="display:none; background-color: #28a745;" onclick="addAiTransactions('selected')">Thêm mục đã chọn</button>
         </div>
       </div>
-    </div>
-  </div>
+      <div id="splitBillSection" style="display: none; flex-direction: column; flex: 1;">
+        
+        <div class="transaction-type-segment" id="splitTypeToggle" style="margin-bottom: 20px;">
+          <div class="type-btn active" onclick="switchSplitMode('nhap-nhanh', this)">Nhập nhanh</div>
+          <div class="type-btn" onclick="switchSplitMode('quet-bill', this)">Quét hoá đơn</div>
+        </div>
 
-  <div id="categoryModal" class="sub-modal">
+        <div id="splitQuickSection" style="display: flex; flex-direction: column; flex: 1;">
+          <div class="form-container">
+            <div class="form-row amount-row">
+              <select id="quickSplitCurrency" class="currency-select" style="margin-top: 10px; margin-right: 15px;" onchange="renderQuickSplitPreview()">
+                <option value="VND">VND</option>
+                <option value="JPY">JPY</option>
+                <option value="USD">USD</option>
+              </select>
+              <div class="amount-input-wrapper" style="margin-left: 0;">
+                <span class="amount-label">Tổng tiền Bill</span>
+                <input type="text" id="quickSplitTotal" class="amount-input" placeholder="0" inputmode="numeric" style="text-align: left;" oninput="formatCurrency(this); isVndRoundingApplied=false; renderQuickSplitPreview()">
+              </div>
+            </div>
+            
+            <div class="form-row" style="cursor: default;">
+              <div class="row-left">Số người chia</div>
+              <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="icon-btn" style="width: 30px; height: 30px;" onclick="adjustSplitPeople(-1)">-</button>
+                <span id="quickSplitPeopleCount" style="font-size: 18px; font-weight: bold; width: 20px; text-align: center;">2</span>
+                <button class="icon-btn" style="width: 30px; height: 30px;" onclick="adjustSplitPeople(1)">+</button>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="row-left">Kiểu chia</div>
+                <select id="quickSplitType" class="currency-select" style="margin-top: 0;" onchange="renderQuickSplitPreview()">
+                <option value="deu">Chia đều</option>
+                <option value="tuy-chinh">Tuỳ chỉnh (Từng người)</option>
+                <option value="theo-mon">Theo món (Thủ công)</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="quickSplitPreview" style="flex: 1; padding: 10px 0;">
+             <div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 20px;">Nhập số tiền để xem kết quả chia</div>
+          </div>
+
+          <div class="modal-bottom" style="margin-top: auto; padding-top: 15px;">
+            <button id="btnSaveQuickSplit" onclick="saveQuickSplit()" style="width: 100%; background-color: #007aff; color: white; border: none; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: bold; cursor: pointer;">
+              Lưu giao dịch
+            </button>
+          </div>
+        </div>
+
+        <div id="splitScanSection" style="display: none; flex-direction: column; flex: 1;">
+          <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <button style="flex: 1; background-color: var(--form-bg); color: var(--text-main); border: 1px dashed var(--border-color); padding: 12px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer;">
+              📷 Chụp hoá đơn mới
+            </button>
+            <button style="flex: 1; background-color: var(--form-bg); color: var(--text-main); border: 1px dashed var(--border-color); padding: 12px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer;">
+              ✨ AI Bóc Tách
+            </button>
+          </div>
+
+          <div class="section-title">DANH SÁCH MÓN TRÊN BILL</div>
+          
+          <div id="splitItemsContainer" style="flex: 1; overflow-y: auto; background-color: var(--form-bg); border-radius: 16px; padding: 10px; border: 1px solid var(--border-color);">
+            <div style="text-align: center; color: var(--text-muted); margin-top: 20px; font-size: 13px;">Chưa có món nào. Chụp bill để AI tự động liệt kê.</div>
+          </div>
+
+          <div style="background-color: var(--bg-card); padding: 15px; border-radius: 16px; margin-top: 15px; border: 1px solid var(--border-color); box-shadow: 0 -5px 20px rgba(0,0,0,0.4);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span style="font-size: 13px; color: var(--text-muted); font-weight: bold;">Tổng đang chọn:</span>
+              <span id="splitSelectedTotal" style="font-size: 24px; font-weight: 800; color: var(--text-main);">0</span>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+              <button style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #007aff; color: white; font-weight: bold; cursor: pointer; font-size: 15px;">CỦA TÔI</button>
+              <button style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-weight: bold; cursor: pointer; font-size: 15px;">NGƯỜI KHÁC</button>
+            </div>
+          </div>
+
+          <div class="modal-bottom" style="margin-top: 15px; padding-top: 0;">
+            <button style="width: 100%; background-color: #28a745; color: white; border: none; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: bold; cursor: pointer;">
+              Lưu phần "Của Tôi" vào Sổ sách
+            </button>
+          </div>
+        </div>
+      </div>
+     </div>
+    </div> 
+    <div id="categoryModal" class="sub-modal">
     <div class="sub-modal-header">
       <button class="btn-icon-circle" onclick="closeCategoryModal()">‹</button>
       <span>Chọn nhóm</span>
@@ -1315,10 +1461,10 @@
     </div>
     
     <div style="padding: 15px 15px 0 15px;">
-      <div class="transaction-type-segment" style="margin-bottom: 0;">
-        <div class="type-btn cat-tab-btn active" onclick="switchCategoryTab('Khoản chi')">Khoản chi</div>
-        <div class="type-btn cat-tab-btn" onclick="switchCategoryTab('Khoản thu')">Khoản thu</div>
-        <div class="type-btn cat-tab-btn" onclick="switchCategoryTab('Vay/Nợ')">Vay/Nợ</div>
+      <div class="transaction-type-segment" id="catTypeToggle" style="margin-bottom: 0;">
+        <div class="type-btn cat-tab-btn active" onclick="switchCategoryTab('Khoản chi', this)">Khoản chi</div>
+        <div class="type-btn cat-tab-btn" onclick="switchCategoryTab('Khoản thu', this)">Khoản thu</div>
+        <div class="type-btn cat-tab-btn" onclick="switchCategoryTab('Vay/Nợ', this)">Vay/Nợ</div>
       </div>
     </div>
 
@@ -1433,6 +1579,58 @@
       document.getElementById('tab-' + tabId).classList.add('active');
       element.classList.add('active');
       if (tabId === 'ledger') renderTimeTabs();
+      if (tabId === 'settings') {
+        setTimeout(() => applyTheme(localStorage.getItem('peih_theme') || 'light'), 50);
+      }
+    }
+
+    function moveSlider(containerId, btnElement) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      
+      container.style.position = 'relative';
+      
+      let slider = container.querySelector('.segment-slider');
+      let isFirstTime = false;
+      
+      if (!slider) {
+        slider = document.createElement('div');
+        slider.className = 'segment-slider';
+        container.insertBefore(slider, container.firstChild);
+        isFirstTime = true;
+      }
+      
+      const targetLeft = btnElement.offsetLeft;
+      const targetWidth = btnElement.offsetWidth;
+      const borderRadius = window.getComputedStyle(btnElement).borderRadius;
+      
+      if (isFirstTime) {
+        slider.style.width = targetWidth + 'px';
+        slider.style.transform = `translateX(${targetLeft}px)`;
+        slider.style.borderRadius = borderRadius;
+        return;
+      }
+      
+      const currentTransform = slider.style.transform;
+      let currentLeft = targetLeft;
+      if (currentTransform) {
+         const match = currentTransform.match(/translateX\(([-0-9.]+)px\)/);
+         if (match) currentLeft = parseFloat(match[1]);
+      }
+      
+      const stretchLeft = Math.min(currentLeft, targetLeft);
+      const stretchWidth = Math.abs(targetLeft - currentLeft) + targetWidth;
+      
+      slider.style.transition = 'transform 0.12s ease-in, width 0.12s ease-in';
+      slider.style.transform = `translateX(${stretchLeft}px)`;
+      slider.style.width = stretchWidth + 'px';
+      slider.style.borderRadius = borderRadius;
+      
+      setTimeout(() => {
+        slider.style.transition = 'transform 0.35s cubic-bezier(0.4, 1.4, 0.4, 1), width 0.35s cubic-bezier(0.4, 1.4, 0.4, 1)';
+        slider.style.transform = `translateX(${targetLeft}px)`;
+        slider.style.width = targetWidth + 'px';
+      }, 100);
     }
 
     function applyTheme(mode) {
@@ -1458,9 +1656,12 @@
         btnDark.classList.remove('active');
         btnAuto.classList.remove('active');
         
-        if (mode === 'light') btnLight.classList.add('active');
-        if (mode === 'dark') btnDark.classList.add('active');
-        if (mode === 'auto') btnAuto.classList.add('active');
+        let targetBtn = null;
+        if (mode === 'light') { btnLight.classList.add('active'); targetBtn = btnLight; }
+        if (mode === 'dark') { btnDark.classList.add('active'); targetBtn = btnDark; }
+        if (mode === 'auto') { btnAuto.classList.add('active'); targetBtn = btnAuto; }
+        
+        if (targetBtn && targetBtn.offsetWidth > 0) moveSlider('themeToggle', targetBtn);
       }
     }
 
@@ -1655,7 +1856,7 @@
       document.getElementById('mainWalletText').innerText = defaultWallet;
     }
 
-    function changeMainType(typeStr) {
+    function changeMainType(typeStr, btnElement) {
       if (currentMainType !== typeStr) {
         document.getElementById('mainCategoryText').innerText = "Chọn nhóm";
         document.getElementById('mainCategoryText').style.color = "var(--text-muted)";
@@ -1678,11 +1879,16 @@
       }
       currentMainType = typeStr;
       
-      const mainBtns = document.querySelectorAll('.transaction-type-segment .type-btn:not(.cat-tab-btn)');
+      const mainBtns = document.querySelectorAll('#manualTypeToggle .type-btn');
       mainBtns.forEach(b => {
-        if(b.innerText === typeStr) b.classList.add('active');
-        else b.classList.remove('active');
+        if(b.innerText === typeStr) {
+          b.classList.add('active');
+          if(!btnElement) btnElement = b;
+        } else {
+          b.classList.remove('active');
+        }
       });
+      if(btnElement && btnElement.offsetWidth > 0) moveSlider('manualTypeToggle', btnElement);
     }
 
     function openCategoryModal() {
@@ -1734,12 +1940,18 @@
       if(groupDiv.lastChild) groupDiv.lastChild.style.borderBottom = "none";
     }
 
-    function switchCategoryTab(typeStr) {
-      const tabBtns = document.querySelectorAll('.cat-tab-btn');
+    function switchCategoryTab(typeStr, btnElement) {
+      const tabBtns = document.querySelectorAll('#catTypeToggle .cat-tab-btn');
       tabBtns.forEach(b => {
-        if(b.innerText === typeStr) b.classList.add('active');
-        else b.classList.remove('active');
+        if(b.innerText === typeStr) {
+          b.classList.add('active');
+          if(!btnElement) btnElement = b;
+        } else {
+          b.classList.remove('active');
+        }
       });
+
+      if(btnElement && btnElement.offsetWidth > 0) moveSlider('catTypeToggle', btnElement);
 
       const container = document.getElementById('categoryTreeContainer');
       container.innerHTML = '';
@@ -1853,6 +2065,15 @@
       renderQueue();
     }
 
+    function formatCurrency(input) {
+      let value = input.value.replace(/\D/g, '');
+      if (value === "") {
+        input.value = "";
+        return;
+      }
+      input.value = parseInt(value, 10).toLocaleString('en-US');
+    }
+
     function queueTransaction() {
       const amount = document.querySelector('.amount-input').value;
       if (!amount || amount === "0") {
@@ -1905,11 +2126,16 @@
         }
       }
 
-      // Dùng innerHTML thay vì innerText để KHÔNG xoá mất thẻ đếm số lượng
       const btn = document.querySelector('.btn-save-batch');
       btn.innerHTML = 'Đang lưu... <span id="queueCount" style="display:none;">(0)</span>';
       
-      const userEmail = document.getElementById('emailInput').value; 
+      const splitBtn = document.getElementById('btnSaveQuickSplit');
+      if (splitBtn) {
+        splitBtn.innerText = 'Đang lưu...';
+        splitBtn.disabled = true; 
+      }
+      
+      const userEmail = document.getElementById('emailInput').value;
 
       fetch(GAS_WEB_APP_URL, {
         method: "POST",
@@ -1922,8 +2148,11 @@
           alert(`Đã lưu thành công ${transactionQueue.length} giao dịch!`);
           transactionQueue = [];
           
-          // Phục hồi lại nút như cũ TRƯỚC khi vẽ lại UI
           btn.innerHTML = 'Lưu <span id="queueCount" style="display:none;">(0)</span>';
+          if (splitBtn) {
+            splitBtn.innerText = 'Lưu giao dịch';
+            splitBtn.disabled = false;
+          }
           
           renderQueue();
           closeAddModal();
@@ -1933,6 +2162,10 @@
         console.error("Lỗi kĩ thuật: ", err);
         alert("Lưu thất bại! Xin kiểm tra lại kết nối.");
         btn.innerHTML = 'Lưu <span id="queueCount" style="display:none;">(0)</span>';
+        if (splitBtn) {
+          splitBtn.innerText = 'Lưu giao dịch';
+          splitBtn.disabled = false;
+        }
       });
     }
     let aiParsedResults = [];
@@ -1950,43 +2183,80 @@
       const found = appConfig.wallets.find(w => (w.name || w) === walletName);
       return found ? (found.icon || "💳") : "💳";
     }
-    function syncAiCurrencies(newVal) {
-      if (aiParsedResults.length > 0) {
-        aiParsedResults.forEach(tx => {
-          tx.currency = newVal;
-        });
-        renderAiList();
-      }
-    }
-    async function handleReceiptUpload(event) {
+    
+    let stagedImages = [];
+
+    async function handleImageSelection(event) {
       const files = event.target.files;
       if (!files || files.length === 0) return;
-
-      const btn = document.querySelector('button[onclick*="receiptInput"]');
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = `Đang đọc ${files.length} ảnh... ✨`;
-      btn.disabled = true;
 
       const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => resolve({
           base64: reader.result.split(',')[1],
-          mimeType: file.type || 'image/jpeg' 
+          mimeType: file.type || 'image/jpeg',
+          preview: reader.result
         });
         reader.onerror = error => reject(error);
       });
 
-      try {
-        const imageDataArray = await Promise.all(Array.from(files).map(file => toBase64(file)));
+      const newImages = await Promise.all(Array.from(files).map(file => toBase64(file)));
+      stagedImages = [...stagedImages, ...newImages];
+      
+      renderImagePreviews();
+      event.target.value = "";
+    }
 
+    function renderImagePreviews() {
+      const container = document.getElementById('pendingImages');
+      const btnProcess = document.getElementById('btnStartAiProcess');
+      const fileInput = document.getElementById('receiptInput');
+      
+      container.innerHTML = '';
+      
+      stagedImages.forEach((img, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-preview-wrapper';
+        wrapper.innerHTML = `
+          <img src="${img.preview}">
+          <button class="btn-remove-img" onclick="removeStagedImage(${index})">✕</button>
+        `;
+        container.appendChild(wrapper);
+      });
+
+      if (stagedImages.length > 0) {
+        btnProcess.style.display = 'block';
+        btnProcess.innerText = `Phân tích ảnh (${stagedImages.length}) ✨`;
+        fileInput.setAttribute('capture', 'environment');
+      } else {
+        btnProcess.style.display = 'none';
+        fileInput.removeAttribute('capture');
+      }
+    }
+
+    function removeStagedImage(index) {
+      stagedImages.splice(index, 1);
+      renderImagePreviews();
+    }
+
+    async function processAllImages() {
+      if (stagedImages.length === 0) return;
+
+      const btn = document.getElementById('btnStartAiProcess');
+      const originalText = btn.innerText;
+      btn.innerText = "Đang xử lý...";
+      btn.disabled = true;
+
+      try {
         const response = await fetch(GAS_WEB_APP_URL, {
           method: "POST",
           body: JSON.stringify({ 
             action: "PARSE_RECEIPT", 
-            images: imageDataArray,
+            images: stagedImages.map(img => ({ base64: img.base64, mimeType: img.mimeType })),
             config: appConfig,
-            currency: document.getElementById('aiCurrencySelect').value 
+            currency: document.getElementById('aiCurrencySelect').value,
+            currentDate: document.getElementById('nativeDateInput').value
           }),
           headers: { "Content-Type": "text/plain;charset=utf-8" }
         });
@@ -1996,9 +2266,23 @@
         if (data.status === "success") {
           const selectedCurrency = document.getElementById('aiCurrencySelect').value;
           const newTxs = Array.isArray(data.data) ? data.data : [data.data];
-          newTxs.forEach(tx => {
-            aiParsedResults.push({ ...tx, currency: tx.currency || selectedCurrency });
+          
+          const processedTxs = newTxs.map(tx => {
+            let aiCurr = tx.currency ? String(tx.currency).trim().toUpperCase() : "";
+            if (aiCurr.includes('YÊN') || aiCurr.includes('YEN') || aiCurr.includes('MAN') || aiCurr.includes('¥')) aiCurr = 'JPY';
+            else if (aiCurr.includes('VNĐ') || aiCurr.includes('ĐỒNG') || aiCurr.includes('₫') || aiCurr.includes('K') || aiCurr.includes('CỦ')) aiCurr = 'VND';
+            
+            let finalCurr = ['VND', 'JPY', 'USD'].includes(aiCurr) ? aiCurr : selectedCurrency;
+            return {
+              ...tx,
+              currency: finalCurr,
+              date: tx.date || document.getElementById('nativeDateInput').value
+            };
           });
+          
+          aiParsedResults = [...processedTxs, ...aiParsedResults];
+          stagedImages = [];
+          renderImagePreviews();
           renderAiList();
         } else {
           alert("Lỗi: " + data.message);
@@ -2007,23 +2291,293 @@
         alert("Lỗi xử lý ảnh!");
       }
       
-      btn.innerHTML = originalHtml;
+      btn.innerText = originalText;
       btn.disabled = false;
-      event.target.value = "";
+    }
+    function removeAiItem(index) {
+       aiParsedResults.splice(index, 1);
+       renderAiList();
     }
     function switchInputMode(mode) {
-      document.getElementById('btnModeNumpad').classList.remove('active');
-      document.getElementById('btnModeAi').classList.remove('active');
+      const btnManual = document.getElementById('btnModeNumpad');
+      const btnAi = document.getElementById('btnModeAi');
+      const btnSplit = document.getElementById('btnModeSplit');
+      
+      btnManual.classList.remove('active');
+      btnAi.classList.remove('active');
+      if (btnSplit) btnSplit.classList.remove('active');
+      
       document.getElementById('manualInputSection').style.display = 'none';
       document.getElementById('aiInputSection').style.display = 'none';
+      if (document.getElementById('splitBillSection')) document.getElementById('splitBillSection').style.display = 'none';
 
       if (mode === 'manual') {
-        document.getElementById('btnModeNumpad').classList.add('active');
+        btnManual.classList.add('active');
         document.getElementById('manualInputSection').style.display = 'flex';
-      } else {
-        document.getElementById('btnModeAi').classList.add('active');
+        moveSlider('topModeToggle', btnManual);
+      } else if (mode === 'ai') {
+        btnAi.classList.add('active');
         document.getElementById('aiInputSection').style.display = 'flex';
+        moveSlider('topModeToggle', btnAi);
+      } else if (mode === 'split') {
+        if (btnSplit) btnSplit.classList.add('active');
+        if (document.getElementById('splitBillSection')) document.getElementById('splitBillSection').style.display = 'flex';
+        if (btnSplit) moveSlider('topModeToggle', btnSplit);
       }
+    }
+
+    function switchSplitMode(mode, btnElement) {
+      const btns = document.querySelectorAll('#splitTypeToggle .type-btn');
+      btns.forEach(b => {
+        if(b.innerText.toLowerCase().includes(mode.replace('-', ' '))) {
+          b.classList.add('active');
+          if(!btnElement) btnElement = b;
+        } else {
+          b.classList.remove('active');
+        }
+      });
+
+      if (btnElement && btnElement.offsetWidth > 0) moveSlider('splitTypeToggle', btnElement);
+
+      if (mode === 'nhap-nhanh') {
+        document.getElementById('splitQuickSection').style.display = 'flex';
+        document.getElementById('splitScanSection').style.display = 'none';
+      } else {
+        document.getElementById('splitQuickSection').style.display = 'none';
+        document.getElementById('splitScanSection').style.display = 'flex';
+      }
+    }
+
+    // Hàm định dạng số tự động (Gắn dấu phẩy)
+    function formatCurrency(input) {
+      let value = input.value.replace(/\D/g, '');
+      if (value === "") {
+        input.value = "";
+        return;
+      }
+      input.value = parseInt(value, 10).toLocaleString();
+    }
+
+    let customSplitValues = [];
+    let useTransferMode = false;
+
+    function adjustSplitPeople(amount) {
+      const countSpan = document.getElementById('quickSplitPeopleCount');
+      let current = parseInt(countSpan.innerText);
+      let next = current + amount;
+      if (next >= 2 && next <= 50) {
+        countSpan.innerText = next;
+        customSplitValues = []; 
+        useTransferMode = false; 
+        renderQuickSplitPreview();
+      }
+    }
+
+    function renderQuickSplitPreview() {
+      const totalInput = document.getElementById('quickSplitTotal').value.replace(/\D/g, '');
+      const total = parseFloat(totalInput) || 0;
+      const numPeople = parseInt(document.getElementById('quickSplitPeopleCount').innerText);
+      const splitType = document.getElementById('quickSplitType').value;
+      const previewContainer = document.getElementById('quickSplitPreview');
+      
+      const currencyEl = document.getElementById('quickSplitCurrency');
+      const currentCurrency = currencyEl ? currencyEl.value : 'VND';
+      const currencySymbols = { "VND": "₫", "JPY": "¥", "USD": "$" };
+      let sym = currencySymbols[currentCurrency] || currentCurrency;
+
+      if (total <= 0) {
+        previewContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 20px;">Nhập số tiền để xem kết quả chia</div>';
+        return;
+      }
+
+      let html = '';
+
+      // --- CHIA ĐỀU ---
+      if (splitType === 'deu') {
+        let perPersonExact = total / numPeople;
+        let baseAmount = Math.round(perPersonExact);
+        let remainder = 0;
+
+        let needsRounding = (currentCurrency === 'VND' && perPersonExact % 1000 !== 0);
+
+        if (needsRounding && !useTransferMode) {
+           baseAmount = Math.floor(perPersonExact / 1000) * 1000;
+           remainder = total - (baseAmount * numPeople);
+        } else {
+           remainder = total - (baseAmount * numPeople);
+        }
+
+        html += '<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">';
+        html += '<div style="font-weight: bold; font-size: 13px; color: var(--text-muted); letter-spacing: 1px; padding-top: 5px;">KẾT QUẢ CHIA ĐỀU:</div>';
+        
+        if (needsRounding) {
+          html += '<div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">';
+          if (!useTransferMode) {
+             html += '<button onclick="useTransferMode=true; renderQuickSplitPreview()" style="background: #ff3b30; color: white; border: none; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(255,59,48,0.3);">💳 Chuyển khoản</button>';
+             if (remainder !== 0) {
+                 html += `<div style="font-size: 12px; color: #ff3b30; font-weight: bold; margin-top: 6px;">Tiền thừa: ${remainder.toLocaleString()} ${sym}</div>`;
+             }
+          } else {
+             html += '<button onclick="useTransferMode=false; renderQuickSplitPreview()" style="background: #34c759; color: white; border: none; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(52,199,89,0.3);">💵 Tiền mặt</button>';
+             if (remainder !== 0) {
+                 html += `<div style="font-size: 11px; color: var(--text-muted); font-weight: bold; margin-top: 6px;">Lệch: ${remainder.toLocaleString()} ${sym}</div>`;
+             }
+          }
+          html += '</div>';
+        } else if (remainder !== 0) {
+             html += `<div style="font-size: 11px; color: var(--text-muted); font-weight: bold; padding-top: 5px;">Lệch: ${remainder.toLocaleString()} ${sym}</div>`;
+        }
+        html += '</div>';
+        
+        for (let i = 0; i < numPeople; i++) {
+          let name = i === 0 ? "Phần Của Tôi" : `Người thứ ${i}`;
+          let color = i === 0 ? "color: #34c759;" : "color: var(--text-main);";
+          
+          html += `
+            <div class="form-row" style="padding: 12px 0; border-bottom: 1px dashed var(--border-color);">
+              <div class="row-left" style="font-weight: 600; ${color}">${name}</div>
+              <div style="font-weight: 800; font-size: 18px; white-space: nowrap;" class="${i === 0 ? 'color-income' : ''}">${baseAmount.toLocaleString()} <span style="font-size: 15px;">${sym}</span></div>
+            </div>
+          `;
+        }
+      } 
+      // --- TUỲ CHỈNH ---
+      else if (splitType === 'tuy-chinh') {
+        if (customSplitValues.length !== numPeople) {
+           customSplitValues = new Array(numPeople).fill('');
+        }
+
+        let sumCustom = 0;
+        let emptyCount = 0;
+        customSplitValues.forEach((val, idx) => {
+           if (val !== '') sumCustom += parseFloat(val) || 0;
+           else emptyCount++;
+        });
+        
+        let autoValue = 0;
+        let remainder = 0;
+        let needsRounding = false;
+
+        if (emptyCount > 0) {
+           let remaining = Math.max(0, total - sumCustom);
+           let perPersonExact = remaining / emptyCount;
+           autoValue = Math.round(perPersonExact);
+
+           needsRounding = (currentCurrency === 'VND' && perPersonExact % 1000 !== 0);
+
+           if (needsRounding && !useTransferMode) {
+              autoValue = Math.floor(perPersonExact / 1000) * 1000;
+           }
+           remainder = remaining - (autoValue * emptyCount);
+        }
+
+        html += '<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">';
+        html += '<div style="font-weight: bold; font-size: 13px; color: var(--text-muted); letter-spacing: 1px; padding-top: 5px;">NHẬP SỐ TIỀN CỤ THỂ:</div>';
+        
+        if (needsRounding) {
+          html += '<div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">';
+          if (!useTransferMode) {
+             html += '<button onclick="useTransferMode=true; renderQuickSplitPreview()" style="background: #ff3b30; color: white; border: none; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(255,59,48,0.3);">💳 Chuyển khoản</button>';
+             html += `<div id="customRemainderText" style="font-size: 12px; color: #ff3b30; font-weight: bold; margin-top: 6px;">${remainder !== 0 ? 'Tiền thừa: '+remainder.toLocaleString()+' '+sym : ''}</div>`;
+          } else {
+             html += '<button onclick="useTransferMode=false; renderQuickSplitPreview()" style="background: #34c759; color: white; border: none; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(52,199,89,0.3);">💵 Tiền mặt</button>';
+             html += `<div id="customRemainderText" style="font-size: 11px; color: var(--text-muted); font-weight: bold; margin-top: 6px;">${remainder !== 0 ? 'Lệch: '+remainder.toLocaleString()+' '+sym : ''}</div>`;
+          }
+          html += '</div>';
+        } else {
+          html += `<div id="customRemainderText" style="font-size: 11px; color: var(--text-muted); font-weight: bold; padding-top: 5px;">${remainder !== 0 ? 'Lệch: '+remainder.toLocaleString()+' '+sym : ''}</div>`;
+        }
+        html += '</div>';
+
+        for (let i = 0; i < numPeople; i++) {
+          let name = i === 0 ? "Phần Của Tôi" : `Người thứ ${i}`;
+          let color = i === 0 ? "color: #34c759;" : "color: var(--text-main);";
+          let val = customSplitValues[i];
+          let displayVal = val ? parseInt(val).toLocaleString() : '';
+          let isAuto = val === '';
+          let phVal = isAuto ? autoValue : 0;
+          
+          html += `
+            <div class="form-row" style="padding: 8px 0; border-bottom: 1px dashed var(--border-color);">
+              <div class="row-left" style="font-weight: 600; width: auto; flex-shrink: 0; white-space: nowrap; ${color}">${name}</div>
+              
+              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 1; margin-left: 15px; min-width: 0;">
+                <input type="text" id="custom-split-input-${i}" inputmode="numeric"
+                       value="${displayVal}" 
+                       placeholder="${phVal.toLocaleString()}" 
+                       oninput="handleCustomSplitInput(${i}, this, ${total})" 
+                       style="text-align: right; background: ${isAuto ? 'transparent' : 'var(--border-color)'}; border: none; color: var(--text-main); font-size: 16px; padding: 8px 12px; border-radius: 8px; width: 100%; min-width: 50px; outline: none; font-weight: bold;">
+                <span style="font-size: 15px; font-weight: bold; color: var(--text-muted); white-space: nowrap;">${sym}</span>
+              </div>
+            </div>
+          `;
+        }
+      } 
+      else if (splitType === 'theo-mon') {
+         html += `
+           <div style="text-align: center; margin-top: 30px;">
+             <svg style="width:40px; height:40px; stroke:var(--text-muted); fill:none; margin-bottom: 10px;" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+             <div style="color: var(--text-muted); font-size: 13px;">Sếp chuyển sang tab <b>QUÉT HOÁ ĐƠN</b> để nhặt từng món nhé!</div>
+           </div>
+         `;
+      }
+
+      previewContainer.innerHTML = html;
+    }
+
+    function handleCustomSplitInput(index, element, total) {
+       formatCurrency(element);
+       customSplitValues[index] = element.value.replace(/\D/g, ''); 
+       
+       const numPeople = parseInt(document.getElementById('quickSplitPeopleCount').innerText);
+       const currencyEl = document.getElementById('quickSplitCurrency');
+       const currentCurrency = currencyEl ? currencyEl.value : 'VND';
+       const currencySymbols = { "VND": "₫", "JPY": "¥", "USD": "$" };
+       let sym = currencySymbols[currentCurrency] || currentCurrency;
+       
+       let sumCustom = 0;
+       let emptyCount = 0;
+       
+       for(let i = 0; i < numPeople; i++) {
+          let val = document.getElementById(`custom-split-input-${i}`).value.replace(/\D/g, '');
+          if(val !== '') sumCustom += parseFloat(val);
+          else emptyCount++;
+       }
+       
+       let autoValue = 0;
+       let remainder = 0;
+
+       if (emptyCount > 0) {
+          let remaining = Math.max(0, total - sumCustom);
+          let perPersonExact = remaining / emptyCount;
+          autoValue = Math.round(perPersonExact);
+
+          if (!useTransferMode && currentCurrency === 'VND' && perPersonExact % 1000 !== 0) {
+              autoValue = Math.floor(perPersonExact / 1000) * 1000;
+          }
+          remainder = remaining - (autoValue * emptyCount);
+       }
+       
+       for(let i = 0; i < numPeople; i++) {
+          let el = document.getElementById(`custom-split-input-${i}`);
+          if(el.value === '') {
+             el.placeholder = autoValue.toLocaleString();
+             el.style.background = 'transparent';
+          } else {
+             el.style.background = 'var(--border-color)';
+          }
+       }
+
+       const remainderEl = document.getElementById('customRemainderText');
+       if (remainderEl) {
+           if (remainder !== 0 && !useTransferMode) {
+               remainderEl.innerText = `Tiền thừa: ${remainder.toLocaleString()} ${sym}`;
+           } else if (remainder !== 0 && useTransferMode) {
+               remainderEl.innerText = `Lệch: ${remainder.toLocaleString()} ${sym}`;
+           } else {
+               remainderEl.innerText = '';
+           }
+       }
     }
 
     async function parseAIPrompt() {
@@ -2041,6 +2595,7 @@
             action: "PARSE_AI", 
             text: text,
             currency: document.getElementById('aiCurrencySelect').value,
+            currentDate: document.getElementById('nativeDateInput').value,
             config: appConfig 
           }),
           headers: { "Content-Type": "text/plain;charset=utf-8" }
@@ -2049,7 +2604,24 @@
         
         if (data.status === "success") {
           const selectedCurrency = document.getElementById('aiCurrencySelect').value;
-          aiParsedResults = data.data.map(tx => ({ ...tx, currency: selectedCurrency })); 
+          const newTxs = Array.isArray(data.data) ? data.data : [data.data];
+          
+          const processedTxs = newTxs.map(tx => {
+            let aiCurr = tx.currency ? String(tx.currency).trim().toUpperCase() : "";
+            if (aiCurr.includes('YÊN') || aiCurr.includes('YEN') || aiCurr.includes('MAN') || aiCurr.includes('¥')) aiCurr = 'JPY';
+            else if (aiCurr.includes('VNĐ') || aiCurr.includes('ĐỒNG') || aiCurr.includes('₫') || aiCurr.includes('K') || aiCurr.includes('CỦ')) aiCurr = 'VND';
+            
+            let finalCurr = aiCurr || selectedCurrency;
+            return {
+              ...tx,
+              currency: finalCurr,
+              date: tx.date || document.getElementById('nativeDateInput').value
+            };
+          });
+          
+          // Nối dữ liệu mới LÊN TRÊN ĐẦU dữ liệu cũ
+          aiParsedResults = [...processedTxs, ...aiParsedResults];
+          
           renderAiList();
         } else {
           alert(data.message || "Có lỗi khi phân tích!");
@@ -2059,6 +2631,130 @@
       }
       btn.innerText = "Phân tích ✨";
       btn.disabled = false;
+    }
+
+    function saveQuickSplit() {
+      const totalInput = document.getElementById('quickSplitTotal').value.replace(/\D/g, '');
+      const total = parseFloat(totalInput) || 0;
+      
+      if (total <= 0) {
+        alert("Sếp chưa nhập tổng tiền Bill!");
+        return;
+      }
+
+      let wallet = document.getElementById('hiddenWallet').value;
+      if (!wallet) {
+        const walletText = document.getElementById('mainWalletText').innerText;
+        if (walletText && walletText !== "Đang tải...") {
+           wallet = walletText;
+        } else {
+           alert("Sếp chưa chọn Ví nguồn! Sang tab THỦ CÔNG lướt chọn ví trước nhé.");
+           return;
+        }
+      }
+
+      let category = document.getElementById('hiddenCategory').value;
+      if (!category) {
+        category = "Ăn uống"; 
+      }
+
+      const date = document.getElementById('nativeDateInput').value;
+      const currency = document.getElementById('quickSplitCurrency').value;
+      const numPeople = parseInt(document.getElementById('quickSplitPeopleCount').innerText);
+      const splitType = document.getElementById('quickSplitType').value;
+
+      let amounts = [];
+      
+      if (splitType === 'deu') {
+        let perPersonExact = total / numPeople;
+        let baseAmount = Math.round(perPersonExact);
+        let myAmount = baseAmount;
+        let needsRounding = (currency === 'VND' && perPersonExact % 1000 !== 0);
+
+        if (needsRounding && !useTransferMode) {
+           baseAmount = Math.floor(perPersonExact / 1000) * 1000;
+           myAmount = baseAmount;
+        } else {
+           myAmount += total - (baseAmount * numPeople);
+        }
+        
+        amounts[0] = myAmount;
+        for(let i = 1; i < numPeople; i++) amounts[i] = baseAmount;
+        
+      } else if (splitType === 'tuy-chinh') {
+        let sumCustom = 0;
+        let emptyCount = 0;
+        let firstEmptyIndex = -1;
+        
+        for(let i = 0; i < numPeople; i++) {
+          let val = document.getElementById(`custom-split-input-${i}`).value.replace(/\D/g, '');
+          if(val !== '') sumCustom += parseFloat(val);
+          else {
+             emptyCount++;
+             if (firstEmptyIndex === -1) firstEmptyIndex = i;
+          }
+        }
+        
+        let autoValue = 0;
+        let firstEmptyValue = 0;
+        
+        if (emptyCount > 0) {
+          let remaining = Math.max(0, total - sumCustom);
+          let perPersonExact = remaining / emptyCount;
+          autoValue = Math.round(perPersonExact);
+          
+          if (!useTransferMode && currency === 'VND' && perPersonExact % 1000 !== 0) {
+              autoValue = Math.floor(perPersonExact / 1000) * 1000;
+          }
+          firstEmptyValue = autoValue + (remaining - (autoValue * emptyCount));
+        }
+        
+        for(let i = 0; i < numPeople; i++) {
+          let val = document.getElementById(`custom-split-input-${i}`).value.replace(/\D/g, '');
+          if (val !== '') {
+            amounts[i] = parseFloat(val);
+          } else {
+            amounts[i] = (i === firstEmptyIndex) ? firstEmptyValue : autoValue;
+          }
+        }
+      } else {
+        alert("Sếp chuyển sang mục QUÉT HOÁ ĐƠN để chia theo món nhé!");
+        return;
+      }
+
+      if (amounts[0] > 0) {
+        transactionQueue.push({
+          type: "Khoản chi",
+          wallet: wallet,
+          currency: currency,
+          amount: amounts[0].toString(),
+          category: category,
+          person: "",
+          note: "Phần của tôi (Chia bill)",
+          date: date
+        });
+      }
+
+      for (let i = 1; i < numPeople; i++) {
+        if (amounts[i] > 0) {
+          transactionQueue.push({
+            type: "Vay/Nợ",
+            wallet: wallet,
+            currency: currency,
+            amount: amounts[i].toString(),
+            category: "Cho vay",
+            person: `Người thứ ${i}`,
+            note: "Tiền chia bill (Chờ đòi)",
+            date: date
+          });
+        }
+      }
+
+      document.getElementById('quickSplitTotal').value = '';
+      customSplitValues = [];
+      renderQuickSplitPreview();
+      
+      submitBatch();
     }
 
     function toggleAiEdit(index) {
@@ -2090,6 +2786,12 @@
         // Icon tam giác cảnh báo tối giản (chỉ sinh ra nếu là Vay/Nợ)
         const warningIcon = isDebt ? `<svg style="width:18px; height:18px; stroke:#ff3b30; fill:none; margin-right:6px; vertical-align:text-bottom;" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>` : '';
 
+        let displayDate = tx.date;
+        if (displayDate && displayDate.includes('-')) {
+          let parts = displayDate.split('-');
+          if (parts.length === 3) displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
         const itemHtml = `
           <div class="ai-card">
             <div class="ai-card-header" onclick="toggleAiEdit(${index})">
@@ -2099,15 +2801,18 @@
                 <div style="font-weight: 700; font-size: 16px; color: var(--text-main); display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                   ${warningIcon} ${tx.category.split(' - ').pop()}
                 </div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.wallet} • ${tx.note || "Ghi chú trống"}</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.wallet} • ${displayDate}</div>
               </div>
 
-              <div style="text-align: right; flex-shrink: 0;">
-                <div class="queue-amount ${colorClass}" style="font-size: 17px;">${sign}${parseInt(tx.amount).toLocaleString()}</div>
-                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">${tx.currency || currentCurrency}</div>
-              </div>
-              <div id="ai-arrow-${index}" class="ai-arrow ${isOpenClass}">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <div style="text-align: right; flex-shrink: 0; display: flex; align-items: center;">
+                <div>
+                  <div class="queue-amount ${colorClass}" style="font-size: 17px;">${sign}${parseInt(tx.amount).toLocaleString()}</div>
+                  <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">${tx.currency}</div>
+                </div>
+                <button onclick="event.stopPropagation(); removeAiItem(${index})" style="background: none; border: none; color: var(--text-muted); margin-left: 15px; font-size: 18px; cursor: pointer;">✕</button>
+                <div id="ai-arrow-${index}" class="ai-arrow ${isOpenClass}" style="margin-left: 10px;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
               </div>
             </div>
 
@@ -2125,6 +2830,13 @@
                 </div>
               </div>
               ` : ''}
+
+              <div class="form-row" style="padding: 12px 0; align-items: center;">
+                <div class="row-left"><span class="ai-label-mini">Ngày</span></div>
+                <div class="ai-input-sleek" style="display:flex; align-items:center; justify-content:flex-end;">
+                  <input type="date" value="${tx.date}" style="background: transparent; border: none; color: var(--text-main); font-size: 14px; outline: none; text-align: right;" onchange="aiParsedResults[${index}].date = this.value">
+                </div>
+              </div>
 
               <div class="form-row" style="padding: 12px 0;" onclick="currentAiEditIndex=${index}; openCategoryModal();">
                 <div class="row-left"><span class="ai-label-mini">Nhóm</span></div>
@@ -2459,8 +3171,16 @@
         toggleDiv.style.display = 'none';
       } else {
         toggleDiv.style.display = 'flex';
-        document.getElementById('btnGroupParent').classList.toggle('active', mode === 'category-parent');
-        document.getElementById('btnGroupChild').classList.toggle('active', mode === 'category-child');
+        const btnParent = document.getElementById('btnGroupParent');
+        const btnChild = document.getElementById('btnGroupChild');
+        
+        btnParent.classList.toggle('active', mode === 'category-parent');
+        btnChild.classList.toggle('active', mode === 'category-child');
+        
+        setTimeout(() => {
+          if (mode === 'category-parent') moveSlider('ledgerGroupToggle', btnParent);
+          if (mode === 'category-child') moveSlider('ledgerGroupToggle', btnChild);
+        }, 50);
       }
       renderLedgerTransactions();
     }
