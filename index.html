@@ -1592,30 +1592,6 @@
   </div>
   <script>
     // --- APP LOGIC ---
-    const AppStorage = {
-      memory: {},
-      set: function(key, value) {
-        try {
-          localStorage.setItem(key, value);
-        } catch (e) {
-          this.memory[key] = value; 
-        }
-      },
-      get: function(key) {
-        try {
-          return localStorage.getItem(key) || this.memory[key] || "";
-        } catch (e) {
-          return this.memory[key] || "";
-        }
-      },
-      remove: function(key) {
-        try {
-          localStorage.removeItem(key);
-        } catch (e) {
-          delete this.memory[key];
-        }
-      }
-    };
     function extractGasCode(input) {
       if (!input) return "";
       if (input.includes("/s/")) {
