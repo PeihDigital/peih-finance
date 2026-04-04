@@ -1217,7 +1217,7 @@
       transition: transform 0.2s;
     }
     .bottom-sheet-backdrop.open .centered-popover-pane { transform: scale(1); }
-
+    
     .warning-box {
       background: var(--bg-main); border-radius: 12px; padding: 12px 16px;
       display: flex; align-items: center; justify-content: space-between; cursor: pointer;
@@ -1225,7 +1225,7 @@
     }
     .warning-text { color: #ff3b30; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; }
     .partner-selected-text { color: var(--text-main); font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-
+    
     .summary-person-card {
       border: 1px solid var(--border-color); border-radius: 12px;
       margin-bottom: 12px; overflow: hidden; background: var(--bg-main);
@@ -1243,48 +1243,6 @@
       background: var(--form-bg); font-size: 13px; color: var(--text-main);
     }
     .items-detail.open { display: block; animation: slideDown 0.2s ease-out forwards; }
-
-    .fab-capture {
-      position: fixed;
-      bottom: 30px;
-      right: 25px;
-      width: 62px;
-      height: 62px;
-      border-radius: 50%;
-      background-color: #007aff;
-      color: white;
-      border: none;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
-      cursor: pointer;
-      z-index: 99; /* Nổi trên nội dung nhưng dưới Modal */
-      transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .fab-capture svg {
-      width: 28px;
-      height: 28px;
-    }
-    .fab-capture:active {
-      transform: scale(0.92);
-      background-color: #006adb;
-    }
-    .fab-capture.hidden-fab {
-      transform: scale(0.5) translateY(60px);
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    body.dark-mode .fab-capture {
-       background-color: #0a84ff;
-       box-shadow: 0 6px 20px rgba(10, 132, 255, 0.5);
-    }
-    body.dark-mode .fab-capture:active {
-       background-color: #006edb;
-    }
-  </style>
   </style>
 </head>
 <body data-theme="light">
@@ -1620,10 +1578,13 @@
 
         <div id="splitScanSection" style="display: none; flex-direction: column; flex: 1;">
           <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <button id="btnCaptureBill" onclick="document.getElementById('billCaptureInput').click()" style="flex: 1; background-color: var(--form-bg); color: var(--text-main); border: 1px dashed var(--border-color); padding: 12px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer;">
+              📷 Chụp hoá đơn
+            </button>
             <input type="file" id="billCaptureInput" accept="image/*" capture="environment" style="display: none;" onchange="executeRealAiBillParse(event)">
             
-            <button onclick="mockAiParseBill()" style="flex: 1; background-color: var(--form-bg); color: var(--text-muted); border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer;">
-              ✨ Test Giả Lập AI (UX)
+            <button onclick="mockAiParseBill()" style="flex: 1; background-color: #007aff; color: white; border: none; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer;">
+              ✨ Test UX
             </button>
           </div>
 
@@ -1651,13 +1612,6 @@
 
           <div id="dynamicBillSummaryContainer" style="background-color: var(--bg-card); padding: 15px; border-radius: 16px; margin-top: 15px; border: 1px solid var(--border-color); box-shadow: 0 -5px 20px rgba(0,0,0,0.4);">
           </div>
-
-          <button id="fabCaptureBill" class="fab-capture" onclick="document.getElementById('billCaptureInput').click()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-              <circle cx="12" cy="13" r="4"></circle>
-            </svg>
-          </button>
         </div>
       </div>
      </div>
@@ -3576,12 +3530,10 @@
       const file = event.target.files[0];
       if (!file) return;
 
-      const fab = document.getElementById('fabCaptureBill');
-      if(!fab) return;
-      
-      const originalIconHtml = fab.innerHTML;
-      fab.innerHTML = '<span class="loading-spinner" style="width: 26px; height: 26px; border-color: white; border-bottom-color: transparent;"></span>';
-      fab.disabled = true;
+      const btn = document.getElementById('btnCaptureBill');
+      const originalText = btn.innerText;
+      btn.innerText = "⏳ Peih Advisory đang đọc Bill...";
+      btn.disabled = true;
 
       try {
         const reader = new FileReader();
@@ -3589,7 +3541,6 @@
         reader.onload = async () => {
           const base64 = reader.result.split(',')[1];
           const mimeType = file.type || 'image/jpeg';
-
           const response = await fetch(GAS_WEB_APP_URL, {
             method: "POST",
             body: JSON.stringify({ 
@@ -3607,18 +3558,17 @@
             
             if (splitParticipants.length < count) {
                for(let i = splitParticipants.length + 1; i <= count; i++) {
-                   splitParticipants.push({id: 'p_' + Date.now() + Math.random(), name: 'Người ' + i});
+                   splitParticipants.push({id: 'p_' + Date.now() + i, name: 'Người ' + i});
                }
             }
 
-            // Map dữ liệu AI (Giả định structure từ GAS)
             currentScannedBill = {
               items: data.data.items.map((item, idx) => ({
                 id: idx,
                 name: item.name,
                 price: item.price,
                 qty: item.qty || 1,
-                owners: ['mine']
+                owners: ['mine'] // Ban đầu mặc định gán hết cho sếp
               })),
               tax: data.data.tax || 0,
               serviceCharge: data.data.serviceCharge || 0,
@@ -3627,36 +3577,20 @@
             };
 
             renderBillItems();
-            // Kích hoạt bộ não quan sát cuộn sau khi bill đã nạp
-            initFabHidingObserver();
           } else {
             alert("AI đọc xịt: " + data.message);
           }
-          
-          fab.innerHTML = originalIconHtml;
-          fab.disabled = false;
+          btn.innerText = originalText;
+          btn.disabled = false;
         };
       } catch (e) {
         alert("Lỗi đường truyền! Không thể bóc tách hoá đơn.");
-        fab.innerHTML = originalIconHtml;
-        fab.disabled = false;
+        btn.innerText = originalText;
+        btn.disabled = false;
       }
       event.target.value = ""; 
     }
-
     function mockAiParseBill() {
-      // Giả lập loading trên nút tròn luôn
-      const fab = document.getElementById('fabCaptureBill');
-      if(fab) {
-        const originalIconHtml = fab.innerHTML;
-        fab.innerHTML = '<span class="loading-spinner" style="width: 26px; height: 26px; border-color: white; border-bottom-color: transparent;"></span>';
-        fab.disabled = true;
-        setTimeout(()=> {
-            fab.innerHTML = originalIconHtml;
-            fab.disabled = false;
-        }, 800);
-      }
-
       if (splitParticipants.length < 2) {
           splitParticipants = [
             { id: 'mine', name: 'Tôi' },
@@ -3676,8 +3610,6 @@
         currency: "VND"
       };
       renderBillItems();
-      // Kích hoạt bộ não quan sát cuộn
-      initFabHidingObserver();
     }
 
     function renderBillItems() {
@@ -4166,7 +4098,7 @@
            container.insertAdjacentHTML('beforeend', dayHtml);
          }
       } 
-
+      // PHÂN LUỒNG 2: XEM THEO NHÓM (CHA / CON)
       else {
          const grouped = {};
          
@@ -4174,6 +4106,8 @@
             let parts = tx.category.split(' - ');
             let parentCat = parts[0];
             let childCat = parts.length > 1 ? parts[1] : parts[0];
+            
+            // Lọc theo Cha hay Con tùy vào nút gạt
             let groupKey = ledgerGroupMode === 'category-parent' ? parentCat : tx.category;
             let displayCatName = ledgerGroupMode === 'category-parent' ? parentCat : childCat;
             
@@ -4197,6 +4131,7 @@
             else grouped[groupKey].totalExpense += amt;
          });
          
+         // Biến thành mảng, tính tổng tiền Net, xếp thằng tiêu nhiều nhất lên đầu
          let groupArr = Object.values(grouped);
          groupArr.sort((a, b) => {
             let aTotal = Math.abs(a.totalIncome - a.totalExpense);
@@ -4227,7 +4162,8 @@
                      ${sign}${sym} ${Math.abs(net).toLocaleString()}
                   </div>
                </div>`;
-
+               
+            // Dòng chi tiết Giao dịch con bên trong
             group.txs.forEach(tx => {
                let txIsDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
                let txIsIncome = (tx.type === "Khoản thu" || (txIsDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
@@ -4261,25 +4197,6 @@
       document.querySelectorAll('.card > div:last-child').forEach(el => {
          el.style.borderBottom = 'none';
       });
-    }
-
-    function initFabHidingObserver() {
-        const fab = document.getElementById('fabCaptureBill');
-        const summaryContainer = document.getElementById('dynamicBillSummaryContainer');
-        
-        if(!fab || !summaryContainer) return;
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    fab.classList.add('hidden-fab');
-                } else {
-                    fab.classList.remove('hidden-fab');
-                }
-            });
-        }, {
-            threshold: 0.1 
-        });
-        observer.observe(summaryContainer);
     }
   </script>
 </body>
