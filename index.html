@@ -1090,10 +1090,204 @@
       justify-content: center;
       align-items: center;
     }
+    .bill-item-row {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-main);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .bill-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .bill-item-name {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 15px;
+      font-weight: 600;
+      flex: 1;
+      outline: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bill-item-price {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 16px;
+      font-weight: 800;
+      width: 90px;
+      text-align: right;
+      outline: none;
+    }
+    .bill-item-qty {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-right: 10px;
+    }
+    .owner-segment {
+      display: flex;
+      background-color: var(--form-bg);
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .owner-btn {
+      flex: 1;
+      text-align: center;
+      padding: 6px 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .owner-btn.active.mine { background-color: #34c759; color: white; }
+    .owner-btn.active.shared { background-color: #007aff; color: white; }
+    .owner-btn.active.others { background-color: var(--border-color); color: var(--text-main); }
+    .table-setup-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      padding: 10px 15px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 10px;
+    }
+    .quick-edit-input {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 15px;
+      font-weight: 600;
+      outline: none;
+      width: 100%;
+    }
+    .btn-edit-pen {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
+    }
+    .btn-edit-pen:active { color: #007aff; }
+    .split-checkbox {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border-color);
+      display: flex; justify-content: center; align-items: center;
+      transition: all 0.2s;
+    }
+    .split-checkbox.checked { background-color: #007aff; border-color: #007aff; }
+    .split-checkbox.checked::after { content: '✓'; color: white; font-size: 13px; font-weight: bold; }
+    
+    .popover-person-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 15px;
+      background: var(--bg-main);
+      margin-bottom: 10px;
+    }
+    .centered-popover-pane {
+      background: var(--bg-card);
+      width: 90%;
+      max-width: 350px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+    .bottom-sheet-backdrop.open .centered-popover-pane { transform: scale(1); }
+
+    .warning-box {
+      background: var(--bg-main); border-radius: 12px; padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+      border: 1px solid var(--border-color);
+    }
+    .warning-text { color: #ff3b30; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .partner-selected-text { color: var(--text-main); font-weight: bold; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+
+    .summary-person-card {
+      border: 1px solid var(--border-color); border-radius: 12px;
+      margin-bottom: 12px; overflow: hidden; background: var(--bg-main);
+    }
+    .summary-person-header { padding: 12px; cursor: pointer; }
+    .summary-person-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .summary-person-bottom { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px; }
+    .items-preview {
+      font-size: 13px; color: var(--text-muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 8px; font-style: italic;
+    }
+    .items-detail {
+      display: none; padding: 12px; border-top: 1px dashed var(--border-color);
+      background: var(--form-bg); font-size: 13px; color: var(--text-main);
+    }
+    .items-detail.open { display: block; animation: slideDown 0.2s ease-out forwards; }
+
+    .fab-capture {
+      position: fixed;
+      bottom: 30px;
+      right: 25px;
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background-color: #007aff;
+      color: white;
+      border: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+      cursor: pointer;
+      z-index: 99; /* Nổi trên nội dung nhưng dưới Modal */
+      transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .fab-capture svg {
+      width: 28px;
+      height: 28px;
+    }
+    .fab-capture:active {
+      transform: scale(0.92);
+      background-color: #006adb;
+    }
+    .fab-capture.hidden-fab {
+      transform: scale(0.5) translateY(60px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    body.dark-mode .fab-capture {
+       background-color: #0a84ff;
+       box-shadow: 0 6px 20px rgba(10, 132, 255, 0.5);
+    }
+    body.dark-mode .fab-capture:active {
+       background-color: #006edb;
+    }
+  </style>
   </style>
 </head>
-<body>
-  <body data-theme="light">
+<body data-theme="light">
   <div id="loginScreen">
     <div class="login-container">
       <div class="login-title">PEIH FINANCE</div>
@@ -1426,37 +1620,44 @@
 
         <div id="splitScanSection" style="display: none; flex-direction: column; flex: 1;">
           <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-            <button style="flex: 1; background-color: var(--form-bg); color: var(--text-main); border: 1px dashed var(--border-color); padding: 12px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer;">
-              📷 Chụp hoá đơn mới
-            </button>
-            <button style="flex: 1; background-color: var(--form-bg); color: var(--text-main); border: 1px dashed var(--border-color); padding: 12px; border-radius: 16px; font-size: 14px; font-weight: bold; cursor: pointer;">
-              ✨ AI Bóc Tách
+            <input type="file" id="billCaptureInput" accept="image/*" capture="environment" style="display: none;" onchange="executeRealAiBillParse(event)">
+            
+            <button onclick="mockAiParseBill()" style="flex: 1; background-color: var(--form-bg); color: var(--text-muted); border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer;">
+              ✨ Test Giả Lập AI (UX)
             </button>
           </div>
 
-          <div class="section-title">DANH SÁCH MÓN TRÊN BILL</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 10px;">
+            <div class="section-title" style="margin: 0;">DANH SÁCH MÓN</div>
+            <div style="display: flex; align-items: center;">
+              
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button class="icon-btn" onclick="changeSplitPeople(-1)" style="width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-color); background: #ffffff; font-size: 16px; font-weight: 300; display: flex; justify-content: center; align-items: center; color: #000000; padding: 0;">-</button>
+                <span id="scanPeopleCount" style="font-size: 16px; font-weight: bold; width: 14px; text-align: center; color: #000000;">2</span>
+                <button class="icon-btn" onclick="changeSplitPeople(1)" style="width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border-color); background: #ffffff; font-size: 16px; font-weight: 300; display: flex; justify-content: center; align-items: center; color: #000000; padding: 0;">+</button>
+              </div>
+
+              <div style="width: 20px;"></div>
+
+              <button onclick="openSplitPersonModal()" style="background: transparent; border: 1px solid #1067e8; color: #1067e8; padding: 6px 14px; border-radius: 18px; font-size: 12px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+                Bạn bè
+              </button>
+            </div>
+          </div>
           
           <div id="splitItemsContainer" style="flex: 1; overflow-y: auto; background-color: var(--form-bg); border-radius: 16px; padding: 10px; border: 1px solid var(--border-color);">
             <div style="text-align: center; color: var(--text-muted); margin-top: 20px; font-size: 13px;">Chưa có món nào. Chụp bill để AI tự động liệt kê.</div>
           </div>
 
-          <div style="background-color: var(--bg-card); padding: 15px; border-radius: 16px; margin-top: 15px; border: 1px solid var(--border-color); box-shadow: 0 -5px 20px rgba(0,0,0,0.4);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <span style="font-size: 13px; color: var(--text-muted); font-weight: bold;">Tổng đang chọn:</span>
-              <span id="splitSelectedTotal" style="font-size: 24px; font-weight: 800; color: var(--text-main);">0</span>
-            </div>
-            
-            <div style="display: flex; gap: 10px;">
-              <button style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #007aff; color: white; font-weight: bold; cursor: pointer; font-size: 15px;">CỦA TÔI</button>
-              <button style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-weight: bold; cursor: pointer; font-size: 15px;">NGƯỜI KHÁC</button>
-            </div>
+          <div id="dynamicBillSummaryContainer" style="background-color: var(--bg-card); padding: 15px; border-radius: 16px; margin-top: 15px; border: 1px solid var(--border-color); box-shadow: 0 -5px 20px rgba(0,0,0,0.4);">
           </div>
 
-          <div class="modal-bottom" style="margin-top: 15px; padding-top: 0;">
-            <button style="width: 100%; background-color: #28a745; color: white; border: none; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: bold; cursor: pointer;">
-              Lưu phần "Của Tôi" vào Sổ sách
-            </button>
-          </div>
+          <button id="fabCaptureBill" class="fab-capture" onclick="document.getElementById('billCaptureInput').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+          </button>
         </div>
       </div>
      </div>
@@ -1500,7 +1701,7 @@
   <div id="personModal" class="sub-modal">
     <div class="sub-modal-header">
       <button class="btn-icon-circle" onclick="closePersonModal()">‹</button>
-      <span>Chọn người Vay / Nợ</span>
+      <span> Bạn bè </span>
       <button class="btn-icon-circle" onclick="addNewPerson()">+</button>
     </div>
     <div id="personListContainer" class="list-container">
@@ -1554,7 +1755,20 @@
       <div class="popover-item" onclick="alert('Tuỳ chỉnh ngày đang phát triển')">Tuỳ chỉnh</div>
     </div>
   </div>
-  </div> <div id="aiNoteModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: rgba(0,0,0,0.6); z-index: 1500; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s;">
+  </div> 
+
+  <div id="miniSplitPopover" class="bottom-sheet-backdrop" style="display: flex; justify-content: center; align-items: center;" onclick="closeMiniSplitPopover(event)">
+    <div class="centered-popover-pane" onclick="event.stopPropagation()">
+      <div class="sheet-header" style="border-bottom: 1px solid var(--border-color); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="sheet-title" id="popoverItemName" style="font-size: 16px; font-weight: bold; color: var(--text-main);">Tên món...</div>
+        <button class="sheet-btn" style="background: #007aff; color: white; border: none; padding: 6px 14px; border-radius: 16px; font-weight: bold; font-size: 13px;" onclick="closeMiniSplitPopover('force')">Xong</button>
+      </div>
+      <div class="sheet-list" id="popoverPeopleList" style="padding: 15px 20px; overflow-y: auto; max-height: 50vh;">
+      </div>
+    </div>
+  </div>
+
+  <div id="aiNoteModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: rgba(0,0,0,0.6); z-index: 1500; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s;">
     <div style="background-color: var(--bg-card); width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s;">
       <div style="font-weight: bold; font-size: 16px; margin-bottom: 15px; text-align: center; color: var(--text-main);">Chi tiết hoá đơn</div>
       <textarea id="aiNoteEditor" style="width: 100%; height: 150px; background-color: var(--form-bg); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); padding: 12px; font-size: 14px; outline: none; resize: none; line-height: 1.5;"></textarea>
@@ -1564,6 +1778,7 @@
       </div>
     </div>
   </div>
+
   <script>
     // --- APP LOGIC ---
     function handleLogin() {
@@ -2993,30 +3208,118 @@
       const container = document.getElementById('personListContainer');
       container.innerHTML = '';
 
+      if (currentAiEditIndex === 'split_scan') {
+        const isMineSelected = splitParticipants.some(p => p.id === 'mine');
+        const checkBg = isMineSelected ? '#007aff' : 'transparent';
+        const checkBorder = isMineSelected ? '#007aff' : 'var(--border-color)';
+        const checkText = isMineSelected ? '✓' : '';
+        
+        const mineRow = document.createElement('div');
+        mineRow.className = 'tree-parent'; 
+        mineRow.style.borderBottom = "1px solid var(--border-color)";
+        mineRow.innerHTML = `
+          <div class="color-icon" style="background-color: ${isMineSelected ? '#34c759' : 'var(--form-bg)'}; border: 1px solid var(--border-color); color: ${isMineSelected ? 'white' : 'transparent'};">✓</div>
+          <span style="flex: 1; font-weight: bold; color: ${isMineSelected ? '#34c759' : 'var(--text-main)'};">Tôi (Chủ tài khoản)</span>
+          <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid ${checkBorder}; background: ${checkBg}; display: flex; justify-content: center; align-items: center; color: white; font-size: 13px; font-weight: bold;">${checkText}</div>
+        `;
+        mineRow.onclick = () => toggleSplitMine();
+        container.appendChild(mineRow);
+      }
+
       const people = (appConfig && appConfig.activeDebtors) ? appConfig.activeDebtors : [];
 
       if (people.length === 0) {
-        container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Sạch nợ! Không có ai đang vay/nợ sếp. Bấm dấu + góc trên để thêm thủ công.</div>';
+        container.innerHTML += '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Không có đối tác nào. Bấm dấu + góc trên để thêm thủ công.</div>';
       } else {
         people.forEach(person => {
           const row = document.createElement('div');
           row.className = 'tree-parent'; 
           row.style.borderBottom = "1px solid var(--border-color)";
-          row.innerHTML = `<div class="color-icon" style="background-color: var(--form-bg); border: 1px solid var(--border-color);">👤</div><span>${person}</span>`;
-          row.onclick = () => selectPerson(person);
+          
+          if (currentAiEditIndex === 'split_scan') {
+            const isSelected = splitParticipants.some(p => p.name === person);
+            const checkBg = isSelected ? '#007aff' : 'transparent';
+            const checkBorder = isSelected ? '#007aff' : 'var(--border-color)';
+            const checkText = isSelected ? '✓' : '';
+            
+            row.innerHTML = `
+              <div class="color-icon" style="background-color: var(--form-bg); border: 1px solid var(--border-color);">👤</div>
+              <span style="flex: 1;">${person}</span>
+              <div style="width: 22px; height: 22px; border-radius: 6px; border: 2px solid ${checkBorder}; background: ${checkBg}; display: flex; justify-content: center; align-items: center; color: white; font-size: 13px; font-weight: bold;">${checkText}</div>
+            `;
+            row.onclick = () => toggleSplitPerson(person);
+          } else {
+            row.innerHTML = `<div class="color-icon" style="background-color: var(--form-bg); border: 1px solid var(--border-color);">👤</div><span>${person}</span>`;
+            row.onclick = () => selectPerson(person);
+          }
           container.appendChild(row);
         });
       }
     }
 
+    function toggleSplitMine() {
+      const idx = splitParticipants.findIndex(p => p.id === 'mine');
+      if (idx > -1) {
+         splitParticipants.splice(idx, 1);
+         if (currentScannedBill && currentScannedBill.items) {
+           currentScannedBill.items.forEach(item => {
+             if(item.owners) item.owners = item.owners.filter(oid => oid !== 'mine');
+           });
+         }
+      } else {
+         splitParticipants.unshift({ id: 'mine', name: 'Tôi' });
+      }
+      const countSpan = document.getElementById('scanPeopleCount');
+      if (countSpan) countSpan.innerText = splitParticipants.length;
+      renderPersonList();
+      if (currentScannedBill && currentScannedBill.items) renderBillItems();
+    }
+
+    function toggleSplitPerson(personName) {
+      const existingIdx = splitParticipants.findIndex(p => p.name === personName);
+      if (existingIdx > -1) {
+        const removedId = splitParticipants[existingIdx].id;
+        splitParticipants.splice(existingIdx, 1);
+        if (currentScannedBill && currentScannedBill.items) {
+           currentScannedBill.items.forEach(item => {
+             if(item.owners) {
+               item.owners = item.owners.filter(oid => oid !== removedId);
+               const hasMine = splitParticipants.some(p => p.id === 'mine');
+               if (item.owners.length === 0 && hasMine) item.owners = ['mine'];
+             }
+           });
+        }
+      } else {
+        const emptySlotIdx = splitParticipants.findIndex(p => p.name.startsWith('Người '));
+        if (emptySlotIdx > -1) {
+          splitParticipants[emptySlotIdx].name = personName;
+        } else {
+          splitParticipants.push({ id: 'p_' + Date.now(), name: personName });
+        }
+      }
+
+      const countSpan = document.getElementById('scanPeopleCount');
+      if (countSpan) countSpan.innerText = splitParticipants.length;
+
+      renderPersonList();
+      if (currentScannedBill && currentScannedBill.items) renderBillItems();
+    }
+
     function selectPerson(personName) {
-      if (currentAiEditIndex !== null) {
+      if (currentAiEditIndex !== null && currentAiEditIndex !== 'split_scan') {
         aiParsedResults[currentAiEditIndex].person = personName;
         renderAiList(currentAiEditIndex);
-      } else {
+      } else if (currentAiEditIndex !== 'split_scan') {
         document.getElementById('mainPersonText').innerText = personName;
         document.getElementById('mainPersonText').style.color = "var(--text-main)";
-        document.getElementById('hiddenPerson').value = personName;
+        if(document.getElementById('hiddenPerson')) document.getElementById('hiddenPerson').value = personName;
+        
+        const billPartnerText = document.getElementById('billPartnerText');
+        if (billPartnerText) {
+          billPartnerText.innerText = "Nợ bởi: " + personName;
+          billPartnerText.style.color = "var(--text-main)";
+          document.getElementById('hiddenBillPartner').value = personName;
+        }
       }
       closePersonModal();
     }
@@ -3028,7 +3331,26 @@
         if(!appConfig.activeDebtors.includes(name.trim())) {
           appConfig.activeDebtors.push(name.trim());
         }
-        selectPerson(name.trim());
+        if (currentAiEditIndex === 'split_scan') {
+           toggleSplitPerson(name.trim());
+        } else {
+           selectPerson(name.trim());
+        }
+      }
+    }
+
+    function addNewPerson() {
+      const name = prompt("Nhập tên Đối tác Vay / Cho vay mới:");
+      if (name && name.trim() !== "") {
+        if(!appConfig.activeDebtors) appConfig.activeDebtors = [];
+        if(!appConfig.activeDebtors.includes(name.trim())) {
+          appConfig.activeDebtors.push(name.trim());
+        }
+        if (currentAiEditIndex === 'split_scan') {
+           toggleSplitPerson(name.trim());
+        } else {
+           selectPerson(name.trim());
+        }
       }
     }
     function openLedgerMainMenu() {
@@ -3194,6 +3516,556 @@
       }
       renderLedgerTransactions();
     }
+    let splitParticipants = [
+      { id: 'mine', name: 'Tôi' },
+      { id: 'p_2', name: 'Người 2' }
+    ];
+    let currentEditingItemIndex = null;
+
+    function changeSplitPeople(amount) {
+      const countSpan = document.getElementById('scanPeopleCount');
+      if (!countSpan) return;
+      let current = splitParticipants.length;
+      let next = current + amount;
+      
+      if (next >= 2 && next <= 50) {
+        countSpan.innerText = next;
+        
+        if (amount > 0) {
+            let newIndex = 2;
+            while(splitParticipants.some(p => p.name === 'Người ' + newIndex)) newIndex++;
+            splitParticipants.push({ id: 'p_' + Date.now() + Math.random(), name: 'Người ' + newIndex });
+        } else {
+            let removedIdx = -1;
+            for (let i = splitParticipants.length - 1; i >= 1; i--) {
+                if (splitParticipants[i].name.startsWith('Người ')) {
+                    removedIdx = i; break;
+                }
+            }
+            if (removedIdx === -1) removedIdx = splitParticipants.length - 1;
+            
+            const removedId = splitParticipants[removedIdx].id;
+            splitParticipants.splice(removedIdx, 1);
+            
+            if (currentScannedBill && currentScannedBill.items) {
+               currentScannedBill.items.forEach(item => {
+                 if(item.owners) {
+                     item.owners = item.owners.filter(oid => oid !== removedId);
+                     if (item.owners.length === 0) item.owners = ['mine'];
+                 }
+               });
+            }
+        }
+
+        if (currentScannedBill && currentScannedBill.items) {
+           renderBillItems();
+        }
+      }
+    }
+
+    function closeMiniSplitPopover(eventOrAction) {
+      if (eventOrAction !== 'force' && eventOrAction.target !== document.getElementById('miniSplitPopover')) return;
+      document.getElementById('miniSplitPopover').classList.remove('open');
+    }
+
+    function openSplitPersonModal() {
+      currentAiEditIndex = 'split_scan';
+      openPersonModal();
+    }
+    async function executeRealAiBillParse(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const fab = document.getElementById('fabCaptureBill');
+      if(!fab) return;
+      
+      const originalIconHtml = fab.innerHTML;
+      fab.innerHTML = '<span class="loading-spinner" style="width: 26px; height: 26px; border-color: white; border-bottom-color: transparent;"></span>';
+      fab.disabled = true;
+
+      try {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+          const base64 = reader.result.split(',')[1];
+          const mimeType = file.type || 'image/jpeg';
+
+          const response = await fetch(GAS_WEB_APP_URL, {
+            method: "POST",
+            body: JSON.stringify({ 
+              action: "PARSE_SPLIT_BILL", 
+              image: { base64, mimeType },
+              config: appConfig
+            }),
+            headers: { "Content-Type": "text/plain;charset=utf-8" }
+          });
+          
+          const data = await response.json();
+          if (data.status === "success") {
+            const countSpan = document.getElementById('scanPeopleCount');
+            const count = countSpan ? parseInt(countSpan.innerText) : 2;
+            
+            if (splitParticipants.length < count) {
+               for(let i = splitParticipants.length + 1; i <= count; i++) {
+                   splitParticipants.push({id: 'p_' + Date.now() + Math.random(), name: 'Người ' + i});
+               }
+            }
+
+            // Map dữ liệu AI (Giả định structure từ GAS)
+            currentScannedBill = {
+              items: data.data.items.map((item, idx) => ({
+                id: idx,
+                name: item.name,
+                price: item.price,
+                qty: item.qty || 1,
+                owners: ['mine']
+              })),
+              tax: data.data.tax || 0,
+              serviceCharge: data.data.serviceCharge || 0,
+              total: data.data.total || 0,
+              currency: document.getElementById('quickSplitCurrency') ? document.getElementById('quickSplitCurrency').value : "VND"
+            };
+
+            renderBillItems();
+            // Kích hoạt bộ não quan sát cuộn sau khi bill đã nạp
+            initFabHidingObserver();
+          } else {
+            alert("AI đọc xịt: " + data.message);
+          }
+          
+          fab.innerHTML = originalIconHtml;
+          fab.disabled = false;
+        };
+      } catch (e) {
+        alert("Lỗi đường truyền! Không thể bóc tách hoá đơn.");
+        fab.innerHTML = originalIconHtml;
+        fab.disabled = false;
+      }
+      event.target.value = ""; 
+    }
+
+    function mockAiParseBill() {
+      // Giả lập loading trên nút tròn luôn
+      const fab = document.getElementById('fabCaptureBill');
+      if(fab) {
+        const originalIconHtml = fab.innerHTML;
+        fab.innerHTML = '<span class="loading-spinner" style="width: 26px; height: 26px; border-color: white; border-bottom-color: transparent;"></span>';
+        fab.disabled = true;
+        setTimeout(()=> {
+            fab.innerHTML = originalIconHtml;
+            fab.disabled = false;
+        }, 800);
+      }
+
+      if (splitParticipants.length < 2) {
+          splitParticipants = [
+            { id: 'mine', name: 'Tôi' },
+            { id: 'p_2', name: 'Người 2' }
+          ];
+      }
+      currentScannedBill = {
+        items: [
+          { id: 1, name: "Bò Wagyu Nướng", price: 500000, qty: 1, owners: ['mine'] },
+          { id: 2, name: "Sashimi Cá Hồi", price: 300000, qty: 1, owners: splitParticipants.map(p=>p.id) },
+          { id: 3, name: "Bia Sapporo", price: 50000, qty: 4, owners: (splitParticipants.length > 1 ? [splitParticipants[1].id] : ['mine']) },
+          { id: 4, name: "Nước Suối", price: 20000, qty: 1, owners: ['mine'] }
+        ],
+        tax: 85000,
+        serviceCharge: 50000,
+        total: 1155000,
+        currency: "VND"
+      };
+      renderBillItems();
+      // Kích hoạt bộ não quan sát cuộn
+      initFabHidingObserver();
+    }
+
+    function renderBillItems() {
+      const container = document.getElementById('splitItemsContainer');
+      container.innerHTML = '';
+
+      if (currentScannedBill.items.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 20px; font-size: 13px;">Chưa có món nào.</div>';
+        calculateBillSplit();
+        return;
+      }
+
+      const numPeople = splitParticipants.length;
+      const hasMine = splitParticipants.some(p => p.id === 'mine');
+
+      currentScannedBill.items.forEach((item, index) => {
+        const itemTotal = item.price * item.qty;
+        
+        if (!item.owners) {
+          if (item.owner === 'shared') item.owners = splitParticipants.map(p=>p.id);
+          else if (item.owner === 'others') item.owners = splitParticipants.filter(p=>p.id !== 'mine').map(p=>p.id);
+          else item.owners = hasMine ? ['mine'] : [];
+        }
+
+        let ownerHtml = '';
+        if (numPeople <= 2 && hasMine) {
+          const isMine = item.owners.length === 1 && item.owners[0] === 'mine';
+          const isShared = item.owners.length === 2;
+          const isOthers = item.owners.length === 1 && item.owners[0] !== 'mine';
+
+          ownerHtml = `
+            <div class="owner-segment">
+              <div class="owner-btn mine ${isMine ? 'active' : ''}" onclick="changeItemOwnerArray(${index}, 'mine')">Của Tôi</div>
+              <div class="owner-btn shared ${isShared ? 'active' : ''}" onclick="changeItemOwnerArray(${index}, 'shared')">Chung</div>
+              <div class="owner-btn others ${isOthers ? 'active' : ''}" onclick="changeItemOwnerArray(${index}, 'others')">Khác</div>
+            </div>
+          `;
+        } 
+        else {
+          if (hasMine) {
+            const isMine = item.owners.length === 1 && item.owners[0] === 'mine';
+            const shareText = isMine ? "Chia món..." : (item.owners.length > 0 ? `Đã chia (${item.owners.length})` : "Chia món...");
+            ownerHtml = `
+              <div class="owner-segment">
+                <div class="owner-btn mine ${isMine ? 'active' : ''}" onclick="changeItemOwnerArray(${index}, 'mine')" style="flex: 0.6;">Của Tôi</div>
+                <div class="owner-btn shared ${!isMine ? 'active' : ''}" onclick="openItemSplitPopover(${index})" style="flex: 1; background: ${!isMine ? '#007aff' : 'transparent'}; color: ${!isMine ? '#fff' : 'var(--text-muted)'};">${shareText}</div>
+              </div>
+            `;
+          } else {
+            const shareText = item.owners.length > 0 ? `Đã chọn: ${item.owners.length} người` : "⚠️ Chọn người";
+            const btnColor = item.owners.length > 0 ? '#007aff' : '#ff3b30';
+            ownerHtml = `
+              <div class="owner-segment">
+                <div class="owner-btn shared active" onclick="openItemSplitPopover(${index})" style="flex: 1; background: ${btnColor}; color: #fff;">${shareText}</div>
+              </div>
+            `;
+          }
+        }
+
+        const row = document.createElement('div');
+        row.className = 'bill-item-row';
+        row.innerHTML = `
+          <div class="bill-item-top">
+            <div style="display: flex; align-items: center; flex: 1; min-width: 0;">
+              <span class="bill-item-qty">${item.qty}x</span>
+              <input type="text" class="bill-item-name" value="${item.name}" onchange="updateBillItem(${index}, 'name', this.value)">
+            </div>
+            <input type="text" inputmode="numeric" class="bill-item-price" value="${itemTotal.toLocaleString()}" onchange="updateBillItemPrice(${index}, this.value)" onfocus="this.value='${itemTotal}'" onblur="this.value=parseInt(this.value || 0).toLocaleString()">
+          </div>
+          ${ownerHtml}
+        `;
+        container.appendChild(row);
+      });
+      
+      const addMoreBtn = document.createElement('div');
+      addMoreBtn.style.textAlign = 'center';
+      addMoreBtn.style.marginTop = '15px';
+      addMoreBtn.style.paddingBottom = '5px';
+      addMoreBtn.innerHTML = `
+        <button onclick="document.getElementById('billCaptureInput').click()" style="background: transparent; border: 1px dashed var(--text-muted); color: var(--text-main); padding: 8px 20px; border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          Chụp thêm bill
+        </button>
+      `;
+      container.appendChild(addMoreBtn);
+
+      calculateBillSplit();
+    }
+
+    function changeItemOwnerArray(index, type) {
+      if (type === 'mine') currentScannedBill.items[index].owners = ['mine'];
+      else if (type === 'shared') currentScannedBill.items[index].owners = splitParticipants.map(p=>p.id);
+      else if (type === 'others') currentScannedBill.items[index].owners = splitParticipants.filter(p=>p.id !== 'mine').map(p=>p.id);
+      renderBillItems();
+    }
+
+    function openItemSplitPopover(index) {
+        currentEditingItemIndex = index;
+        const item = currentScannedBill.items[index];
+        document.getElementById('popoverItemName').innerText = item.name;
+        
+        const listContainer = document.getElementById('popoverPeopleList');
+        listContainer.innerHTML = '';
+        
+        splitParticipants.forEach(p => {
+            const isChecked = item.owners.includes(p.id);
+            const checkClass = isChecked ? 'checked' : '';
+            
+            const isMine = p.id === 'mine';
+            
+            let nameHtml = isMine ? 
+                `<span style="font-weight: bold; font-size: 15px; color: #34c759; flex: 1; pointer-events: none;">Tôi</span>` : 
+                `<input type="text" class="quick-edit-input" value="${p.name}" id="edit-name-${p.id}" onclick="event.stopPropagation()" onchange="updateParticipantName('${p.id}', this.value)" onblur="this.setAttribute('readonly', true); this.style.pointerEvents='none'; this.style.borderBottom='none';" readonly style="pointer-events: none; border-bottom: none;" />`;
+
+            let penHtml = isMine ? '' : 
+                `<button class="btn-edit-pen" onclick="event.stopPropagation(); let inp = document.getElementById('edit-name-${p.id}'); inp.removeAttribute('readonly'); inp.style.pointerEvents='auto'; inp.style.borderBottom='1px dashed var(--text-muted)'; inp.focus();">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                 </button>`;
+
+            listContainer.insertAdjacentHTML('beforeend', `
+                <div class="popover-person-row" onclick="togglePopoverCheck('${p.id}')" style="cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                        <div class="split-checkbox ${checkClass}" id="check-p-${p.id}"></div>
+                        ${nameHtml}
+                    </div>
+                    ${penHtml}
+                </div>
+            `);
+        });
+        document.getElementById('miniSplitPopover').classList.add('open');
+    }
+
+    function togglePopoverCheck(pId) {
+        const item = currentScannedBill.items[currentEditingItemIndex];
+        const idx = item.owners.indexOf(pId);
+        if (idx > -1) item.owners.splice(idx, 1);
+        else item.owners.push(pId);
+        
+        document.getElementById(`check-p-${pId}`).classList.toggle('checked');
+        renderBillItems(); 
+    }
+
+    function updateParticipantName(pId, newName) {
+        const p = splitParticipants.find(x => x.id === pId);
+        if(p) {
+           p.name = newName || "Bạn bè";
+           renderBillItems(); 
+        }
+    }
+
+    function updateBillItem(index, field, value) {
+      currentScannedBill.items[index][field] = value;
+    }
+
+    function updateBillItemPrice(index, value) {
+      const numValue = parseInt(value.replace(/\D/g, '')) || 0;
+      currentScannedBill.items[index].price = numValue / currentScannedBill.items[index].qty;
+      renderBillItems();
+    }
+
+    let finalBillBreakdown = {};
+
+    function calculateBillSplit() {
+      let totals = {};
+      splitParticipants.forEach(p => {
+        totals[p.id] = { subtotal: 0, tax: 0, total: 0, items: [] };
+      });
+      
+      let actualSubTotal = 0;
+
+      currentScannedBill.items.forEach(item => {
+        const lineTotal = item.price * item.qty;
+        actualSubTotal += lineTotal;
+        if (item.owners && item.owners.length > 0) {
+          const share = lineTotal / item.owners.length;
+          item.owners.forEach(oid => {
+            if (totals[oid]) {
+              totals[oid].subtotal += share;
+              totals[oid].items.push(item.name);
+            }
+          });
+        }
+      });
+
+      const totalTaxFee = currentScannedBill.tax + currentScannedBill.serviceCharge;
+      finalBillBreakdown = {};
+      
+      let myTotal = 0;
+      let othersTotal = 0;
+
+      splitParticipants.forEach(p => {
+        const ratio = actualSubTotal > 0 ? (totals[p.id].subtotal / actualSubTotal) : 0;
+        const taxShare = Math.round(totalTaxFee * ratio);
+        const pTotal = totals[p.id].subtotal + taxShare;
+        
+        totals[p.id].tax = taxShare;
+        totals[p.id].total = pTotal;
+        
+        finalBillBreakdown[p.id] = { name: p.name, amount: pTotal, subtotal: totals[p.id].subtotal, tax: taxShare };
+        
+        if (p.id === 'mine') myTotal += pTotal;
+        else othersTotal += pTotal;
+      });
+
+      const sumCalculated = myTotal + othersTotal;
+      const diff = currentScannedBill.total - sumCalculated;
+      
+      const hasMine = splitParticipants.some(p => p.id === 'mine');
+      
+      if (hasMine) {
+         myTotal += diff; 
+         finalBillBreakdown['mine'].amount += diff;
+         totals['mine'].total += diff;
+      } else if (splitParticipants.length > 0) {
+         othersTotal += diff;
+         const firstId = splitParticipants[0].id;
+         finalBillBreakdown[firstId].amount += diff;
+         totals[firstId].total += diff;
+      }
+
+      renderDynamicSummary(totalTaxFee, myTotal, othersTotal, totals, hasMine);
+    }
+
+    function renderDynamicSummary(totalTaxFee, myTotal, othersTotal, totals, hasMine) {
+      const container = document.getElementById('dynamicBillSummaryContainer');
+      const curr = currentScannedBill.currency;
+      let html = '';
+
+      html += `
+        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+          <span>Thuế & Phí dịch vụ:</span>
+          <span>${totalTaxFee.toLocaleString()} ${curr}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          <span>Tổng Bill Gốc (Cần khớp):</span>
+          <span>${currentScannedBill.total.toLocaleString()} ${curr}</span>
+        </div>
+        <div style="height: 1px; background: var(--border-color); margin-bottom: 15px;"></div>
+      `;
+
+      if (splitParticipants.length <= 2 && hasMine) {
+        let partnerName = "Người 2";
+        if (splitParticipants.length === 2) partnerName = splitParticipants[1].name;
+        const isPartnerNamed = partnerName && !partnerName.startsWith('Người ');
+
+        html += `
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
+            <div>
+              <div style="font-size: 12px; color: #34c759; font-weight: bold; margin-bottom: 4px;">PHẦN TÔI TRẢ</div>
+              <div style="font-size: 24px; font-weight: 800; color: #34c759;">${myTotal.toLocaleString()} <span style="font-size: 16px;">${curr}</span></div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 4px;">NGƯỜI KHÁC TRẢ</div>
+              <div style="font-size: 18px; font-weight: bold; color: var(--text-main);">${othersTotal.toLocaleString()} <span style="font-size: 14px;">${curr}</span></div>
+            </div>
+          </div>
+        `;
+
+        if (isPartnerNamed) {
+          html += `
+            <div class="warning-box" onclick="openSplitPersonModal()" style="margin-bottom: 15px;">
+               <span class="partner-selected-text">Bạn bè: ${partnerName}</span>
+               <span class="arrow" style="font-size: 16px;">›</span>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="warning-box" onclick="openSplitPersonModal()" style="margin-bottom: 15px;">
+               <span class="warning-text">⚠️ Bấm chọn người nợ phần kia</span>
+               <span class="arrow" style="font-size: 16px;">›</span>
+            </div>
+          `;
+        }
+      } 
+      else {
+        if (hasMine) {
+          html += `
+            <div style="margin-bottom: 15px;">
+              <div style="font-size: 12px; color: #34c759; font-weight: bold; margin-bottom: 4px;">PHẦN TÔI TRẢ</div>
+              <div style="font-size: 24px; font-weight: 800; color: #34c759;">${myTotal.toLocaleString()} <span style="font-size: 16px;">${curr}</span></div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div style="margin-bottom: 15px; text-align: center;">
+              <div style="font-size: 12px; color: #ff3b30; font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">Chế độ chia hộ</div>
+              <div style="font-size: 18px; font-weight: 800; color: var(--text-main);">Thu hồi: ${othersTotal.toLocaleString()} <span style="font-size: 14px;">${curr}</span></div>
+            </div>
+          `;
+        }
+
+        splitParticipants.forEach(p => {
+          if (p.id === 'mine') return;
+          const pData = totals[p.id];
+          const itemsStr = pData.items.length > 0 ? pData.items.join(', ') : 'Không có món nào';
+          
+          html += `
+            <div class="summary-person-card">
+              <div class="summary-person-header" onclick="toggleSummaryAccordion('${p.id}')">
+                <div class="summary-person-top">
+                  <span style="font-size: 14px; font-weight: bold; color: var(--text-main);">${p.name}</span>
+                  <span style="font-size: 12px; color: var(--text-muted);">Thuế phí: ${pData.tax.toLocaleString()}</span>
+                </div>
+                <div class="summary-person-bottom">
+                  <span style="font-size: 18px; font-weight: bold; color: var(--text-main);">${pData.total.toLocaleString()} <span style="font-size: 12px;">${curr}</span></span>
+                  <span style="font-size: 12px; color: var(--text-muted);">Chưa thuế: ${Math.round(pData.subtotal).toLocaleString()}</span>
+                </div>
+                <div class="items-preview">${itemsStr}</div>
+              </div>
+              <div class="items-detail" id="detail-${p.id}">
+                ${pData.items.length > 0 ? 'Các món: <br>• ' + pData.items.join('<br>• ') : 'Chưa gán món nào.'}
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      html += `
+        <button onclick="saveScannedBill()" style="width: 100%; background-color: #007aff; color: white; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px;">
+          Lưu Vào Sổ
+        </button>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function toggleSummaryAccordion(pId) {
+      document.querySelectorAll('.items-detail.open').forEach(el => {
+        if (el.id !== `detail-${pId}`) el.classList.remove('open');
+      });
+      const target = document.getElementById(`detail-${pId}`);
+      if(target) target.classList.toggle('open');
+    }
+
+    function saveScannedBill() {
+      let wallet = document.getElementById('hiddenWallet').value;
+      if (!wallet) {
+        const walletText = document.getElementById('mainWalletText').innerText;
+        if (walletText && walletText !== "Đang tải...") wallet = walletText;
+        else {
+          alert("Sếp chưa chọn Ví nguồn bên tab THỦ CÔNG!");
+          return;
+        }
+      }
+
+      let category = document.getElementById('hiddenCategory').value;
+      if (!category) category = "Ăn uống"; 
+      
+      const date = document.getElementById('nativeDateInput').value;
+      const currency = currentScannedBill.currency;
+
+      const hasMine = splitParticipants.some(p => p.id === 'mine');
+
+      if (splitParticipants.length <= 2 && hasMine) {
+          const othersAmount = finalBillBreakdown[splitParticipants[1]?.id]?.amount || 0;
+          const pName = splitParticipants[1]?.name || "";
+          if (othersAmount > 0 && (!pName || pName.startsWith('Người '))) {
+            alert("Sếp vui lòng bấm chọn tên người nợ phần kia nhé!");
+            return;
+          }
+      }
+
+      let totalBillAmount = 0;
+      splitParticipants.forEach(p => {
+         const amt = finalBillBreakdown[p.id]?.amount || 0;
+         totalBillAmount += amt;
+         
+         if (amt > 0) {
+            if (p.id === 'mine') {
+              transactionQueue.push({ type: "Khoản chi", wallet: wallet, currency: currency, amount: amt.toString(), category: category, person: "", note: "Phần của tôi (Quét Bill)", date: date });
+            } else {
+              transactionQueue.push({ type: "Vay/Nợ", wallet: wallet, currency: currency, amount: amt.toString(), category: "Cho vay", person: p.name, note: "Tiền ăn chung (Quét Bill)", date: date });
+            }
+         }
+      });
+      if (!hasMine && totalBillAmount > 0) {
+         transactionQueue.push({ type: "Khoản chi", wallet: wallet, currency: currency, amount: totalBillAmount.toString(), category: category, person: "", note: "Trả hộ cả bàn (Quét Bill)", date: date });
+      }
+
+      document.getElementById('splitItemsContainer').innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 20px; font-size: 13px;">Chưa có món nào. Chụp hoá đơn để Peih Advisory liệt kê.</div>';
+      const countSpan = document.getElementById('scanPeopleCount');
+      if (countSpan) countSpan.innerText = "2";
+      currentScannedBill.items = [];
+      splitParticipants = [{ id: 'mine', name: 'Tôi' }, { id: 'p_2', name: 'Người 2' }];
+      calculateBillSplit();
+
+      submitBatch();
+    }
 
     // --- BỘ NÃO VẼ GIAO DỊCH (TÍCH HỢP XEM THEO NGÀY & NHÓM) ---
     function renderLedgerTransactions() {
@@ -3294,7 +4166,7 @@
            container.insertAdjacentHTML('beforeend', dayHtml);
          }
       } 
-      // PHÂN LUỒNG 2: XEM THEO NHÓM (CHA / CON)
+
       else {
          const grouped = {};
          
@@ -3302,8 +4174,6 @@
             let parts = tx.category.split(' - ');
             let parentCat = parts[0];
             let childCat = parts.length > 1 ? parts[1] : parts[0];
-            
-            // Lọc theo Cha hay Con tùy vào nút gạt
             let groupKey = ledgerGroupMode === 'category-parent' ? parentCat : tx.category;
             let displayCatName = ledgerGroupMode === 'category-parent' ? parentCat : childCat;
             
@@ -3327,7 +4197,6 @@
             else grouped[groupKey].totalExpense += amt;
          });
          
-         // Biến thành mảng, tính tổng tiền Net, xếp thằng tiêu nhiều nhất lên đầu
          let groupArr = Object.values(grouped);
          groupArr.sort((a, b) => {
             let aTotal = Math.abs(a.totalIncome - a.totalExpense);
@@ -3358,8 +4227,7 @@
                      ${sign}${sym} ${Math.abs(net).toLocaleString()}
                   </div>
                </div>`;
-               
-            // Dòng chi tiết Giao dịch con bên trong
+
             group.txs.forEach(tx => {
                let txIsDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
                let txIsIncome = (tx.type === "Khoản thu" || (txIsDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
@@ -3393,6 +4261,25 @@
       document.querySelectorAll('.card > div:last-child').forEach(el => {
          el.style.borderBottom = 'none';
       });
+    }
+
+    function initFabHidingObserver() {
+        const fab = document.getElementById('fabCaptureBill');
+        const summaryContainer = document.getElementById('dynamicBillSummaryContainer');
+        
+        if(!fab || !summaryContainer) return;
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    fab.classList.add('hidden-fab');
+                } else {
+                    fab.classList.remove('hidden-fab');
+                }
+            });
+        }, {
+            threshold: 0.1 
+        });
+        observer.observe(summaryContainer);
     }
   </script>
 </body>
