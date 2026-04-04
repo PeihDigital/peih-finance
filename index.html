@@ -74,9 +74,11 @@
     }
 
     #loginScreen {
-      justify-content: center;
+      justify-content: flex-start;
+      padding-top: 15vh;
       align-items: center;
-      padding: 20px;
+      padding-left: 20px;
+      padding-right: 20px;
     }
 
     .login-container {
@@ -1082,20 +1084,54 @@
     }
   </style>
 </head>
-<body>
-  <body data-theme="light">
+
+<body data-theme="light">
   <div id="loginScreen">
-    <div class="login-container">
+    
+    <div class="login-container" id="formLogin">
       <div class="login-title">PEIH FINANCE</div>
       <div class="login-subtitle">AUTHENTICATION REQUIRED</div>
-      <div class="input-group">
-        <input type="email" id="emailInput" class="input-field" placeholder="Email sếp">
-      </div>
-      <div class="input-group">
-        <input type="password" id="passwordInput" class="input-field" placeholder="Mật khẩu">
-      </div>
-      <button class="btn-submit" onclick="handleLogin()">XÁC NHẬN VÀO HỆ THỐNG</button>
+      <form id="appleAuthFormLogin" onsubmit="handleLogin(event)">
+        <div class="input-group" style="position: relative;">
+          <input type="text" id="usernameInput" class="input-field" placeholder="Tên đăng nhập" autocomplete="username" style="padding-right: 95px;">
+          <span style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 15px; pointer-events: none;">@peih.com</span>
+        </div>
+        <div class="input-group">
+          <input type="password" id="passwordInput" class="input-field" placeholder="Mật khẩu" autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-submit" id="btnLoginSubmit">ĐĂNG NHẬP</button>
+      </form>
     </div>
+    <div id="linkToRegister" style="margin-top: 20px; font-size: 14px; text-align: center; width: 100%;">
+      <a href="javascript:void(0)" style="color: var(--text-muted); text-decoration: underline; padding: 10px; display: inline-block;" onclick="showRegisterForm()">Đăng ký tài khoản mới</a>
+    </div>
+
+    <div class="login-container" id="formRegister" style="display: none;">
+      <div class="login-title">PEIH FINANCE</div>
+      <div class="login-subtitle">REGISTER ACCOUNT</div>
+
+      <div id="registerStep1">
+        <div class="input-group">
+          <input type="text" id="gasCodeInput" class="input-field" placeholder="Nhập mã đăng ký (AKfy...)">
+        </div>
+        <button class="btn-submit" id="btnVerifyCode" onclick="verifyGasCode()">KIỂM TRA MÃ</button>
+      </div>
+
+      <form id="registerStep2" style="display: none;" onsubmit="handleRegister(event)">
+        <div class="input-group" style="position: relative;">
+          <input type="text" id="regUsernameInput" class="input-field" placeholder="Tên đăng nhập" autocomplete="username" style="padding-right: 95px;">
+          <span style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 15px; pointer-events: none;">@peih.com</span>
+        </div>
+        <div class="input-group">
+          <input type="password" id="regPasswordInput" class="input-field" placeholder="Mật khẩu" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn-submit" id="btnRegSubmit">XÁC NHẬN ĐĂNG KÝ</button>
+      </form>
+    </div>
+    <div id="linkToLogin" style="margin-top: 20px; font-size: 14px; display: none; text-align: center; width: 100%;">
+      <a href="javascript:void(0)" style="color: var(--text-muted); text-decoration: underline; padding: 10px; display: inline-block;" onclick="showLoginForm()">Đã có tài khoản? Đăng nhập</a>
+    </div>
+
   </div>
 
   <div id="mainApp">
@@ -1556,22 +1592,186 @@
   </div>
   <script>
     // --- APP LOGIC ---
-    function handleLogin() {
-      const email = document.getElementById('emailInput').value;
-      const pass = document.getElementById('passwordInput').value;
-      const loginBtn = document.querySelector('.btn-submit');
-      loginBtn.innerText = "ĐANG KIỂM TRA...";
-      setTimeout(() => {
-        if(email !== "" && pass !== "") {
-          document.getElementById('loginScreen').style.display = 'none';
-          document.getElementById('mainApp').style.display = 'flex';
-          loadAppConfig(); 
-        } else {
-          alert("Sếp vui lòng nhập đủ Email và Mật khẩu!");
-          loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
-        }
-      }, 800);
+    // -- HÀM HỖ TRỢ TRÍCH XUẤT MÃ GAS (Chống lỡ tay copy nguyên đường link) --
+    function extractGasCode(input) {
+      if (!input) return "";
+      if (input.includes("/s/")) {
+        const match = input.match(/\/s\/([a-zA-Z0-9_-]+)/);
+        return match ? match[1] : input.trim();
+      }
+      return input.trim();
     }
+
+    // -- ĐIỀU KHIỂN GIAO DIỆN --
+    function showRegisterForm() {
+      document.getElementById('formLogin').style.display = 'none';
+      document.getElementById('linkToRegister').style.display = 'none';
+      document.getElementById('formRegister').style.display = 'block';
+      document.getElementById('linkToLogin').style.display = 'block';
+    }
+
+    function showLoginForm() {
+      document.getElementById('formRegister').style.display = 'none';
+      document.getElementById('linkToLogin').style.display = 'none';
+      document.getElementById('formLogin').style.display = 'block';
+      document.getElementById('linkToRegister').style.display = 'block';
+    }
+
+    // -- BƯỚC 1: KIỂM TRA MÃ GAS --
+    async function verifyGasCode() {
+      const rawCode = document.getElementById('gasCodeInput').value;
+      const code = extractGasCode(rawCode);
+      if (!code) return alert("Sếp chưa nhập mã!");
+      
+      document.getElementById('gasCodeInput').value = code; // Ghi đè lại mã ngắn gọn lên UI
+      const btn = document.getElementById('btnVerifyCode');
+      btn.innerText = "ĐANG KIỂM TRA...";
+      
+      try {
+        const tempUrl = `https://script.google.com/macros/s/${code}/exec`;
+        // Ping thử lên backend xem có sống không
+        const res = await fetch(tempUrl, {
+          method: "POST",
+          body: JSON.stringify({ action: "PING" }),
+          headers: { "Content-Type": "text/plain;charset=utf-8" }
+        });
+        const data = await res.json();
+        
+        if (data.status === "success" || data.ping === "ok") {
+           document.getElementById('registerStep1').style.display = 'none';
+           document.getElementById('registerStep2').style.display = 'block';
+        } else {
+           alert("Mã này phản hồi sai. Sếp kiểm tra lại nhé!");
+        }
+      } catch(e) {
+        alert("Mã không hợp lệ hoặc lỗi mạng!");
+      }
+      btn.innerText = "KIỂM TRA MÃ";
+    }
+
+    // -- BƯỚC 2: XỬ LÝ ĐĂNG KÝ --
+    async function handleRegister(event) {
+      if (event) event.preventDefault(); // Chặn tải lại trang
+      const user = document.getElementById('regUsernameInput').value.trim();
+      let pass = document.getElementById('regPasswordInput').value;
+      const rawCode = document.getElementById('gasCodeInput').value;
+      const code = extractGasCode(rawCode);
+      
+      if(!user || !pass) return alert("Sếp nhập đủ thông tin nhé!");
+      
+      const btn = document.getElementById('btnRegSubmit');
+      btn.innerText = "ĐANG ĐĂNG KÝ...";
+      
+      try {
+        const url = `https://script.google.com/macros/s/${code}/exec`;
+        const fullEmail = user + "@peih.com";
+        
+        const res = await fetch(url, {
+          method: "POST",
+          body: JSON.stringify({ action: "REGISTER", email: fullEmail, pass: pass }),
+          headers: { "Content-Type": "text/plain;charset=utf-8" }
+        });
+        const data = await res.json();
+        
+        if (data.status === "success") {
+           // Đánh lừa iPhone lưu gộp mật khẩu
+           const combinedPass = pass + "@@" + code;
+           document.getElementById('regPasswordInput').value = combinedPass; 
+           
+           localStorage.setItem('peih_user', user);
+           localStorage.setItem('peih_pass', pass);
+           localStorage.setItem('peih_gas_code', code);
+           
+           alert("Đăng ký thành công! Chào mừng sếp.");
+           document.getElementById('loginScreen').style.display = 'none';
+           document.getElementById('mainApp').style.display = 'flex';
+           loadAppConfig(); 
+        } else {
+           alert(data.message || "Tên đăng nhập đã tồn tại!");
+        }
+      } catch(e) {
+        alert("Lỗi kết nối tới Server!");
+      }
+      btn.innerText = "XÁC NHẬN ĐĂNG KÝ";
+    }
+
+    // -- XỬ LÝ ĐĂNG NHẬP (LỌC MÃ GỘP) --
+    async function handleLogin(event) {
+      if (event) event.preventDefault(); // Chặn tải lại trang
+      const user = document.getElementById('usernameInput').value.trim();
+      let passInput = document.getElementById('passwordInput').value;
+      
+      if (!user || !passInput) return alert("Sếp nhập đủ tên và mật khẩu nhé!");
+      
+      let pass = passInput;
+      let gasCode = localStorage.getItem('peih_gas_code');
+      
+      // Nếu iCloud tự điền mã gộp thì chẻ nó ra
+      if (passInput.includes('@@')) {
+        const parts = passInput.split('@@');
+        pass = parts[0];
+        gasCode = parts[1];
+      }
+      
+      if (!gasCode) {
+        alert("Máy mới chưa kết nối hệ thống! Chuyển sang Đăng ký để nhập mã kết nối.");
+        showRegisterForm();
+        return;
+      }
+      
+      const btn = document.getElementById('btnLoginSubmit');
+      btn.innerText = "ĐANG KIỂM TRA...";
+      
+      try {
+        const url = `https://script.google.com/macros/s/${gasCode}/exec`;
+        const fullEmail = user + "@peih.com";
+        
+        const res = await fetch(url, {
+          method: "POST",
+          body: JSON.stringify({ action: "LOGIN", email: fullEmail, pass: pass }),
+          headers: { "Content-Type": "text/plain;charset=utf-8" }
+        });
+        const data = await res.json();
+        
+        if (data.status === "success") {
+           // Gán lại mật khẩu gộp để iCloud lưu/cập nhật
+           document.getElementById('passwordInput').value = pass + "@@" + gasCode;
+           
+           localStorage.setItem('peih_user', user);
+           localStorage.setItem('peih_pass', pass);
+           localStorage.setItem('peih_gas_code', gasCode);
+           
+           document.getElementById('loginScreen').style.display = 'none';
+           document.getElementById('mainApp').style.display = 'flex';
+           loadAppConfig(); 
+        } else {
+           alert("Sai tên đăng nhập hoặc mật khẩu!");
+        }
+      } catch(e) {
+        alert("Mã đăng ký cũ đã hỏng. Vui lòng thử lại!");
+        localStorage.removeItem('peih_gas_code');
+        showRegisterForm();
+      }
+      btn.innerText = "ĐĂNG NHẬP";
+    }
+
+    // -- AUTO-LOGIN / HIỆN ĐĂNG KÝ CHO MÁY MỚI --
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUser = localStorage.getItem('peih_user');
+      const savedPass = localStorage.getItem('peih_pass');
+      const savedCode = localStorage.getItem('peih_gas_code');
+      
+      if (savedUser && savedPass && savedCode) {
+        // Điền sẵn vào form
+        document.getElementById('usernameInput').value = savedUser;
+        document.getElementById('passwordInput').value = savedPass + "@@" + savedCode;
+        // Bấm đăng nhập luôn
+        handleLogin();
+      } else {
+        // MÁY MỚI TINH CHƯA CÓ MÃ -> BẬT LUÔN FORM ĐĂNG KÝ
+        showLoginForm();
+      }
+    });
 
     function switchTab(tabId, element) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -1798,7 +1998,14 @@
     }
 
     // --- BACKEND & CONFIG LOGIC ---
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMlOvI6Fbw4AqnAf-09WgFlviIH9XOecyP6LBzgILvPnIXcXpTkwWKUqHjrwYaBi2kuw/exec";
+    function getGasUrl() {
+      const code = localStorage.getItem('peih_gas_code');
+      return code ? `https://script.google.com/macros/s/${code}/exec` : "";
+    }
+
+    function getFullEmail() {
+      return localStorage.getItem('peih_user') + "@peih.com";
+    }
 
     let appConfig = null;
     let transactionQueue = [];
@@ -1807,10 +2014,10 @@
     let allLedgerData = []; 
 
     async function loadLedgerData() {
-      const userEmail = document.getElementById('emailInput').value; 
+      const userEmail = getFullEmail(); 
       try {
-        const userEmail = document.getElementById('emailInput').value;
-        const response = await fetch(GAS_WEB_APP_URL, {
+        const userEmail = getFullEmail();
+        const response = await fetch(getGasUrl(), {
         method: "POST",
         body: JSON.stringify({ action: "GET_TRANSACTIONS", email: userEmail }),
         headers: { "Content-Type": "text/plain;charset=utf-8" }
@@ -1825,10 +2032,10 @@
       }
     }
     async function loadAppConfig() {
-      const userEmail = document.getElementById('emailInput').value;
+      const userEmail = getFullEmail();
       sessionStorage.clear();
       try {
-        const response = await fetch(GAS_WEB_APP_URL, {
+        const response = await fetch(getGasUrl(), {
           method: "POST",
           body: JSON.stringify({ action: "GET_CONFIG", email: userEmail }),
           headers: { "Content-Type": "text/plain;charset=utf-8" }
@@ -2135,9 +2342,9 @@
         splitBtn.disabled = true; 
       }
       
-      const userEmail = document.getElementById('emailInput').value;
+      const userEmail = getFullEmail();
 
-      fetch(GAS_WEB_APP_URL, {
+      fetch(getGasUrl(), {
         method: "POST",
         body: JSON.stringify({ action: "SAVE_BATCH", transactions: transactionQueue, email: userEmail }), 
         headers: { "Content-Type": "text/plain;charset=utf-8" }
@@ -2249,7 +2456,7 @@
       btn.disabled = true;
 
       try {
-        const response = await fetch(GAS_WEB_APP_URL, {
+        const response = await fetch(getGasUrl(), {
           method: "POST",
           body: JSON.stringify({ 
             action: "PARSE_RECEIPT", 
@@ -2589,7 +2796,7 @@
       btn.disabled = true;
 
       try {
-        const response = await fetch(GAS_WEB_APP_URL, {
+        const response = await fetch(getGasUrl(), {
           method: "POST",
           body: JSON.stringify({ 
             action: "PARSE_AI", 
