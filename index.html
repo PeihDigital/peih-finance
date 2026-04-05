@@ -3626,7 +3626,7 @@
       const hasMine = splitParticipants.some(p => p.id === 'mine');
 
       currentScannedBill.items.forEach((item, index) => {
-        const itemTotal = item.price * item.qty;
+        const itemTotal = item.price;
         
         if (!item.owners) {
           if (item.owner === 'shared') item.owners = splitParticipants.map(p=>p.id);
@@ -3766,7 +3766,7 @@
 
     function updateBillItemPrice(index, value) {
       const numValue = parseInt(value.replace(/\D/g, '')) || 0;
-      currentScannedBill.items[index].price = numValue / currentScannedBill.items[index].qty;
+      currentScannedBill.items[index].price = numValue;
       renderBillItems();
     }
 
@@ -3781,7 +3781,7 @@
       let actualSubTotal = 0;
 
       currentScannedBill.items.forEach(item => {
-        const lineTotal = item.price * item.qty;
+        const lineTotal = item.price;
         actualSubTotal += lineTotal;
         if (item.owners && item.owners.length > 0) {
           const share = lineTotal / item.owners.length;
