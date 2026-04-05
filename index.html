@@ -1577,16 +1577,7 @@
         </div>
 
         <div id="splitScanSection" style="display: none; flex-direction: column; flex: 1;">
-          <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-            <button id="btnCaptureBill" onclick="document.getElementById('billCaptureInput').click()" style="flex: 1; background-color: var(--form-bg); color: var(--text-main); border: 1px dashed var(--border-color); padding: 12px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer;">
-              📷 Chụp hoá đơn
-            </button>
-            <input type="file" id="billCaptureInput" accept="image/*" capture="environment" style="display: none;" onchange="executeRealAiBillParse(event)">
-            
-            <button onclick="mockAiParseBill()" style="flex: 1; background-color: #007aff; color: white; border: none; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer;">
-              ✨ Test UX
-            </button>
-          </div>
+          <input type="file" id="billCaptureInput" accept="image/*" multiple style="display: none;" onchange="executeRealAiBillParse(event)">
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 10px;">
             <div class="section-title" style="margin: 0;">DANH SÁCH MÓN</div>
@@ -1607,7 +1598,13 @@
           </div>
           
           <div id="splitItemsContainer" style="flex: 1; overflow-y: auto; background-color: var(--form-bg); border-radius: 16px; padding: 10px; border: 1px solid var(--border-color);">
-            <div style="text-align: center; color: var(--text-muted); margin-top: 20px; font-size: 13px;">Chưa có món nào. Chụp bill để AI tự động liệt kê.</div>
+            <div style="text-align: center; margin-top: 30px;">
+              <button onclick="document.getElementById('billCaptureInput').click()" style="background: transparent; border: 1px dashed var(--text-muted); color: var(--text-main); padding: 12px 24px; border-radius: 16px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                Chọn ảnh hoặc Chụp bill
+              </button>
+              <div style="color: var(--text-muted); margin-top: 15px; font-size: 13px;">Peih Advisory sẽ liệt kê món giúp sếp.</div>
+            </div>
           </div>
 
           <div id="dynamicBillSummaryContainer" style="background-color: var(--bg-card); padding: 15px; border-radius: 16px; margin-top: 15px; border: 1px solid var(--border-color); box-shadow: 0 -5px 20px rgba(0,0,0,0.4);">
@@ -1770,46 +1767,42 @@
       container.style.position = 'relative';
       
       let slider = container.querySelector('.segment-slider');
-      let isFirstTime = false;
+      
+      const targetLeft = btnElement.offsetLeft;
+      const targetWidth = btnElement.offsetWidth;
+      const targetRight = container.offsetWidth - (targetLeft + targetWidth);
+      const borderRadius = window.getComputedStyle(btnElement).borderRadius;
       
       if (!slider) {
         slider = document.createElement('div');
         slider.className = 'segment-slider';
         container.insertBefore(slider, container.firstChild);
-        isFirstTime = true;
-      }
-      
-      const targetLeft = btnElement.offsetLeft;
-      const targetWidth = btnElement.offsetWidth;
-      const borderRadius = window.getComputedStyle(btnElement).borderRadius;
-      
-      if (isFirstTime) {
-        slider.style.width = targetWidth + 'px';
-        slider.style.transform = `translateX(${targetLeft}px)`;
+        
+        slider.style.width = 'auto'; 
+        slider.style.transform = 'none';
+        slider.style.transition = 'none';
+        slider.style.left = targetLeft + 'px';
+        slider.style.right = targetRight + 'px';
         slider.style.borderRadius = borderRadius;
         return;
       }
       
-      const currentTransform = slider.style.transform;
-      let currentLeft = targetLeft;
-      if (currentTransform) {
-         const match = currentTransform.match(/translateX\(([-0-9.]+)px\)/);
-         if (match) currentLeft = parseFloat(match[1]);
+      const currentLeft = parseFloat(slider.style.left || 0);
+      const isMovingRight = targetLeft > currentLeft;
+      
+      const leadingEdge = '0.35s cubic-bezier(0.25, 1.4, 0.3, 1)'; 
+      const trailingEdge = '0.45s cubic-bezier(0.25, 1.4, 0.3, 1) 0.08s'; 
+      slider.style.width = 'auto';
+      slider.style.transform = 'none';
+      if (isMovingRight) {
+        slider.style.transition = `right ${leadingEdge}, left ${trailingEdge}`;
+      } else {
+        slider.style.transition = `left ${leadingEdge}, right ${trailingEdge}`;
       }
-      
-      const stretchLeft = Math.min(currentLeft, targetLeft);
-      const stretchWidth = Math.abs(targetLeft - currentLeft) + targetWidth;
-      
-      slider.style.transition = 'transform 0.12s ease-in, width 0.12s ease-in';
-      slider.style.transform = `translateX(${stretchLeft}px)`;
-      slider.style.width = stretchWidth + 'px';
+
+      slider.style.left = targetLeft + 'px';
+      slider.style.right = targetRight + 'px';
       slider.style.borderRadius = borderRadius;
-      
-      setTimeout(() => {
-        slider.style.transition = 'transform 0.35s cubic-bezier(0.4, 1.4, 0.4, 1), width 0.35s cubic-bezier(0.4, 1.4, 0.4, 1)';
-        slider.style.transform = `translateX(${targetLeft}px)`;
-        slider.style.width = targetWidth + 'px';
-      }, 100);
     }
 
     function applyTheme(mode) {
@@ -2016,7 +2009,7 @@
         if (data.status === "success") {
           appConfig = data.data;
           if (appConfig.wallets.length === 0) {
-            alert("Không tìm thấy dữ liệu cho tài khoản: " + userEmail + ". Sếp kiểm tra lại cột Email trong Google Sheets xem đã gõ đúng chữ '" + userEmail + "' chưa nhé!");
+            alert("Không tìm thấy dữ liệu cho tài khoản: " + userEmail + ". Sếp kiểm tra lại Email hoặc báo cho quản trị viên nhé! '" + userEmail + "' chưa nhé!");
           }  
           initDefaultValues();
           loadLedgerData();
@@ -2092,7 +2085,7 @@
       groupDiv.innerHTML = '';
 
       if (!appConfig.wallets || appConfig.wallets.length === 0) {
-        groupDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Sếp chưa cài đặt Ví nào trong Sheets!</div>';
+        groupDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Sếp chưa cài đặt Ví nào!</div>';
         return;
       }
 
@@ -3526,98 +3519,101 @@
       currentAiEditIndex = 'split_scan';
       openPersonModal();
     }
+    function clearAllBillItems() {
+      if (currentScannedBill) {
+        currentScannedBill.items = [];
+        currentScannedBill.tax = 0;
+        currentScannedBill.serviceCharge = 0;
+        currentScannedBill.total = 0;
+      }
+      renderBillItems();
+    }
+
     async function executeRealAiBillParse(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
 
-      const btn = document.getElementById('btnCaptureBill');
-      const originalText = btn.innerText;
-      btn.innerText = "⏳ Peih Advisory đang đọc Bill...";
-      btn.disabled = true;
-
-      try {
+      const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = async () => {
-          const base64 = reader.result.split(',')[1];
-          const mimeType = file.type || 'image/jpeg';
-          const response = await fetch(GAS_WEB_APP_URL, {
-            method: "POST",
-            body: JSON.stringify({ 
-              action: "PARSE_SPLIT_BILL", 
-              image: { base64, mimeType },
-              config: appConfig
-            }),
-            headers: { "Content-Type": "text/plain;charset=utf-8" }
-          });
+        reader.onload = () => resolve({
+          base64: reader.result.split(',')[1],
+          mimeType: file.type || 'image/jpeg'
+        });
+        reader.onerror = error => reject(error);
+      });
+
+      document.getElementById('splitItemsContainer').innerHTML = '<div style="text-align: center; margin-top: 30px; font-weight: bold; color: var(--text-main);">⏳ Peih Advisory đang đọc Bill...</div>';
+
+      try {
+        const imagesData = await Promise.all(Array.from(files).map(file => toBase64(file)));
+
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ 
+            action: "PARSE_SPLIT_BILL", 
+            images: imagesData,
+            image: imagesData[0], // Backup cho hệ thống cũ nếu cần
+            config: appConfig
+          }),
+          headers: { "Content-Type": "text/plain;charset=utf-8" }
+        });
+        
+        const data = await response.json();
+        if (data.status === "success") {
+          const countSpan = document.getElementById('scanPeopleCount');
+          const count = countSpan ? parseInt(countSpan.innerText) : 2;
           
-          const data = await response.json();
-          if (data.status === "success") {
-            const countSpan = document.getElementById('scanPeopleCount');
-            const count = countSpan ? parseInt(countSpan.innerText) : 2;
-            
-            if (splitParticipants.length < count) {
-               for(let i = splitParticipants.length + 1; i <= count; i++) {
-                   splitParticipants.push({id: 'p_' + Date.now() + i, name: 'Người ' + i});
-               }
-            }
-
-            currentScannedBill = {
-              items: data.data.items.map((item, idx) => ({
-                id: idx,
-                name: item.name,
-                price: item.price,
-                qty: item.qty || 1,
-                owners: ['mine'] // Ban đầu mặc định gán hết cho sếp
-              })),
-              tax: data.data.tax || 0,
-              serviceCharge: data.data.serviceCharge || 0,
-              total: data.data.total || 0,
-              currency: document.getElementById('quickSplitCurrency') ? document.getElementById('quickSplitCurrency').value : "VND"
-            };
-
-            renderBillItems();
-          } else {
-            alert("AI đọc xịt: " + data.message);
+          if (splitParticipants.length < count) {
+             for(let i = splitParticipants.length + 1; i <= count; i++) {
+                 splitParticipants.push({id: 'p_' + Date.now() + i, name: 'Người ' + i});
+             }
           }
-          btn.innerText = originalText;
-          btn.disabled = false;
-        };
+
+          if (!currentScannedBill) {
+            currentScannedBill = { items: [], tax: 0, serviceCharge: 0, total: 0, currency: "VND" };
+          }
+
+          const newItems = data.data.items.map((item, idx) => ({
+            id: Date.now() + idx,
+            name: item.name,
+            price: item.price,
+            qty: item.qty || 1,
+            owners: ['mine']
+          }));
+
+          currentScannedBill.items = currentScannedBill.items.concat(newItems);
+          currentScannedBill.tax += (data.data.tax || 0);
+          currentScannedBill.serviceCharge += (data.data.serviceCharge || 0);
+          currentScannedBill.total += (data.data.total || 0);
+          currentScannedBill.currency = document.getElementById('quickSplitCurrency') ? document.getElementById('quickSplitCurrency').value : "VND";
+
+          renderBillItems();
+        } else {
+          alert("AI đọc xịt: " + data.message);
+          renderBillItems();
+        }
       } catch (e) {
         alert("Lỗi đường truyền! Không thể bóc tách hoá đơn.");
-        btn.innerText = originalText;
-        btn.disabled = false;
+        renderBillItems();
       }
       event.target.value = ""; 
-    }
-    function mockAiParseBill() {
-      if (splitParticipants.length < 2) {
-          splitParticipants = [
-            { id: 'mine', name: 'Tôi' },
-            { id: 'p_2', name: 'Người 2' }
-          ];
-      }
-      currentScannedBill = {
-        items: [
-          { id: 1, name: "Bò Wagyu Nướng", price: 500000, qty: 1, owners: ['mine'] },
-          { id: 2, name: "Sashimi Cá Hồi", price: 300000, qty: 1, owners: splitParticipants.map(p=>p.id) },
-          { id: 3, name: "Bia Sapporo", price: 50000, qty: 4, owners: (splitParticipants.length > 1 ? [splitParticipants[1].id] : ['mine']) },
-          { id: 4, name: "Nước Suối", price: 20000, qty: 1, owners: ['mine'] }
-        ],
-        tax: 85000,
-        serviceCharge: 50000,
-        total: 1155000,
-        currency: "VND"
-      };
-      renderBillItems();
     }
 
     function renderBillItems() {
       const container = document.getElementById('splitItemsContainer');
       container.innerHTML = '';
 
-      if (currentScannedBill.items.length === 0) {
-        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 20px; font-size: 13px;">Chưa có món nào.</div>';
+      if (!currentScannedBill || !currentScannedBill.items || currentScannedBill.items.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; margin-top: 30px;">
+            <button onclick="document.getElementById('billCaptureInput').click()" style="background: transparent; border: 1px dashed var(--text-muted); color: var(--text-main); padding: 12px 24px; border-radius: 16px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              Chọn ảnh hoặc Chụp bill
+            </button>
+            <div style="color: var(--text-muted); margin-top: 15px; font-size: 13px;">Peih Advisory sẽ tự động liệt kê món giúp sếp.</div>
+          </div>
+        `;
         calculateBillSplit();
         return;
       }
@@ -3685,13 +3681,18 @@
       });
       
       const addMoreBtn = document.createElement('div');
-      addMoreBtn.style.textAlign = 'center';
+      addMoreBtn.style.display = 'flex';
+      addMoreBtn.style.justifyContent = 'center';
+      addMoreBtn.style.gap = '10px';
       addMoreBtn.style.marginTop = '15px';
       addMoreBtn.style.paddingBottom = '5px';
       addMoreBtn.innerHTML = `
-        <button onclick="document.getElementById('billCaptureInput').click()" style="background: transparent; border: 1px dashed var(--text-muted); color: var(--text-main); padding: 8px 20px; border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+        <button onclick="document.getElementById('billCaptureInput').click()" style="background: transparent; border: 1px dashed var(--text-muted); color: var(--text-main); padding: 8px 16px; border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
           Chụp thêm bill
+        </button>
+        <button onclick="clearAllBillItems()" style="background: transparent; border: 1px solid #ff3b30; color: #ff3b30; padding: 8px 16px; border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+          Xoá hết món
         </button>
       `;
       container.appendChild(addMoreBtn);
@@ -3989,12 +3990,11 @@
          transactionQueue.push({ type: "Khoản chi", wallet: wallet, currency: currency, amount: totalBillAmount.toString(), category: category, person: "", note: "Trả hộ cả bàn (Quét Bill)", date: date });
       }
 
-      document.getElementById('splitItemsContainer').innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 20px; font-size: 13px;">Chưa có món nào. Chụp hoá đơn để Peih Advisory liệt kê.</div>';
       const countSpan = document.getElementById('scanPeopleCount');
       if (countSpan) countSpan.innerText = "2";
-      currentScannedBill.items = [];
+      currentScannedBill = { items: [], tax: 0, serviceCharge: 0, total: 0, currency: "VND" };
       splitParticipants = [{ id: 'mine', name: 'Tôi' }, { id: 'p_2', name: 'Người 2' }];
-      calculateBillSplit();
+      renderBillItems();
 
       submitBatch();
     }
