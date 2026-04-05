@@ -1732,21 +1732,41 @@
 
   <script>
     // --- APP LOGIC ---
-    function handleLogin() {
-      const email = document.getElementById('emailInput').value;
+    async function handleLogin() {
+      const email = document.getElementById('emailInput').value.trim();
       const pass = document.getElementById('passwordInput').value;
       const loginBtn = document.querySelector('.btn-submit');
-      loginBtn.innerText = "ĐANG KIỂM TRA...";
-      setTimeout(() => {
-        if(email !== "" && pass !== "") {
+      
+      if (email === "" || pass === "") {
+        alert("Sếp vui lòng nhập đủ Email và Mật khẩu!");
+        return;
+      }
+
+      loginBtn.innerText = "ĐANG KIỂM TRA BẢO MẬT...";
+      loginBtn.disabled = true;
+
+      try {
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "LOGIN", email: email, password: pass }),
+          headers: { "Content-Type": "text/plain;charset=utf-8" }
+        });
+        
+        const data = await response.json();
+
+        if (data.status === "success") {
           document.getElementById('loginScreen').style.display = 'none';
           document.getElementById('mainApp').style.display = 'flex';
           loadAppConfig(); 
         } else {
-          alert("Sếp vui lòng nhập đủ Email và Mật khẩu!");
-          loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
+          alert(data.message || "Đăng nhập thất bại!");
         }
-      }, 800);
+      } catch (e) {
+        alert("Lỗi kết nối máy chủ! Sếp kiểm tra lại mạng nhé.");
+      }
+      
+      loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
+      loginBtn.disabled = false;
     }
 
     function switchTab(tabId, element) {
@@ -3468,6 +3488,7 @@
       { id: 'p_2', name: 'Người 2' }
     ];
     let currentEditingItemIndex = null;
+    let currentScannedBill = { items: [], tax: 0, serviceCharge: 0, total: 0, currency: document.getElementById('quickSplitCurrency') ? document.getElementById('quickSplitCurrency').value : "VND" };
 
     function changeSplitPeople(amount) {
       const countSpan = document.getElementById('scanPeopleCount');
@@ -3553,7 +3574,6 @@
           body: JSON.stringify({ 
             action: "PARSE_SPLIT_BILL", 
             images: imagesData,
-            image: imagesData[0], // Backup cho hệ thống cũ nếu cần
             config: appConfig
           }),
           headers: { "Content-Type": "text/plain;charset=utf-8" }
@@ -3571,7 +3591,7 @@
           }
 
           if (!currentScannedBill) {
-            currentScannedBill = { items: [], tax: 0, serviceCharge: 0, total: 0, currency: "VND" };
+            currentScannedBill = { items: [], tax: 0, serviceCharge: 0, total: 0, currency: document.getElementById('quickSplitCurrency') ? document.getElementById('quickSplitCurrency').value : "VND" };
           }
 
           const newItems = data.data.items.map((item, idx) => ({
@@ -3586,15 +3606,19 @@
           currentScannedBill.tax += (data.data.tax || 0);
           currentScannedBill.serviceCharge += (data.data.serviceCharge || 0);
           currentScannedBill.total += (data.data.total || 0);
-          currentScannedBill.currency = document.getElementById('quickSplitCurrency') ? document.getElementById('quickSplitCurrency').value : "VND";
+          
+          let aiDetectedCurrency = data.data.currency;
+          let uiSelectedCurrency = document.getElementById('quickSplitCurrency') ? document.getElementById('quickSplitCurrency').value : "VND";
+          let finalCurrency = (aiDetectedCurrency && ["VND", "JPY", "USD"].includes(aiDetectedCurrency)) ? aiDetectedCurrency : uiSelectedCurrency;
+          currentScannedBill.currency = finalCurrency;
 
           renderBillItems();
         } else {
-          alert("AI đọc xịt: " + data.message);
+          alert("Peih đọc xịt hicc: " + data.message);
           renderBillItems();
         }
       } catch (e) {
-        alert("Lỗi đường truyền! Không thể bóc tách hoá đơn.");
+        alert("Lỗi đường truyền! Hãy thử chọn lại ảnh.");
         renderBillItems();
       }
       event.target.value = ""; 
@@ -3780,6 +3804,9 @@
       });
       
       let actualSubTotal = 0;
+      
+      const isUSD = currentScannedBill.currency === 'USD';
+      const roundMoney = (val) => isUSD ? Math.round(val * 100) / 100 : Math.round(val);
 
       currentScannedBill.items.forEach(item => {
         const lineTotal = item.price;
@@ -3800,41 +3827,33 @@
       
       let myTotal = 0;
       let othersTotal = 0;
+      let sumCalculated = 0;
 
       splitParticipants.forEach(p => {
         const ratio = actualSubTotal > 0 ? (totals[p.id].subtotal / actualSubTotal) : 0;
-        const taxShare = Math.round(totalTaxFee * ratio);
-        const pTotal = totals[p.id].subtotal + taxShare;
+        const taxShare = totalTaxFee * ratio;
         
-        totals[p.id].tax = taxShare;
+        const exactTotal = totals[p.id].subtotal + taxShare;
+        const pTotal = roundMoney(exactTotal);
+        
+        totals[p.id].tax = roundMoney(taxShare);
         totals[p.id].total = pTotal;
         
-        finalBillBreakdown[p.id] = { name: p.name, amount: pTotal, subtotal: totals[p.id].subtotal, tax: taxShare };
+        finalBillBreakdown[p.id] = { name: p.name, amount: pTotal, subtotal: totals[p.id].subtotal, tax: totals[p.id].tax };
         
+        sumCalculated += pTotal;
+
         if (p.id === 'mine') myTotal += pTotal;
         else othersTotal += pTotal;
       });
 
-      const sumCalculated = myTotal + othersTotal;
-      const diff = currentScannedBill.total - sumCalculated;
-      
+      const diff = roundMoney(currentScannedBill.total - sumCalculated);
       const hasMine = splitParticipants.some(p => p.id === 'mine');
-      
-      if (hasMine) {
-         myTotal += diff; 
-         finalBillBreakdown['mine'].amount += diff;
-         totals['mine'].total += diff;
-      } else if (splitParticipants.length > 0) {
-         othersTotal += diff;
-         const firstId = splitParticipants[0].id;
-         finalBillBreakdown[firstId].amount += diff;
-         totals[firstId].total += diff;
-      }
 
-      renderDynamicSummary(totalTaxFee, myTotal, othersTotal, totals, hasMine);
+      renderDynamicSummary(totalTaxFee, myTotal, othersTotal, totals, hasMine, diff);
     }
 
-    function renderDynamicSummary(totalTaxFee, myTotal, othersTotal, totals, hasMine) {
+    function renderDynamicSummary(totalTaxFee, myTotal, othersTotal, totals, hasMine, diff = 0) {
       const container = document.getElementById('dynamicBillSummaryContainer');
       const curr = currentScannedBill.currency;
       let html = '';
@@ -3848,6 +3867,27 @@
           <span>Tổng Bill Gốc (Cần khớp):</span>
           <span>${currentScannedBill.total.toLocaleString()} ${curr}</span>
         </div>
+      `;
+
+      if (diff !== 0) {
+        let diffLabel = diff > 0 ? "Thiếu" : "Dư";
+        let absDiff = Math.abs(diff);
+        html += `
+          <div style="background-color: rgba(255, 149, 0, 0.1); border: 1px solid rgba(255, 149, 0, 0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="font-size: 16px;">💡</div>
+              <div style="font-size: 12px; color: #d07100; font-weight: bold;">
+                Tiền lẻ do làm tròn:
+              </div>
+            </div>
+            <div style="font-size: 14px; color: #d07100; font-weight: 800;">
+              ${diffLabel} ${absDiff.toLocaleString()} ${curr}
+            </div>
+          </div>
+        `;
+      }
+
+      html += `
         <div style="height: 1px; background: var(--border-color); margin-bottom: 15px;"></div>
       `;
 
