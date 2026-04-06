@@ -1243,7 +1243,28 @@
       background: var(--form-bg); font-size: 13px; color: var(--text-main);
     }
     .items-detail.open { display: block; animation: slideDown 0.2s ease-out forwards; }
+    .minimal-checkbox {
+      width: 24px; 
+      height: 24px;
+      border-radius: 6px;
+      border: 2px solid var(--border-color);
+      display: flex; 
+      justify-content: center; 
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .minimal-checkbox.checked {
+      background-color: #007aff;
+      border-color: #007aff;
+    }
+    .minimal-checkbox.checked::after {
+      content: '✓';
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: bold;
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body data-theme="light">
   <div id="loginScreen">
@@ -1289,8 +1310,12 @@
     <div id="tab-ledger" class="tab-content">
       
       <div class="ledger-header">
-        <button class="icon-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <button class="icon-btn" style="border: none; background: transparent; padding: 0; outline: none;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="11" fill="#1A1A1A"/>
+            <path d="M9.5 6V18" stroke="#E2E8F0" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M9.5 6H13.5C15.5 6 17 7.5 17 9.5C17 11.5 15.5 13 13.5 13H9.5" stroke="#E2E8F0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
         
         <div class="wallet-selector" onclick="openLedgerWalletMenu()">
@@ -1302,8 +1327,12 @@
         </div>
         
         <div class="right-actions">
-          <button class="icon-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <button class="icon-btn" onclick="toggleSortMode()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="7.5" y1="6" x2="16.5" y2="6"></line>
+            <line x1="7.5" y1="18" x2="16.5" y2="18"></line>
+            </svg>
           </button>
           <button class="icon-btn" onclick="openLedgerMainMenu()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle><circle cx="5" cy="12" r="1.5"></circle></svg>
@@ -1333,7 +1362,7 @@
         <div class="summary-row" style="justify-content: flex-end">
           <span id="ledgerGrandTotal" style="font-weight: bold;">-¥ 89,888</span>
         </div>
-        <div class="summary-link">Xem báo cáo cho giai đoạn này</div>
+        <div class="summary-link" onclick="openReportModal()">Xem báo cáo cho giai đoạn này</div>
       </div>
       <div id="ledgerGroupToggle" class="transaction-type-segment" style="display: none; margin-bottom: 15px;">
         <div class="type-btn active" onclick="setLedgerGroupMode('category-parent')" id="btnGroupParent">Nhóm Cha</div>
@@ -1534,6 +1563,15 @@
 
         <div id="splitQuickSection" style="display: flex; flex-direction: column; flex: 1;">
           <div class="form-container">
+
+            <div class="form-row" onclick="currentAiEditIndex = null; openWalletModal()">
+              <div class="row-left">
+                <svg class="minimal-icon" viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v2h2V3a2 2 0 0 0-2-2H5a4 4 0 0 0 0 8h16v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7h2v7h14v-7z"></path><path d="M16 15a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg>
+                <span id="splitWalletText" style="margin-left: 12px;">Đang tải...</span>
+              </div>
+              <span class="arrow">›</span>
+            </div>
+
             <div class="form-row amount-row">
               <select id="quickSplitCurrency" class="currency-select" style="margin-top: 10px; margin-right: 15px;" onchange="renderQuickSplitPreview()">
                 <option value="VND">VND</option>
@@ -1689,9 +1727,9 @@
     <div class="popover-menu" onclick="event.stopPropagation()">
       <div class="popover-item" onclick="openTimePeriodMenu()">Khoảng thời gian</div>
       <div class="popover-item" id="menuGroupToggle" onclick="toggleLedgerMainGroupMode()">Xem theo nhóm</div>
-      <div class="popover-item" onclick="alert('Tính năng Chuyển tiền đang phát triển')">Chuyển tiền đến ví khác</div>
-      <div class="popover-item" onclick="alert('Tính năng Điều chỉnh số dư đang phát triển')">Điều chỉnh số dư</div>
-      <div class="popover-item" onclick="alert('Tính năng Đồng bộ đang phát triển')">Đồng bộ ví</div>
+      <div class="popover-item" onclick="showToast('🚧 Tính năng này đang được phát triển')">Chuyển tiền đến ví khác</div>
+      <div class="popover-item" onclick="showToast('🚧 Tính năng này đang được phát triển')">Điều chỉnh số dư</div>
+      <div class="popover-item" onclick="showToast('🚧 Tính năng này đang được phát triển')">Đồng bộ ví</div>
     </div>
   </div>
 
@@ -1703,7 +1741,7 @@
       <div class="popover-item" onclick="selectLedgerTimeMode('Quý')">Quý</div>
       <div class="popover-item" onclick="selectLedgerTimeMode('Năm')">Năm</div>
       <div class="popover-item" onclick="selectLedgerTimeMode('Tất cả')">Tất cả</div>
-      <div class="popover-item" onclick="alert('Tuỳ chỉnh ngày đang phát triển')">Tuỳ chỉnh</div>
+      <div class="popover-item" onclick="showToast('Tuỳ chỉnh ngày đang phát triển')">Tuỳ chỉnh</div>
     </div>
   </div>
   </div> 
@@ -1719,6 +1757,29 @@
     </div>
   </div>
 
+  <div id="splitConfirmSheet" class="bottom-sheet-backdrop" style="display: flex; justify-content: center; align-items: center; z-index: 1200;" onclick="closeSplitConfirmSheet(event)">
+    <div class="centered-popover-pane" style="background: var(--bg-card); width: 90%; max-width: 360px; border-radius: 24px; padding: 25px 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column;" onclick="event.stopPropagation()">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="font-size: 18px; font-weight: 800; color: var(--text-main);">Xác nhận vào sổ</div>
+        <button style="background: transparent; color: var(--text-muted); border: none; font-size: 14px; cursor: pointer; padding: 0;" onclick="closeSplitConfirmSheet('force')">Huỷ</button>
+      </div>
+      
+      <div id="splitConfirmList" style="max-height: 50vh; overflow-y: auto; margin-bottom: 25px;">
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button onclick="executeFinalSplitSave('mine_only')" style="flex: 1; background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 14px; border-radius: 30px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          Chỉ lưu Tôi
+        </button>
+        <button onclick="executeFinalSplitSave('selected')" style="flex: 1; background-color: #007aff; color: #fff; border: none; padding: 14px; border-radius: 30px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          Lưu đã chọn
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <div id="aiNoteModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: rgba(0,0,0,0.6); z-index: 1500; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s;">
     <div style="background-color: var(--bg-card); width: 90%; max-width: 400px; border-radius: 20px; padding: 20px; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s;">
       <div style="font-weight: bold; font-size: 16px; margin-bottom: 15px; text-align: center; color: var(--text-main);">Chi tiết hoá đơn</div>
@@ -1726,6 +1787,69 @@
       <div style="display: flex; gap: 10px; margin-top: 20px;">
         <button onclick="closeAiNoteModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--btn-outline); background: transparent; color: var(--text-main); font-weight: bold; cursor: pointer;">Huỷ</button>
         <button onclick="saveAiNoteModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #007aff; color: #fff; font-weight: bold; cursor: pointer;">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="reportModal" class="sub-modal">
+    <div class="sub-modal-header">
+      <button class="btn-icon-circle" onclick="closeReportModal()">‹</button>
+      <span>Báo cáo giai đoạn</span>
+      <div style="width: 36px;"></div>
+    </div>
+    <div class="modal-content" style="background-color: var(--bg-main); padding-top: 20px; overflow-y: auto;">
+      
+      <div id="reportAiInsight" class="card" style="background: linear-gradient(135deg, #007aff 0%, #0056b3 100%); color: white; border: none;">
+        <div style="font-size: 12px; font-weight: bold; opacity: 0.8; margin-bottom: 5px;">PEIH ADVISORY ✨</div>
+        <div id="reportAiText" style="font-size: 15px; font-weight: 600; line-height: 1.4;">
+          Đang phân tích dữ liệu...
+        </div>
+      </div>
+
+      <div class="section-title">SO SÁNH DÒNG TIỀN</div>
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted);">TỔNG THU</div>
+            <div id="reportTotalIncome" style="font-size: 16px; font-weight: bold; color: #34c759;">0</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 11px; color: var(--text-muted);">TỔNG CHI</div>
+            <div id="reportTotalExpense" style="font-size: 16px; font-weight: bold; color: #ff3b30;">0</div>
+          </div>
+        </div>
+        <div class="progress-bar-bg" style="height: 8px; display: flex;">
+          <div id="reportIncomeBar" style="height: 100%; background-color: #34c759; width: 50%;"></div>
+          <div id="reportExpenseBar" style="height: 100%; background-color: #ff3b30; width: 50%;"></div>
+        </div>
+      </div>
+
+      <div class="section-title">PHÂN BỔ THU / CHI</div>
+      <div class="card" style="display: flex; flex-direction: column; align-items: center;">
+        <div style="display: flex; justify-content: center; width: 100%; margin-bottom: 20px;">
+          <div class="mode-toggle" id="pieChartToggle" style="width: 100%; max-width: 250px;">
+            <div class="mode-btn active" id="btnPieExpense" style="flex: 1; text-align: center;" onclick="switchPieChart('expense')">KHOẢN CHI</div>
+            <div class="mode-btn" id="btnPieIncome" style="flex: 1; text-align: center;" onclick="switchPieChart('income')">KHOẢN THU</div>
+          </div>
+        </div>
+        <canvas id="pieChartCanvas" width="250" height="250" style="max-width: 100%; max-height: 250px;"></canvas>
+      </div>
+
+      <div class="section-title">TOP GIAO DỊCH LỚN NHẤT</div>
+      <div class="card" id="reportTopListContainer" style="display: flex; flex-direction: column;">
+      </div>
+
+      <div class="section-title">XU HƯỚNG & DỰ BÁO TÍCH LŨY</div>
+      <div class="card">
+        <canvas id="trendLineChart" width="300" height="250" style="max-width: 100%;"></canvas>
+        <div id="forecastText" style="margin-top: 15px; font-size: 13px; font-weight: 600; color: var(--text-main); text-align: center;">
+        </div>
+        <div style="display: flex; justify-content: center; margin-top: 15px;">
+          <label style="display: flex; align-items: center; cursor: pointer; font-size: 12px; color: var(--text-muted); font-weight: 600;">
+            <input type="checkbox" id="toggleLastYear" onchange="toggleLastYearLine()" style="margin-right: 8px; width: 16px; height: 16px; accent-color: #34c759;">
+            Hiển thị cùng kỳ năm ngoái
+          </label>
+        </div>
       </div>
     </div>
   </div>
@@ -1738,7 +1862,7 @@
       const loginBtn = document.querySelector('.btn-submit');
       
       if (email === "" || pass === "") {
-        alert("Sếp vui lòng nhập đủ Email và Mật khẩu!");
+        showToast("Sếp vui lòng nhập đủ Email và Mật khẩu!");
         return;
       }
 
@@ -2029,15 +2153,15 @@
         if (data.status === "success") {
           appConfig = data.data;
           if (appConfig.wallets.length === 0) {
-            alert("Không tìm thấy dữ liệu cho tài khoản: " + userEmail + ". Sếp kiểm tra lại Email hoặc báo cho quản trị viên nhé! '" + userEmail + "' chưa nhé!");
+            alert("⚠️ Tài khoản: " + userEmail + "chưa được thiết lập dữ liệu. Vui lòng liên hệ hỗ trợ về tài khoản'" + userEmail + "' nhé!");
           }  
           initDefaultValues();
           loadLedgerData();
         } else {
-          alert("Lỗi từ máy chủ Google! Sếp nhớ Triển khai phiên bản mới nhé.");
+          alert("Lỗi từ máy chủ Google! Hệ thống đang bảo trì. Vui lòng quay lại sau!");
         }
       } catch (err) { 
-        alert("Lỗi đường truyền! Hãy kiểm tra lại link GAS.");
+        alert("Lỗi đường truyền! Kiểm tra lại internet nhé!");
       }
     }
 
@@ -2046,6 +2170,8 @@
       const defaultWallet = appConfig.wallets[0].name ? appConfig.wallets[0].name : appConfig.wallets[0];
       document.getElementById('hiddenWallet').value = defaultWallet;
       document.getElementById('mainWalletText').innerText = defaultWallet;
+      let splitText = document.getElementById('splitWalletText');
+      if (splitText) splitText.innerText = defaultWallet;
     }
 
     function changeMainType(typeStr, btnElement) {
@@ -2120,9 +2246,11 @@
         row.onclick = () => {
           if (currentAiEditIndex !== null) {
             aiParsedResults[currentAiEditIndex].wallet = walletName;
-            renderAiList(currentAiEditIndex); // Giữ nguyên thẻ sửa
+            renderAiList(currentAiEditIndex);
           } else {
             document.getElementById('mainWalletText').innerText = walletName;
+            let splitText = document.getElementById('splitWalletText');
+            if (splitText) splitText.innerText = walletName;
             document.getElementById('hiddenWallet').value = walletName;
           }
           closeWalletModal();
@@ -2269,12 +2397,12 @@
     function queueTransaction() {
       const amount = document.querySelector('.amount-input').value;
       if (!amount || amount === "0") {
-        alert("Sếp chưa nhập số tiền!");
+        showToast("Sếp chưa nhập số tiền!");
         return;
       }
       const category = document.getElementById('hiddenCategory').value;
       if (!category) {
-        alert("Sếp vui lòng chọn nhóm!");
+        showToast("Sếp vui lòng chọn nhóm!");
         return;
       }
 
@@ -2305,6 +2433,7 @@
       }
       document.querySelector('.amount-input').focus();
       if(document.getElementById('hiddenPerson')) document.getElementById('hiddenPerson').value = "";
+      showToast("⏳ Đã thêm vào hàng đợi!");
     }
 
     function submitBatch() {
@@ -2313,7 +2442,7 @@
         if (currentAmount && currentAmount !== "0") {
           queueTransaction();
         } else {
-          alert("Không có giao dịch nào để lưu!");
+          showToast("Không có giao dịch nào để lưu!");
           return;
         }
       }
@@ -2337,7 +2466,7 @@
       .then(res => res.json())
       .then(data => {
         if(data.status === "success") {
-          alert(`Đã lưu thành công ${transactionQueue.length} giao dịch!`);
+          showToast(`Đã lưu thành công ${transactionQueue.length} giao dịch!`);
           transactionQueue = [];
           
           btn.innerHTML = 'Lưu <span id="queueCount" style="display:none;">(0)</span>';
@@ -2607,7 +2736,7 @@
           if (!useTransferMode) {
              html += '<button onclick="useTransferMode=true; renderQuickSplitPreview()" style="background: #ff3b30; color: white; border: none; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(255,59,48,0.3);">💳 Chuyển khoản</button>';
              if (remainder !== 0) {
-                 html += `<div style="font-size: 12px; color: #ff3b30; font-weight: bold; margin-top: 6px;">Tiền thừa: ${remainder.toLocaleString()} ${sym}</div>`;
+                 html += `<div style="font-size: 12px; color: #ff3b30; font-weight: bold; margin-top: 6px;">Tiền thiếu: ${remainder.toLocaleString()} ${sym}</div>`;
              }
           } else {
              html += '<button onclick="useTransferMode=false; renderQuickSplitPreview()" style="background: #34c759; color: white; border: none; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(52,199,89,0.3);">💵 Tiền mặt</button>';
@@ -2774,7 +2903,7 @@
 
     async function parseAIPrompt() {
       const text = document.getElementById('aiPromptInput').value;
-      if (!text) return alert("Sếp chưa nhập nội dung!");
+      if (!text) return showToast("Sếp chưa nhập nội dung!");
       
       const btn = document.getElementById('btnAiParse');
       btn.innerText = "Đang xử lý...";
@@ -2795,6 +2924,7 @@
         const data = await response.json();
         
         if (data.status === "success") {
+          showToast("✨ Peih đã phân tích xong!");
           const selectedCurrency = document.getElementById('aiCurrencySelect').value;
           const newTxs = Array.isArray(data.data) ? data.data : [data.data];
           
@@ -2811,7 +2941,6 @@
             };
           });
           
-          // Nối dữ liệu mới LÊN TRÊN ĐẦU dữ liệu cũ
           aiParsedResults = [...processedTxs, ...aiParsedResults];
           
           renderAiList();
@@ -2830,19 +2959,14 @@
       const total = parseFloat(totalInput) || 0;
       
       if (total <= 0) {
-        alert("Sếp chưa nhập tổng tiền Bill!");
+        showToast("Sếp chưa nhập tổng tiền Bill!");
         return;
       }
 
       let wallet = document.getElementById('hiddenWallet').value;
       if (!wallet) {
-        const walletText = document.getElementById('mainWalletText').innerText;
-        if (walletText && walletText !== "Đang tải...") {
-           wallet = walletText;
-        } else {
-           alert("Sếp chưa chọn Ví nguồn! Sang tab THỦ CÔNG lướt chọn ví trước nhé.");
-           return;
-        }
+         showToast("💳 Vui lòng chọn Ví thanh toán!");
+         return;
       }
 
       let category = document.getElementById('hiddenCategory').value;
@@ -2914,39 +3038,34 @@
         return;
       }
 
+      pendingSplitTransactions = [];
+
       if (amounts[0] > 0) {
-        transactionQueue.push({
-          type: "Khoản chi",
-          wallet: wallet,
-          currency: currency,
-          amount: amounts[0].toString(),
-          category: category,
-          person: "",
-          note: "Phần của tôi (Chia bill)",
-          date: date
+        pendingSplitTransactions.push({
+            id: 'mine',
+            name: 'Phần của Tôi',
+            color: '#34c759',
+            tx: { type: "Khoản chi", wallet: wallet, currency: currency, amount: amounts[0].toString(), category: category, person: "", note: "Phần của tôi (Chia bill)", date: date }
         });
       }
 
       for (let i = 1; i < numPeople; i++) {
         if (amounts[i] > 0) {
-          transactionQueue.push({
-            type: "Vay/Nợ",
-            wallet: wallet,
-            currency: currency,
-            amount: amounts[i].toString(),
-            category: "Cho vay",
-            person: `Người thứ ${i}`,
-            note: "Tiền chia bill (Chờ đòi)",
-            date: date
+          pendingSplitTransactions.push({
+              id: 'p_quick_' + i,
+              name: `Người thứ ${i}`,
+              color: 'var(--text-main)',
+              tx: { type: "Vay/Nợ", wallet: wallet, currency: currency, amount: amounts[i].toString(), category: "Cho vay", person: `Người thứ ${i}`, note: "Tiền chia bill (Chờ đòi)", date: date }
           });
         }
       }
 
-      document.getElementById('quickSplitTotal').value = '';
-      customSplitValues = [];
-      renderQuickSplitPreview();
-      
-      submitBatch();
+      if (pendingSplitTransactions.length === 0) {
+         showToast("⚠️ Không có khoản tiền nào để phân bổ!");
+         return;
+      }
+
+      renderSplitConfirmSheet();
     }
 
     function toggleAiEdit(index) {
@@ -3366,7 +3485,6 @@
         else if (offset === -1) label = "TUẦN TRƯỚC";
         else if (offset === 1) label = "TUẦN SAU";
         else {
-           // Ép hiển thị chuẩn 13/04 - 19/04
            let sDay = String(start.getDate()).padStart(2, '0');
            let sMon = String(start.getMonth() + 1).padStart(2, '0');
            let eDay = String(end.getDate()).padStart(2, '0');
@@ -3448,7 +3566,7 @@
       currentLedgerTimeOffset = 0;
       renderTimeTabs();
     }
-    // --- BIẾN ĐIỀU KHIỂN CHẾ ĐỘ XEM THEO NHÓM ---
+
     let ledgerGroupMode = 'time'; 
 
     function toggleLedgerMainGroupMode() {
@@ -3607,11 +3725,17 @@
           currentScannedBill.serviceCharge += (data.data.serviceCharge || 0);
           currentScannedBill.total += (data.data.total || 0);
           
-          let aiDetectedCurrency = data.data.currency;
+          let aiCurrRaw = data.data.currency ? String(data.data.currency).trim().toUpperCase() : "";
+          if (aiCurrRaw.includes('YÊN') || aiCurrRaw.includes('YEN') || aiCurrRaw.includes('MAN') || aiCurrRaw.includes('¥') || aiCurrRaw === 'JPY') {
+              aiCurrRaw = 'JPY';
+          } else if (aiCurrRaw.includes('VNĐ') || aiCurrRaw.includes('VND') || aiCurrRaw.includes('ĐỒNG') || aiCurrRaw.includes('₫') || aiCurrRaw.includes('K') || aiCurrRaw.includes('CỦ')) {
+              aiCurrRaw = 'VND';
+          } else if (aiCurrRaw.includes('$') || aiCurrRaw.includes('USD')) {
+              aiCurrRaw = 'USD';
+          }
           let uiSelectedCurrency = document.getElementById('quickSplitCurrency') ? document.getElementById('quickSplitCurrency').value : "VND";
-          let finalCurrency = (aiDetectedCurrency && ["VND", "JPY", "USD"].includes(aiDetectedCurrency)) ? aiDetectedCurrency : uiSelectedCurrency;
+          let finalCurrency = ["VND", "JPY", "USD"].includes(aiCurrRaw) ? aiCurrRaw : uiSelectedCurrency;
           currentScannedBill.currency = finalCurrency;
-
           renderBillItems();
         } else {
           alert("Peih đọc xịt hicc: " + data.message);
@@ -3644,6 +3768,8 @@
 
       const numPeople = splitParticipants.length;
       const hasMine = splitParticipants.some(p => p.id === 'mine');
+      const currencySymbols = { "VND": "₫", "JPY": "¥", "USD": "$" };
+      const sym = currencySymbols[currentScannedBill.currency] || currentScannedBill.currency;
 
       currentScannedBill.items.forEach((item, index) => {
         const itemTotal = item.price;
@@ -3655,6 +3781,30 @@
         }
 
         let ownerHtml = '';
+        let selectedCount = item.owners.length;
+        let shareTextHtml = "";
+        
+        if (selectedCount > 0) {
+            let avatars = '';
+            let displayOwners = item.owners.slice(0, 3); 
+            
+            displayOwners.forEach((oid, idx) => {
+                let participant = splitParticipants.find(p => p.id === oid);
+                let initial = participant ? (oid === 'mine' ? 'T' : participant.name.charAt(0).toUpperCase()) : '?';
+                let zIndex = idx;
+                let overlap = idx === 0 ? '0' : '-8px';
+                
+                avatars += `<div style="box-sizing: border-box; width: 20px; height: 20px; border-radius: 50%; background-color: #fff; color: #007aff; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: 800; border: 1.5px solid #007aff; margin-left: ${overlap}; z-index: ${zIndex}; position: relative;">${initial}</div>`;
+            });
+            
+            shareTextHtml = `
+               <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                   <span style="font-weight: 700; font-size: 12px;">Đã chia ${selectedCount}</span>
+                   <div style="display: flex; align-items: center;">${avatars}</div>
+               </div>
+            `;
+        }
+
         if (numPeople <= 2 && hasMine) {
           const isMine = item.owners.length === 1 && item.owners[0] === 'mine';
           const isShared = item.owners.length === 2;
@@ -3671,19 +3821,20 @@
         else {
           if (hasMine) {
             const isMine = item.owners.length === 1 && item.owners[0] === 'mine';
-            const shareText = isMine ? "Chia món..." : (item.owners.length > 0 ? `Đã chia (${item.owners.length})` : "Chia món...");
+            const finalShareContent = isMine ? "Chia món..." : (selectedCount > 0 ? shareTextHtml : "Chia món...");
+            
             ownerHtml = `
               <div class="owner-segment">
                 <div class="owner-btn mine ${isMine ? 'active' : ''}" onclick="changeItemOwnerArray(${index}, 'mine')" style="flex: 0.6;">Của Tôi</div>
-                <div class="owner-btn shared ${!isMine ? 'active' : ''}" onclick="openItemSplitPopover(${index})" style="flex: 1; background: ${!isMine ? '#007aff' : 'transparent'}; color: ${!isMine ? '#fff' : 'var(--text-muted)'};">${shareText}</div>
+                <div class="owner-btn shared ${!isMine ? 'active' : ''}" onclick="openItemSplitPopover(${index})" style="flex: 1; background: ${!isMine ? '#007aff' : 'transparent'}; color: ${!isMine ? '#fff' : 'var(--text-muted)'}; display: flex; align-items: center; justify-content: center;">${finalShareContent}</div>
               </div>
             `;
           } else {
-            const shareText = item.owners.length > 0 ? `Đã chọn: ${item.owners.length} người` : "⚠️ Chọn người";
-            const btnColor = item.owners.length > 0 ? '#007aff' : '#ff3b30';
+            const finalShareContent = selectedCount > 0 ? shareTextHtml : "⚠️ Chọn người";
+            const btnColor = selectedCount > 0 ? '#007aff' : '#ff3b30';
             ownerHtml = `
               <div class="owner-segment">
-                <div class="owner-btn shared active" onclick="openItemSplitPopover(${index})" style="flex: 1; background: ${btnColor}; color: #fff;">${shareText}</div>
+                <div class="owner-btn shared active" onclick="openItemSplitPopover(${index})" style="flex: 1; background: ${btnColor}; color: #fff; display: flex; align-items: center; justify-content: center;">${finalShareContent}</div>
               </div>
             `;
           }
@@ -3697,7 +3848,10 @@
               <span class="bill-item-qty">${item.qty}x</span>
               <input type="text" class="bill-item-name" value="${item.name}" onchange="updateBillItem(${index}, 'name', this.value)">
             </div>
-            <input type="text" inputmode="numeric" class="bill-item-price" value="${itemTotal.toLocaleString()}" onchange="updateBillItemPrice(${index}, this.value)" onfocus="this.value='${itemTotal}'" onblur="this.value=parseInt(this.value || 0).toLocaleString()">
+            <div style="display: flex; align-items: center;">
+               <input type="text" inputmode="numeric" class="bill-item-price" value="${itemTotal.toLocaleString()}" onchange="updateBillItemPrice(${index}, this.value)" onfocus="this.value='${itemTotal}'" onblur="this.value=parseInt(this.value || 0).toLocaleString()" style="text-align: right; width: auto; max-width: 80px; margin-right: 4px;">
+               <span style="font-size: 13px; font-weight: 800; color: var(--text-muted);">${sym}</span>
+            </div>
           </div>
           ${ownerHtml}
         `;
@@ -3985,61 +4139,6 @@
       if(target) target.classList.toggle('open');
     }
 
-    function saveScannedBill() {
-      let wallet = document.getElementById('hiddenWallet').value;
-      if (!wallet) {
-        const walletText = document.getElementById('mainWalletText').innerText;
-        if (walletText && walletText !== "Đang tải...") wallet = walletText;
-        else {
-          alert("Sếp chưa chọn Ví nguồn bên tab THỦ CÔNG!");
-          return;
-        }
-      }
-
-      let category = document.getElementById('hiddenCategory').value;
-      if (!category) category = "Ăn uống"; 
-      
-      const date = document.getElementById('nativeDateInput').value;
-      const currency = currentScannedBill.currency;
-
-      const hasMine = splitParticipants.some(p => p.id === 'mine');
-
-      if (splitParticipants.length <= 2 && hasMine) {
-          const othersAmount = finalBillBreakdown[splitParticipants[1]?.id]?.amount || 0;
-          const pName = splitParticipants[1]?.name || "";
-          if (othersAmount > 0 && (!pName || pName.startsWith('Người '))) {
-            alert("Sếp vui lòng bấm chọn tên người nợ phần kia nhé!");
-            return;
-          }
-      }
-
-      let totalBillAmount = 0;
-      splitParticipants.forEach(p => {
-         const amt = finalBillBreakdown[p.id]?.amount || 0;
-         totalBillAmount += amt;
-         
-         if (amt > 0) {
-            if (p.id === 'mine') {
-              transactionQueue.push({ type: "Khoản chi", wallet: wallet, currency: currency, amount: amt.toString(), category: category, person: "", note: "Phần của tôi (Quét Bill)", date: date });
-            } else {
-              transactionQueue.push({ type: "Vay/Nợ", wallet: wallet, currency: currency, amount: amt.toString(), category: "Cho vay", person: p.name, note: "Tiền ăn chung (Quét Bill)", date: date });
-            }
-         }
-      });
-      if (!hasMine && totalBillAmount > 0) {
-         transactionQueue.push({ type: "Khoản chi", wallet: wallet, currency: currency, amount: totalBillAmount.toString(), category: category, person: "", note: "Trả hộ cả bàn (Quét Bill)", date: date });
-      }
-
-      const countSpan = document.getElementById('scanPeopleCount');
-      if (countSpan) countSpan.innerText = "2";
-      currentScannedBill = { items: [], tax: 0, serviceCharge: 0, total: 0, currency: "VND" };
-      splitParticipants = [{ id: 'mine', name: 'Tôi' }, { id: 'p_2', name: 'Người 2' }];
-      renderBillItems();
-
-      submitBatch();
-    }
-
-    // --- BỘ NÃO VẼ GIAO DỊCH (TÍCH HỢP XEM THEO NGÀY & NHÓM) ---
     function renderLedgerTransactions() {
       const container = document.getElementById('ledgerTxContainer');
       container.innerHTML = '';
@@ -4058,6 +4157,13 @@
          }
          return true;
       });
+      if (currentSortMode === 'desc') {
+          filteredData.sort((a, b) => Number(b.amount) - Number(a.amount));
+      } else if (currentSortMode === 'asc') {
+          filteredData.sort((a, b) => Number(a.amount) - Number(b.amount));
+      } else {
+          filteredData.sort((a, b) => new Date(b.date) - new Date(a.date));
+      }
 
       filteredData.forEach(tx => {
          let amt = Number(tx.amount) || 0;
@@ -4088,7 +4194,6 @@
 
       const currencySymbols = { "VND": "₫", "JPY": "¥", "USD": "$" };
 
-      // PHÂN LUỒNG 1: XEM THEO THỜI GIAN (NGÀY)
       if (ledgerGroupMode === 'time') {
          const grouped = {};
          const daysVN = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
@@ -4138,7 +4243,6 @@
            container.insertAdjacentHTML('beforeend', dayHtml);
          }
       } 
-      // PHÂN LUỒNG 2: XEM THEO NHÓM (CHA / CON)
       else {
          const grouped = {};
          
@@ -4171,7 +4275,6 @@
             else grouped[groupKey].totalExpense += amt;
          });
          
-         // Biến thành mảng, tính tổng tiền Net, xếp thằng tiêu nhiều nhất lên đầu
          let groupArr = Object.values(grouped);
          groupArr.sort((a, b) => {
             let aTotal = Math.abs(a.totalIncome - a.totalExpense);
@@ -4203,7 +4306,6 @@
                   </div>
                </div>`;
                
-            // Dòng chi tiết Giao dịch con bên trong
             group.txs.forEach(tx => {
                let txIsDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
                let txIsIncome = (tx.type === "Khoản thu" || (txIsDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
@@ -4213,8 +4315,6 @@
                
                let d = new Date(tx.date);
                let dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-               
-               // Bí kíp: Đang xem nhóm Cha thì hiện tên nhóm con. Đang xem nhóm Con thì hiện Ghi chú.
                let subTitle = ledgerGroupMode === 'category-parent' ? tx.category.split(' - ').pop() : (tx.note || "Không có ghi chú");
 
                groupHtml += `
@@ -4237,6 +4337,569 @@
       document.querySelectorAll('.card > div:last-child').forEach(el => {
          el.style.borderBottom = 'none';
       });
+    }
+    let currentSortMode = 'default'; 
+
+    function showToast(message) {
+      let wrapper = document.getElementById('peih-toast-wrapper');
+      if (!wrapper) {
+        const style = document.createElement('style');
+        style.innerHTML = `
+          .peih-toast-wrapper {
+            position: fixed; 
+            top: 100px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            z-index: 9999; 
+            pointer-events: none;
+            animation: floatBob 2.5s ease-in-out infinite; 
+          }
+          
+          .peih-toast-content {
+            padding: 10px 24px; 
+            border-radius: 24px; 
+            font-size: 13px; 
+            font-weight: bold;
+            white-space: nowrap; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            opacity: 0; 
+            transform: translateY(-120px) scale(0.9);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+          }
+          .peih-toast-wrapper.show .peih-toast-content {
+            opacity: 1; 
+            transform: translateY(0) scale(1);
+          }
+          .peih-toast-wrapper.hide .peih-toast-content {
+            opacity: 0; 
+            transform: translateY(-100px) scale(0.5);
+            transition: all 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+          }
+          @keyframes floatBob {
+            0%, 100% { margin-top: 0px; }
+            50% { margin-top: -6px; } 
+          }
+
+          [data-theme="light"] .peih-toast-content {
+            background: rgba(26, 26, 26, 0.85); 
+            color: #E2E8F0; 
+            border: 1px solid rgba(255, 255, 255, 0.15);
+          }
+
+          body:not([data-theme="light"]) .peih-toast-content {
+            background: rgba(250, 250, 250, 0.9); 
+            color: #1A1A1A; 
+            border: 1px solid rgba(0, 0, 0, 0.1);
+          }
+        `;
+        document.head.appendChild(style);
+        wrapper = document.createElement('div');
+        wrapper.id = 'peih-toast-wrapper';
+        wrapper.className = 'peih-toast-wrapper';
+        const content = document.createElement('div');
+        content.id = 'peih-toast-content';
+        content.className = 'peih-toast-content';
+        
+        wrapper.appendChild(content);
+        document.body.appendChild(wrapper);
+      }
+      const content = document.getElementById('peih-toast-content');
+      content.innerText = message;
+      wrapper.classList.remove('hide');
+      wrapper.classList.remove('show');
+      void wrapper.offsetWidth; 
+      wrapper.classList.add('show');
+      
+      if (wrapper.timeoutId) clearTimeout(wrapper.timeoutId);
+      wrapper.timeoutId = setTimeout(() => {
+        wrapper.classList.remove('show');
+        wrapper.classList.add('hide');
+      }, 4000);
+    }
+
+    function toggleSortMode() {
+        if (currentSortMode === 'default') {
+            currentSortMode = 'desc';
+            showToast("Sắp xếp: Lớn đến Nhỏ"); 
+        } else if (currentSortMode === 'desc') {
+            currentSortMode = 'asc';
+            showToast("Sắp xếp: Nhỏ đến Lớn");
+        } else {
+            currentSortMode = 'default';
+            showToast("Sắp xếp: Mặc định");
+        }
+        renderLedgerTransactions(); 
+    }
+    function closeSplitConfirmSheet(eventOrAction) {
+      if (eventOrAction !== 'force' && eventOrAction.target !== document.getElementById('splitConfirmSheet')) return;
+      document.getElementById('splitConfirmSheet').classList.remove('open');
+    }
+
+    function toggleConfirmCheck(pId) {
+      const checkbox = document.getElementById(`confirm-check-${pId}`);
+      if (checkbox) checkbox.classList.toggle('checked');
+    }
+
+    let pendingSplitTransactions = [];
+
+    function renderSplitConfirmSheet() {
+      const listContainer = document.getElementById('splitConfirmList');
+      listContainer.innerHTML = '';
+      
+      pendingSplitTransactions.forEach((item, index) => {
+          let borderBottom = index === pendingSplitTransactions.length - 1 ? 'none' : '1px solid var(--border-color)';
+          
+          listContainer.insertAdjacentHTML('beforeend', `
+              <div onclick="toggleConfirmCheck('${item.id}')" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: ${borderBottom}; cursor: pointer;">
+                  <div style="display: flex; align-items: center; gap: 16px;">
+                      <div class="minimal-checkbox checked" id="confirm-check-${item.id}"></div>
+                      <span style="font-size: 16px; color: var(--text-main); font-weight: 500;">${item.name}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                     <div style="width: 1px; height: 14px; background-color: var(--border-color);"></div>
+                     <span style="font-weight: 800; font-size: 17px; color: var(--text-main); margin-left: 4px;">${Number(item.tx.amount).toLocaleString()} <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">${item.tx.currency}</span></span>
+                  </div>
+              </div>
+          `);
+      });
+      document.getElementById('splitConfirmSheet').classList.add('open');
+    }
+
+    function saveScannedBill() {
+      let wallet = document.getElementById('hiddenWallet').value;
+      if (!wallet) {
+        showToast("💳 Sếp ơi, chọn Ví thanh toán đã nhé!");
+        return;
+      }
+
+      let category = document.getElementById('hiddenCategory').value || "Ăn uống"; 
+      const date = document.getElementById('nativeDateInput').value;
+      const currency = currentScannedBill.currency;
+
+      pendingSplitTransactions = [];
+
+      splitParticipants.forEach(p => {
+         const amt = finalBillBreakdown[p.id]?.amount || 0;
+         if (amt > 0) {
+            const isMine = p.id === 'mine';
+            pendingSplitTransactions.push({
+                id: p.id,
+                name: isMine ? 'Phần của Tôi' : p.name,
+                color: isMine ? '#34c759' : 'var(--text-main)',
+                tx: { 
+                    type: isMine ? "Khoản chi" : "Vay/Nợ", 
+                    wallet: wallet, 
+                    currency: currency, 
+                    amount: amt.toString(), 
+                    category: isMine ? category : "Cho vay", 
+                    person: isMine ? "" : p.name, 
+                    note: isMine ? "Phần của tôi (Quét Bill)" : "Tiền ăn chung (Quét Bill)", 
+                    date: date 
+                }
+            });
+         }
+      });
+
+      if (pendingSplitTransactions.length === 0) {
+         showToast("⚠️ Không có khoản tiền nào để lưu!");
+         return;
+      }
+      renderSplitConfirmSheet();
+    }
+
+    function executeFinalSplitSave(mode) {
+      let savedCount = 0;
+
+      pendingSplitTransactions.forEach(item => {
+         const isChecked = document.getElementById(`confirm-check-${item.id}`)?.classList.contains('checked');
+         
+         if (mode === 'mine_only' && item.id !== 'mine') return;
+         if (mode === 'selected' && !isChecked) return;
+
+         transactionQueue.push(item.tx);
+         savedCount++;
+      });
+
+      if (savedCount === 0) {
+         showToast("⚠️ Không có mục nào được chọn để lưu!");
+         return;
+      }
+
+      closeSplitConfirmSheet('force');
+
+      document.getElementById('quickSplitTotal').value = '';
+      customSplitValues = [];
+      renderQuickSplitPreview();
+
+      const countSpan = document.getElementById('scanPeopleCount');
+      if (countSpan) countSpan.innerText = "2";
+      currentScannedBill = { items: [], tax: 0, serviceCharge: 0, total: 0, currency: "VND" };
+      splitParticipants = [{ id: 'mine', name: 'Tôi' }, { id: 'p_2', name: 'Người 2' }];
+      renderBillItems();
+
+      submitBatch();
+    }
+    let reportPieChartInstance = null;
+    let trendLineChartInstance = null;
+    let reportDataCache = {
+        expenses: {},
+        incomes: {},
+        expenseColors: ['#ff3b30', '#ff9500', '#ffcc00', '#af52de', '#ff2d55', '#5856d6', '#8e8e93'],
+        incomeColors: ['#34c759', '#32ade6', '#007aff', '#30b0c7', '#34aadc']
+    };
+
+    function openReportModal() {
+      document.getElementById('reportModal').classList.add('open');
+      
+      let incomeTotal = 0;
+      let expenseTotal = 0;
+      reportDataCache.expenses = {};
+      reportDataCache.incomes = {};
+      
+      let currentRange = getLedgerTimeRange(currentLedgerTimeMode, currentLedgerTimeOffset);
+      let startTime = currentRange.start.getTime();
+      let endTime = currentRange.end.getTime();
+      
+      let filteredData = allLedgerData.filter(tx => {
+         if (!selectedLedgerWallets.includes('all') && !selectedLedgerWallets.includes(tx.wallet)) return false;
+         if (currentLedgerTimeMode !== 'Tất cả') {
+            let txTime = new Date(tx.date).getTime();
+            if (txTime < startTime || txTime > endTime) return false;
+         }
+         return true;
+      });
+
+      filteredData.forEach(tx => {
+         let amt = Number(tx.amount) || 0;
+         let isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
+         let isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
+         
+         let catParts = tx.category.split(' - ');
+         let parentCat = catParts[0];
+
+         if (isIncome) {
+             incomeTotal += amt;
+             if (!reportDataCache.incomes[parentCat]) reportDataCache.incomes[parentCat] = 0;
+             reportDataCache.incomes[parentCat] += amt;
+         } else {
+             expenseTotal += amt;
+             if (!reportDataCache.expenses[parentCat]) reportDataCache.expenses[parentCat] = 0;
+             reportDataCache.expenses[parentCat] += amt;
+         }
+      });
+
+      let sym = "₫";
+      if (filteredData.length > 0) {
+          const currencySymbols = { "VND": "₫", "JPY": "¥", "USD": "$" };
+          sym = currencySymbols[filteredData[0].currency] || filteredData[0].currency;
+      }
+
+      document.getElementById('reportTotalIncome').innerText = `+${incomeTotal.toLocaleString()} ${sym}`;
+      document.getElementById('reportTotalExpense').innerText = `-${expenseTotal.toLocaleString()} ${sym}`;
+
+      let totalFlow = incomeTotal + expenseTotal;
+      let incPct = totalFlow === 0 ? 50 : (incomeTotal / totalFlow) * 100;
+      let expPct = totalFlow === 0 ? 50 : (expenseTotal / totalFlow) * 100;
+      document.getElementById('reportIncomeBar').style.width = `${incPct}%`;
+      document.getElementById('reportExpenseBar').style.width = `${expPct}%`;
+
+      let aiText = "";
+      if (totalFlow === 0) {
+          aiText = "Sếp chưa có giao dịch nào trong giai đoạn này. Hãy nạp thêm dữ liệu nhé!";
+          document.getElementById('reportAiInsight').style.background = 'var(--bg-card)';
+          document.getElementById('reportAiInsight').style.color = 'var(--text-main)';
+      } else if (incomeTotal >= expenseTotal) {
+          aiText = `Tuyệt vời! Sếp đang thặng dư dương ${ (incomeTotal - expenseTotal).toLocaleString() } ${sym}. Cơ cấu dòng tiền rất khỏe!`;
+          document.getElementById('reportAiInsight').style.background = 'linear-gradient(135deg, #34c759 0%, #248a3d 100%)';
+          document.getElementById('reportAiInsight').style.color = 'white';
+      } else {
+          aiText = `Chú ý! Sếp đang thâm hụt ${ (expenseTotal - incomeTotal).toLocaleString() } ${sym}. Xu hướng chi tiêu đang vượt mức thu nhập!`;
+          document.getElementById('reportAiInsight').style.background = 'linear-gradient(135deg, #ff3b30 0%, #b3241d 100%)';
+          document.getElementById('reportAiInsight').style.color = 'white';
+      }
+      document.getElementById('reportAiText').innerText = aiText;
+
+      switchPieChart('expense');
+
+      let topExpenses = Object.keys(reportDataCache.expenses).map(cat => ({ name: cat, amount: reportDataCache.expenses[cat] }));
+      topExpenses.sort((a, b) => b.amount - a.amount);
+      let top3Exp = topExpenses.slice(0, 3);
+
+      let topIncomes = Object.keys(reportDataCache.incomes).map(cat => ({ name: cat, amount: reportDataCache.incomes[cat] }));
+      topIncomes.sort((a, b) => b.amount - a.amount);
+      let top1Inc = topIncomes.slice(0, 1);
+
+      let topHtml = '';
+      if (top1Inc.length > 0) {
+          topHtml += `<div style="font-size: 12px; font-weight: 800; color: #34c759; margin-bottom: 10px; letter-spacing: 1px;">🏆 NGUỒN THU CHÍNH</div>`;
+          let maxInc = topIncomes[0].amount;
+          let item = top1Inc[0];
+          let pct = (item.amount / maxInc) * 100;
+          topHtml += `
+              <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                  <div style="font-weight: 600; font-size: 14px;">1. ${item.name}</div>
+                  <div style="font-weight: bold; font-size: 14px; color: #34c759;">+${item.amount.toLocaleString()} ${sym}</div>
+                </div>
+                <div class="progress-bar-bg" style="height: 6px; background-color: var(--border-color);">
+                  <div class="progress-bar-fill" style="width: ${pct}%; background-color: #34c759;"></div>
+                </div>
+              </div>
+          `;
+      }
+
+      if (top3Exp.length > 0) {
+          topHtml += `<div style="font-size: 12px; font-weight: 800; color: #ff3b30; margin-bottom: 10px; letter-spacing: 1px;">🔥 CHI TIÊU NHIỀU NHẤT</div>`;
+          let maxExp = top3Exp[0].amount;
+          top3Exp.forEach((item, idx) => {
+              let pct = (item.amount / maxExp) * 100;
+              topHtml += `
+                  <div style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                      <div style="font-weight: 600; font-size: 14px;">${idx + 1}. ${item.name}</div>
+                      <div style="font-weight: bold; font-size: 14px; color: #ff3b30;">-${item.amount.toLocaleString()} ${sym}</div>
+                    </div>
+                    <div class="progress-bar-bg" style="height: 6px; background-color: var(--border-color);">
+                      <div class="progress-bar-fill" style="width: ${pct}%; background-color: #ff3b30;"></div>
+                    </div>
+                  </div>
+              `;
+          });
+      }
+      
+      if (topHtml === '') {
+          topHtml = '<div style="color: var(--text-muted); font-size: 13px; text-align: center;">Chưa có dữ liệu để xếp hạng.</div>';
+      }
+      document.getElementById('reportTopListContainer').innerHTML = topHtml;
+
+      let periodDuration = endTime - startTime;
+      let isSingleDay = Math.round(periodDuration / 86400000) <= 1;
+      let daysCount = isSingleDay ? 24 : Math.round(periodDuration / 86400000);
+      if (daysCount <= 0 || daysCount > 366) daysCount = 30;
+
+      let labels = isSingleDay 
+          ? Array.from({length: 24}, (_, i) => i + "h") 
+          : Array.from({length: daysCount}, (_, i) => i + 1);
+
+      function getCumulative(startT, endT) {
+          let data = new Array(daysCount).fill(0);
+          let pDuration = endT - startT;
+          allLedgerData.forEach(tx => {
+              if (!selectedLedgerWallets.includes('all') && !selectedLedgerWallets.includes(tx.wallet)) return;
+              let txTime = new Date(tx.date).getTime();
+              if (txTime >= startT && txTime <= endT) {
+                  let isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
+                  let isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
+                  if (!isIncome) {
+                      let step = isSingleDay 
+                          ? new Date(txTime).getHours() 
+                          : Math.floor(((txTime - startT) / pDuration) * daysCount);
+                      if(step >= daysCount) step = daysCount - 1;
+                      if(step < 0) step = 0;
+                      data[step] += (Number(tx.amount) || 0);
+                  }
+              }
+          });
+          let sum = 0;
+          return data.map(val => { sum += val; return sum; });
+      }
+
+      let currentCumul = getCumulative(startTime, endTime);
+      let prev1Cumul = getCumulative(startTime - periodDuration, endTime - periodDuration);
+      let prev2Cumul = getCumulative(startTime - 2 * periodDuration, endTime - 2 * periodDuration);
+      let prev3Cumul = getCumulative(startTime - 3 * periodDuration, endTime - 3 * periodDuration);
+      let avg3Cumul = currentCumul.map((_, i) => (prev1Cumul[i] + prev2Cumul[i] + prev3Cumul[i]) / 3);
+      let lastYearStart = new Date(startTime);
+      lastYearStart.setFullYear(lastYearStart.getFullYear() - 1);
+      let lastYearEnd = new Date(endTime);
+      lastYearEnd.setFullYear(lastYearEnd.getFullYear() - 1);
+      let lastYearCumul = getCumulative(lastYearStart.getTime(), lastYearEnd.getTime());
+      let toggleEl = document.getElementById('toggleLastYear');
+      if (toggleEl) toggleEl.checked = false;
+
+      let actualLine = [];
+      let forecastLine = [];
+      let now = new Date().getTime();
+      let currentStep = -1;
+
+      if (now >= startTime && now <= endTime) {
+          currentStep = Math.floor(((now - startTime) / periodDuration) * daysCount);
+      } else if (now > endTime) {
+          currentStep = daysCount;
+      }
+      let totalAvgSpent = avg3Cumul[daysCount - 1]; 
+      let historicalDailyRate = totalAvgSpent / daysCount;
+
+      for (let i = 0; i < daysCount; i++) {
+          if (currentStep === -1 || currentStep >= daysCount) {
+              actualLine.push(currentCumul[i]);
+              forecastLine.push(null);
+          } else {
+              if (i <= currentStep) {
+                  actualLine.push(currentCumul[i]);
+                  forecastLine.push(i === currentStep ? currentCumul[i] : null);
+              } else {
+                  actualLine.push(null);
+                  let daysRemaining = i - currentStep;
+                  forecastLine[i] = currentCumul[currentStep] + (historicalDailyRate * daysRemaining);
+              }
+          }
+      }
+
+      let forecastedEndValue = forecastLine[daysCount - 1] || actualLine[daysCount - 1];
+      let avgEndValue = avg3Cumul[daysCount - 1];
+      document.getElementById('forecastText').innerHTML = 
+          `Dự báo cuối kỳ: <span style="color:#ff3b30">${Math.round(forecastedEndValue).toLocaleString()} ${sym}</span><br>` +
+          `<span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Trung bình 3 kỳ trước: ${Math.round(avgEndValue).toLocaleString()} ${sym})</span>`;
+
+      if (trendLineChartInstance) trendLineChartInstance.destroy();
+      const ctxTrend = document.getElementById('trendLineChart').getContext('2d');
+      trendLineChartInstance = new Chart(ctxTrend, {
+          type: 'line',
+          data: {
+              labels: labels,
+              datasets: [
+                  {
+                      label: 'Thực tế',
+                      data: actualLine,
+                      borderColor: '#ff3b30',
+                      borderWidth: 2,
+                      tension: 0.2,
+                      pointRadius: 0
+                  },
+                  {
+                      label: 'Dự báo',
+                      data: forecastLine,
+                      borderColor: '#ff3b30',
+                      borderWidth: 2,
+                      borderDash: [5, 5],
+                      tension: 0.2,
+                      pointRadius: 0
+                  },
+                  {
+                      label: 'Trung bình 3 kỳ',
+                      data: avg3Cumul,
+                      borderColor: '#007aff',
+                      borderWidth: 1.5,
+                      tension: 0.2,
+                      pointRadius: 0
+                  },
+                  {
+                      label: 'Kỳ trước',
+                      data: prev1Cumul,
+                      borderColor: '#8e8e93',
+                      borderWidth: 1.5,
+                      tension: 0.2,
+                      pointRadius: 0
+                  },
+                  {
+                      label: 'Năm ngoái',
+                      data: lastYearCumul,
+                      borderColor: '#34c759', 
+                      borderWidth: 1.5,
+                      borderDash: [3, 3],
+                      tension: 0.2,
+                      pointRadius: 0,
+                      hidden: true 
+                  }
+              ]
+          },
+          options: { 
+              responsive: true, 
+              interaction: { mode: 'index', intersect: false },
+              scales: { 
+                y: { 
+                  display: true,
+                  position: 'right', 
+                  ticks: {
+                    color: '#888',
+                    font: { size: 9 },
+                    callback: function(value) {
+                      if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                      if (value >= 1000) return (value / 1000) + 'k';
+                      return value;
+                    }
+                  },
+                  grid: {
+                    color: 'rgba(136, 136, 136, 0.1)',
+                    drawBorder: false
+                  }
+                }, 
+                x: { 
+                  ticks: { maxTicksLimit: 6, color: '#888', font: { size: 10 } }, 
+                  grid: { display: false } 
+                } 
+              }, 
+              plugins: { 
+                legend: { 
+                  display: true, 
+                  position: 'bottom', 
+                  labels: { 
+                    boxWidth: 12, 
+                    font: {size: 10}, 
+                    color: '#888', 
+                    padding: 15,
+                    // Lọc bỏ nhãn "Năm ngoái" (index 4) khỏi phần chú thích
+                    filter: function(item, chart) {
+                        return item.datasetIndex < 4;
+                    }
+                  } 
+                } 
+              } 
+          }
+      });
+    }
+
+    function switchPieChart(type) {
+        document.getElementById('btnPieExpense').classList.remove('active');
+        document.getElementById('btnPieIncome').classList.remove('active');
+
+        let dataObj = {};
+        let currentColors = [];
+        
+        if (type === 'expense') {
+            document.getElementById('btnPieExpense').classList.add('active');
+            moveSlider('pieChartToggle', document.getElementById('btnPieExpense'));
+            dataObj = reportDataCache.expenses;
+            currentColors = reportDataCache.expenseColors;
+        } else {
+            document.getElementById('btnPieIncome').classList.add('active');
+            moveSlider('pieChartToggle', document.getElementById('btnPieIncome'));
+            dataObj = reportDataCache.incomes;
+            currentColors = reportDataCache.incomeColors;
+        }
+
+        if (reportPieChartInstance) reportPieChartInstance.destroy();
+        const ctxExp = document.getElementById('pieChartCanvas').getContext('2d');
+        reportPieChartInstance = new Chart(ctxExp, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(dataObj),
+                datasets: [{
+                    data: Object.values(dataObj),
+                    backgroundColor: currentColors,
+                    borderWidth: 0
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { position: 'right', labels: { color: '#888', font: {size: 11}, boxWidth: 12 } } } 
+            }
+        });
+    }
+    function toggleLastYearLine() {
+      if (trendLineChartInstance) {
+          const isChecked = document.getElementById('toggleLastYear').checked;
+          trendLineChartInstance.data.datasets[4].hidden = !isChecked;
+          trendLineChartInstance.update();
+      }
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.remove('open');
     }
   </script>
 </body>
