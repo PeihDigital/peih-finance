@@ -433,16 +433,21 @@
     }
 
     .btn-icon-circle {
-      width: 36px;
-      height: 36px;
-      border-radius: 18px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
       background-color: var(--form-bg);
       display: flex;
       justify-content: center;
       align-items: center;
-      border: none;
+      border: 1px solid var(--border-color);
       color: var(--text-main);
       cursor: pointer;
+      /* Kích thước vừa vặn, nét thanh mảnh */
+      font-size: 20px; 
+      font-weight: 300; 
+      line-height: 1;
+      padding-bottom: 2px;
     }
 
     .list-container {
@@ -1358,9 +1363,17 @@
           <span style="color: var(--text-muted);">Tiền ra</span>
           <span class="" id="ledgerExpenseTotal">-¥ 89,888</span>
         </div>
+        
         <div class="summary-divider"></div>
-        <div class="summary-row" style="justify-content: flex-end">
-          <span id="ledgerGrandTotal" style="font-weight: bold;">-¥ 89,888</span>
+        <div class="summary-row" style="align-items: center;">
+          <div id="globalCurrencyWrapper" style="display: flex; align-items: center;">
+            <select id="globalCurrencySelect" class="currency-select" style="margin-top: 0; padding: 4px 10px; font-size: 12px; width: auto;" onchange="renderLedgerTransactions(); if(document.getElementById('reportModal').classList.contains('open')) openReportModal();">
+              <option value="VND">VND</option>
+              <option value="JPY">JPY</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+          <span id="ledgerGrandTotal" style="font-weight: bold; font-size: 16px; margin-left: auto;">-¥ 89,888</span>
         </div>
         <div class="summary-link" onclick="openReportModal()">Xem báo cáo cho giai đoạn này</div>
       </div>
@@ -1459,7 +1472,7 @@
           </div>
           
           <div class="form-row amount-row">
-            <select class="currency-select">
+            <select id="manualCurrencySelect" class="currency-select">
               <option value="VND">VND</option>
               <option value="USD">USD</option>
               <option value="JPY">JPY</option>
@@ -1893,6 +1906,7 @@
         if (data.status === "success") {
           document.getElementById('loginScreen').style.display = 'none';
           document.getElementById('mainApp').style.display = 'flex';
+          loadLedgerData();
           loadAppConfig(); 
         } else {
           alert(data.message || "Đăng nhập thất bại!");
@@ -2180,7 +2194,8 @@
             reportEnd: currentRange.end.getTime(),
             wallets: selectedLedgerWallets,
             timeMode: 'Tháng',
-            timeOffset: 0
+            timeOffset: 0,
+            targetCurrency: document.getElementById('globalCurrencySelect').value // <-- THÊM DÒNG NÀY
           }),
           headers: { "Content-Type": "text/plain;charset=utf-8" }
         });
@@ -2189,7 +2204,10 @@
         
         if (data.status === "success") {
           allLedgerData = data.data.transactions;
-          window.preCalculatedReport = data.data.report;
+          window.peihReportCache = {};
+          let currentTargetCurr = document.getElementById('globalCurrencySelect').value;
+          window.peihReportCache[currentTargetCurr] = data.data.report;
+          window.exchangeRates = data.data.rates;
           
           try {
             localStorage.setItem(cacheKey, JSON.stringify(data.data));
@@ -2220,7 +2238,6 @@
             alert("⚠️ Tài khoản: " + userEmail + "chưa được thiết lập dữ liệu. Vui lòng liên hệ hỗ trợ về tài khoản'" + userEmail + "' nhé!");
           }  
           initDefaultValues();
-          loadLedgerData();
         } else {
           alert("Lỗi từ máy chủ Google! Hệ thống đang bảo trì. Vui lòng quay lại sau!");
         }
@@ -2475,7 +2492,7 @@
       const tx = {
         type: currentMainType,
         wallet: document.getElementById('hiddenWallet').value,
-        currency: document.querySelector('.currency-select').value,
+        currency: document.getElementById('manualCurrencySelect').value,
         amount: amount,
         category: category,
         person: document.getElementById('hiddenPerson') ? document.getElementById('hiddenPerson').value : "",
@@ -2542,6 +2559,7 @@
           }
           
           renderQueue();
+          loadLedgerData();
           closeAddModal();
         }
       })
@@ -3490,21 +3508,6 @@
         }
       }
     }
-
-    function addNewPerson() {
-      const name = prompt("Nhập tên Đối tác Vay / Cho vay mới:");
-      if (name && name.trim() !== "") {
-        if(!appConfig.activeDebtors) appConfig.activeDebtors = [];
-        if(!appConfig.activeDebtors.includes(name.trim())) {
-          appConfig.activeDebtors.push(name.trim());
-        }
-        if (currentAiEditIndex === 'split_scan') {
-           toggleSplitPerson(name.trim());
-        } else {
-           selectPerson(name.trim());
-        }
-      }
-    }
     function openLedgerMainMenu() {
       document.getElementById('ledgerMainMenu').classList.add('open');
     }
@@ -3528,16 +3531,13 @@
     let currentLedgerTimeOffset = 0; 
 
     function getLedgerTimeRange(mode, offset) {
-      let start = new Date();
-      let end = new Date();
       let label = "";
       let today = new Date();
-      start.setHours(0,0,0,0);
-      end.setHours(23,59,59,999);
-
+      // Khởi tạo ngày bắt đầu cực chuẩn
+      let start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+      
       if (mode === 'Ngày') {
         start.setDate(today.getDate() + offset);
-        end.setDate(today.getDate() + offset);
         if (offset === 0) label = "HÔM NAY";
         else if (offset === -1) label = "HÔM QUA";
         else if (offset === 1) label = "NGÀY MAI";
@@ -3546,21 +3546,12 @@
       else if (mode === 'Tuần') {
         let day = today.getDay() || 7; 
         start.setDate(today.getDate() - day + 1 + (offset * 7));
-        end.setDate(start.getDate() + 6);
         if (offset === 0) label = "TUẦN NÀY";
         else if (offset === -1) label = "TUẦN TRƯỚC";
         else if (offset === 1) label = "TUẦN SAU";
-        else {
-           let sDay = String(start.getDate()).padStart(2, '0');
-           let sMon = String(start.getMonth() + 1).padStart(2, '0');
-           let eDay = String(end.getDate()).padStart(2, '0');
-           let eMon = String(end.getMonth() + 1).padStart(2, '0');
-           label = `${sDay}/${sMon} - ${eDay}/${eMon}`;
-        }
       }
       else if (mode === 'Tháng') {
-        start.setMonth(today.getMonth() + offset, 1);
-        end.setMonth(start.getMonth() + 1, 0); 
+        start.setFullYear(today.getFullYear(), today.getMonth() + offset, 1);
         if (offset === 0) label = "THÁNG NÀY";
         else if (offset === -1) label = "THÁNG TRƯỚC";
         else if (offset === 1) label = "THÁNG SAU";
@@ -3568,8 +3559,7 @@
       }
       else if (mode === 'Quý') {
         let currentQuarter = Math.floor(today.getMonth() / 3);
-        start.setMonth((currentQuarter + offset) * 3, 1);
-        end.setMonth(start.getMonth() + 3, 0);
+        start.setFullYear(today.getFullYear(), (currentQuarter + offset) * 3, 1);
         if (offset === 0) label = "QUÝ NÀY";
         else if (offset === -1) label = "QUÝ TRƯỚC";
         else if (offset === 1) label = "QUÝ SAU";
@@ -3577,16 +3567,39 @@
       }
       else if (mode === 'Năm') {
         start.setFullYear(today.getFullYear() + offset, 0, 1);
-        end.setFullYear(today.getFullYear() + offset, 11, 31);
         if (offset === 0) label = "NĂM NAY";
         else if (offset === -1) label = "NĂM NGOÁI";
         else if (offset === 1) label = "NĂM SAU";
         else label = "NĂM " + start.getFullYear();
       }
-      else {
-        label = "TẤT CẢ THỜI GIAN";
-      }
       
+      // Ngày kết thúc bám sát hoàn toàn vào ngày bắt đầu
+      let end = new Date(start.getTime());
+      
+      if (mode === 'Tuần') {
+        end.setDate(start.getDate() + 6);
+        if (offset !== 0 && offset !== -1 && offset !== 1) {
+           let sDay = String(start.getDate()).padStart(2, '0');
+           let sMon = String(start.getMonth() + 1).padStart(2, '0');
+           let eDay = String(end.getDate()).padStart(2, '0');
+           let eMon = String(end.getMonth() + 1).padStart(2, '0');
+           label = `${sDay}/${sMon} - ${eDay}/${eMon}`;
+        }
+      } else if (mode === 'Tháng') {
+        end.setMonth(start.getMonth() + 1, 0);
+      } else if (mode === 'Quý') {
+        end.setMonth(start.getMonth() + 3, 0);
+      } else if (mode === 'Năm') {
+        end.setFullYear(start.getFullYear(), 11, 31);
+      }
+
+      if (mode === 'Tất cả') {
+        label = "TẤT CẢ THỜI GIAN";
+        start = new Date(2000, 0, 1);
+        end = new Date(2100, 11, 31);
+      }
+
+      end.setHours(23,59,59,999);
       return { start, end, label };
     }
 
@@ -4215,50 +4228,65 @@
       let startTime = currentRange.start.getTime();
       let endTime = currentRange.end.getTime();
       
+      let isAllWallets = selectedLedgerWallets.includes('all');
+      let targetCurrency = document.getElementById('globalCurrencySelect').value;
+      let rates = window.exchangeRates || { "USD": 1, "VND": 25400, "JPY": 152 };
+
+      document.getElementById('globalCurrencyWrapper').style.display = isAllWallets ? 'flex' : 'none';
+
       let filteredData = allLedgerData.filter(tx => {
-         if (!selectedLedgerWallets.includes('all') && !selectedLedgerWallets.includes(tx.wallet)) return false;
+         if (!isAllWallets && !selectedLedgerWallets.includes(tx.wallet)) return false;
          if (currentLedgerTimeMode !== 'Tất cả') {
             let txTime = new Date(tx.date).getTime();
             if (txTime < startTime || txTime > endTime) return false;
          }
          return true;
       });
-      if (currentSortMode === 'desc') {
-          filteredData.sort((a, b) => Number(b.amount) - Number(a.amount));
-      } else if (currentSortMode === 'asc') {
-          filteredData.sort((a, b) => Number(a.amount) - Number(b.amount));
-      } else {
-          filteredData.sort((a, b) => new Date(b.date) - new Date(a.date));
-      }
+
+      filteredData.sort((a, b) => {
+          let dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+          if (dateDiff !== 0) return dateDiff;
+          if (currentSortMode === 'desc') return Number(b.amount) - Number(a.amount);
+          if (currentSortMode === 'asc') return Number(a.amount) - Number(b.amount);
+          return String(b.id).localeCompare(String(a.id));
+      });
 
       filteredData.forEach(tx => {
          let amt = Number(tx.amount) || 0;
+         let txCurr = tx.currency || "VND";
+         let convertedAmt = amt;
+
+         if (isAllWallets && txCurr !== targetCurrency) {
+             convertedAmt = (amt / rates[txCurr]) * rates[targetCurrency];
+         }
+
          let isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
          let isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
          
-         if (isIncome) incomeTotal += amt;
-         else expenseTotal += amt;
+         if (isIncome) incomeTotal += convertedAmt;
+         else expenseTotal += convertedAmt;
       });
 
-      document.getElementById('ledgerIncomeTotal').innerText = `+¥ ${incomeTotal.toLocaleString()}`;
+      let displaySym = isAllWallets ? targetCurrency : (filteredData.length > 0 ? filteredData[0].currency : "VND");
+      const currencySymbols = { "VND": "₫", "JPY": "¥", "USD": "$" };
+      let sym = currencySymbols[displaySym] || displaySym;
+
+      document.getElementById('ledgerIncomeTotal').innerText = `+${Math.round(incomeTotal).toLocaleString()} ${sym}`;
       document.getElementById('ledgerIncomeTotal').style.color = '#34c759';
-      document.getElementById('ledgerExpenseTotal').innerText = `-¥ ${expenseTotal.toLocaleString()}`;
+      document.getElementById('ledgerExpenseTotal').innerText = `-${Math.round(expenseTotal).toLocaleString()} ${sym}`;
       document.getElementById('ledgerExpenseTotal').style.color = '#ff3b30';
       
       let grandTotal = incomeTotal - expenseTotal;
       let grandSign = grandTotal >= 0 ? "" : "-"; 
       let grandColor = grandTotal >= 0 ? "var(--text-main)" : "#ff3b30";
       
-      document.getElementById('ledgerGrandTotal').innerText = `${grandSign}¥ ${Math.abs(grandTotal).toLocaleString()}`;
+      document.getElementById('ledgerGrandTotal').innerText = `${grandSign}${Math.round(Math.abs(grandTotal)).toLocaleString()} ${sym}`;
       document.getElementById('ledgerGrandTotal').style.color = grandColor;
-      document.getElementById('ledgerWalletBalance').innerText = `${grandSign}¥ ${Math.abs(grandTotal).toLocaleString()}`; 
-
+      document.getElementById('ledgerWalletBalance').innerText = `${grandSign}${Math.round(Math.abs(grandTotal)).toLocaleString()} ${sym}`;
       if (filteredData.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding: 30px; color: var(--text-muted);">Sạch sẽ! Không có giao dịch nào ở ví này.</div>';
         return;
       }
-
-      const currencySymbols = { "VND": "₫", "JPY": "¥", "USD": "$" };
 
       if (ledgerGroupMode === 'time') {
          const grouped = {};
@@ -4290,6 +4318,13 @@
               let catIcon = getAiCatIcon(tx.category, tx.type);
               let sym = currencySymbols[tx.currency] || tx.currency;
               
+              let subAmtHtml = "";
+              if (isAllWallets && tx.currency !== targetCurrency) {
+                  let converted = (Number(tx.amount) / rates[tx.currency]) * rates[targetCurrency];
+                  let displayVal = (targetCurrency === 'USD') ? converted.toFixed(2) : Math.round(converted);
+                  subAmtHtml = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">≈ ${Number(displayVal).toLocaleString('en-US')} ${targetCurrency}</div>`;
+              }
+              
               dayHtml += `
                 <div onclick="openTxDetail('${tx.id}')" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dashed var(--border-color); cursor: pointer;">
                    <div style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0;">
@@ -4299,8 +4334,9 @@
                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tx.wallet} ${tx.note ? '• '+tx.note : ''} ${tx.person ? '• 👤 '+tx.person : ''}</div>
                       </div>
                    </div>
-                   <div style="font-weight: 700; font-size: 16px; white-space: nowrap; flex-shrink: 0; text-align: right;" class="${colorClass}">
-                      ${sign}${sym} ${parseInt(tx.amount).toLocaleString()}
+                   <div style="text-align: right; flex-shrink: 0;">
+                      <div style="font-weight: 700; font-size: 16px; white-space: nowrap;" class="${colorClass}">${sign}${sym} ${parseInt(tx.amount).toLocaleString()}</div>
+                      ${subAmtHtml}
                    </div>
                 </div>
               `;
@@ -4383,14 +4419,22 @@
                let dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
                let subTitle = ledgerGroupMode === 'category-parent' ? tx.category.split(' - ').pop() : (tx.note || "Không có ghi chú");
 
+               let subAmtHtml = "";
+               if (isAllWallets && tx.currency !== targetCurrency) {
+                   let converted = (Number(tx.amount) / rates[tx.currency]) * rates[targetCurrency];
+                   let displayValGroup = (targetCurrency === 'USD') ? converted.toFixed(2) : Math.round(converted);
+                   subAmtHtml = `<div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">≈ ${Number(displayValGroup).toLocaleString('en-US')} ${targetCurrency}</div>`;
+               }
+
                groupHtml += `
                  <div onclick="openTxDetail('${tx.id}')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border-color); margin-left: 53px; cursor: pointer;">
                     <div style="flex: 1; min-width: 0; padding-right: 10px;">
                        <div style="font-weight: 500; font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${subTitle}</div>
                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${dateStr} • ${tx.wallet} ${tx.person ? '• 👤 '+tx.person : ''}</div>
                     </div>
-                    <div style="font-weight: 600; font-size: 14px; white-space: nowrap; flex-shrink: 0; text-align: right;" class="${txColorClass}">
-                       ${txSign}${txSym} ${parseInt(tx.amount).toLocaleString()}
+                    <div style="text-align: right; flex-shrink: 0;">
+                       <div style="font-weight: 600; font-size: 14px; white-space: nowrap;" class="${txColorClass}">${txSign}${txSym} ${parseInt(tx.amount).toLocaleString()}</div>
+                       ${subAmtHtml}
                     </div>
                  </div>
                `;
@@ -4615,16 +4659,17 @@
         expenseColors: ['#ff3b30', '#ff9500', '#ffcc00', '#af52de', '#ff2d55', '#5856d6', '#8e8e93'],
         incomeColors: ['#34c759', '#32ade6', '#007aff', '#30b0c7', '#34aadc']
     };
+    window.peihReportCache = {};
 
     async function openReportModal() {
       document.getElementById('reportModal').classList.add('open');
       
       let isCurrentMonth = (currentLedgerTimeMode === 'Tháng' && currentLedgerTimeOffset === 0);
-      
-      if (isCurrentMonth && window.preCalculatedReport) {
-          document.getElementById('reportAiText').innerText = "Đang tải báo cáo...";
+      let targetCurr = document.getElementById('globalCurrencySelect').value;
+      if (isCurrentMonth && window.peihReportCache && window.peihReportCache[targetCurr]) {
+          document.getElementById('reportAiText').innerText = "Đang tải báo cáo từ bộ nhớ...";
           setTimeout(() => {
-              renderReportUI(window.preCalculatedReport);
+              renderReportUI(window.peihReportCache[targetCurr]);
           }, 50);
           return;
       }
@@ -4644,7 +4689,8 @@
             endDate: currentRange.end.getTime(),
             wallets: selectedLedgerWallets,
             timeMode: currentLedgerTimeMode,
-            timeOffset: currentLedgerTimeOffset
+            timeOffset: currentLedgerTimeOffset,
+            targetCurrency: targetCurr 
           }),
           headers: { "Content-Type": "text/plain;charset=utf-8" }
         });
@@ -4652,6 +4698,9 @@
         const data = await response.json();
 
         if (data.status === "success") {
+          if (isCurrentMonth) {
+              window.peihReportCache[targetCurr] = data.data; 
+          }
           renderReportUI(data.data);
         } else {
           document.getElementById('reportAiText').innerText = "Không thể tải báo cáo lúc này.";
@@ -4667,9 +4716,26 @@
 
       let sym = reportData.currency;
 
-      document.getElementById('reportTotalIncome').innerText = `+${reportData.incomeTotal.toLocaleString()} ${sym}`;
-      document.getElementById('reportTotalExpense').innerText = `-${reportData.expenseTotal.toLocaleString()} ${sym}`;
+      const formatSmart = (val, curr) => {
+          let num = parseFloat(val) || 0;
+          if (curr === 'USD') return Number(num.toFixed(2)).toLocaleString('en-US');
+          return Math.round(num).toLocaleString('en-US');
+      };
 
+      let rawIncHtml = '';
+      let rawExpHtml = '';
+      
+      ['VND', 'JPY', 'USD'].forEach(curr => {
+          if (reportData.rawIncomes && reportData.rawIncomes[curr] > 0) {
+              rawIncHtml += `<div style="font-size: 11px; color: rgba(52, 199, 89, 0.8); margin-top: 4px;">+${formatSmart(reportData.rawIncomes[curr], curr)} ${curr}</div>`;
+          }
+          if (reportData.rawExpenses && reportData.rawExpenses[curr] > 0) {
+              rawExpHtml += `<div style="font-size: 11px; color: rgba(255, 59, 48, 0.8); margin-top: 4px;">-${formatSmart(reportData.rawExpenses[curr], curr)} ${curr}</div>`;
+          }
+      });
+
+      document.getElementById('reportTotalIncome').innerHTML = `+${formatSmart(reportData.incomeTotal, sym)} ${sym}${rawIncHtml}`;
+      document.getElementById('reportTotalExpense').innerHTML = `-${formatSmart(reportData.expenseTotal, sym)} ${sym}${rawExpHtml}`;
       let totalFlow = reportData.incomeTotal + reportData.expenseTotal;
       let incPct = totalFlow === 0 ? 50 : (reportData.incomeTotal / totalFlow) * 100;
       let expPct = totalFlow === 0 ? 50 : (reportData.expenseTotal / totalFlow) * 100;
@@ -4695,49 +4761,54 @@
       if (reportData.topIncomes.length > 0) {
           topHtml += `<div style="font-size: 12px; font-weight: 800; color: #34c759; margin-bottom: 10px; letter-spacing: 1px;">🏆 NGUỒN THU CHÍNH</div>`;
           let maxInc = reportData.topIncomes[0].amount;
-          let item = reportData.topIncomes[0];
-          let pct = (item.amount / maxInc) * 100;
-          topHtml += `
-              <div style="margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                  <div style="font-weight: 600; font-size: 14px;">1. ${item.name}</div>
-                  <div style="font-weight: bold; font-size: 14px; color: #34c759;">+${item.amount.toLocaleString()} ${sym}</div>
-                </div>
-                <div class="progress-bar-bg" style="height: 6px; background-color: var(--border-color);">
-                  <div class="progress-bar-fill" style="width: ${pct}%; background-color: #34c759;"></div>
-                </div>
-              </div>
-          `;
+          
+          topHtml += reportData.topIncomes.map((item, idx) => {
+              let pct = (item.amount / maxInc) * 100;
+              return `
+                  <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                      <div style="font-weight: 600; font-size: 14px; flex: 1;">${idx + 1}. ${item.name}</div>
+                      <div style="text-align: right; flex-shrink: 0;">
+                        <div style="font-weight: bold; font-size: 14px; color: #34c759;">+${formatSmart(item.amount, sym)} ${sym}</div>
+                      </div>
+                    </div>
+                    <div class="progress-bar-bg" style="height: 6px; background-color: var(--border-color);">
+                      <div class="progress-bar-fill" style="width: ${pct}%; background-color: #34c759;"></div>
+                    </div>
+                  </div>
+              `;
+          }).join('');
       }
 
       if (reportData.topExpenses.length > 0) {
           topHtml += `<div style="font-size: 12px; font-weight: 800; color: #ff3b30; margin-bottom: 10px; letter-spacing: 1px;">🔥 CHI TIÊU NHIỀU NHẤT</div>`;
           let maxExp = reportData.topExpenses[0].amount;
-          reportData.topExpenses.forEach((item, idx) => {
+          
+          topHtml += reportData.topExpenses.map((item, idx) => {
               let pct = (item.amount / maxExp) * 100;
-              topHtml += `
+              return `
                   <div style="margin-bottom: 12px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                      <div style="font-weight: 600; font-size: 14px;">${idx + 1}. ${item.name}</div>
-                      <div style="font-weight: bold; font-size: 14px; color: #ff3b30;">-${item.amount.toLocaleString()} ${sym}</div>
+                      <div style="font-weight: 600; font-size: 14px; flex: 1;">${idx + 1}. ${item.name}</div>
+                      <div style="text-align: right; flex-shrink: 0;">
+                        <div style="font-weight: bold; font-size: 14px; color: #ff3b30;">-${formatSmart(item.amount, sym)} ${sym}</div>
+                      </div>
                     </div>
                     <div class="progress-bar-bg" style="height: 6px; background-color: var(--border-color);">
                       <div class="progress-bar-fill" style="width: ${pct}%; background-color: #ff3b30;"></div>
                     </div>
                   </div>
               `;
-          });
+          }).join('');
       }
       
       if (topHtml === '') {
           topHtml = '<div style="color: var(--text-muted); font-size: 13px; text-align: center;">Chưa có dữ liệu để xếp hạng.</div>';
       }
       document.getElementById('reportTopListContainer').innerHTML = topHtml;
-
       document.getElementById('forecastText').innerHTML = 
-          `Dự báo cuối kỳ: <span style="color:#ff3b30">${Math.round(reportData.forecastedEndValue).toLocaleString()} ${sym}</span><br>` +
-          `<span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Trung bình 3 kỳ trước: ${Math.round(reportData.avgEndValue).toLocaleString()} ${sym})</span>`;
-
+          `Dự báo cuối kỳ: <span style="color:#ff3b30">${formatSmart(reportData.forecastedEndValue, sym)} ${sym}</span><br>` +
+          `<span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Trung bình 3 kỳ trước: ${formatSmart(reportData.avgEndValue, sym)} ${sym})</span>`;
       if (trendLineChartInstance) trendLineChartInstance.destroy();
       const ctxTrend = document.getElementById('trendLineChart').getContext('2d');
       trendLineChartInstance = new Chart(ctxTrend, {
@@ -4936,7 +5007,7 @@
         document.getElementById('hiddenWallet').value = tx.wallet;
         document.getElementById('mainWalletText').innerText = tx.wallet;
         
-        document.querySelector('.currency-select').value = tx.currency;
+        document.getElementById('manualCurrencySelect').value = tx.currency;
         document.querySelector('.amount-input').value = parseInt(tx.amount).toLocaleString('en-US');
         
         document.getElementById('hiddenCategory').value = tx.category;
@@ -5002,7 +5073,7 @@
             id: editingTxId,
             type: currentMainType,
             wallet: document.getElementById('hiddenWallet').value,
-            currency: document.querySelector('.currency-select').value,
+            currency: document.getElementById('manualCurrencySelect').value,
             amount: amount,
             category: category,
             person: document.getElementById('hiddenPerson') ? document.getElementById('hiddenPerson').value : "",
