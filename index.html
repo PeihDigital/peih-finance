@@ -1513,9 +1513,10 @@
 
         <div id="queueListContainer" class="queue-container"></div>
 
-        <div class="modal-bottom">
-          <button class="btn-queue" onclick="queueTransaction()">+ Thêm giao dịch</button>
-          <button class="btn-save-batch" onclick="submitBatch()">Lưu <span id="queueCount" style="display:none;">(0)</span></button>
+        <div class="modal-bottom" id="manualModalBottom">
+          <button id="btnQueue" class="btn-queue" onclick="queueTransaction()">+ Thêm giao dịch</button>
+          <button id="btnSaveBatch" class="btn-save-batch" onclick="submitBatch()">Lưu <span id="queueCount" style="display:none;">(0)</span></button>
+          <button id="btnUpdateEdit" class="btn-save-batch" style="display: none; background-color: #ff9500;" onclick="submitEdit()">Cập nhật</button>
         </div>
       </div>
       <div id="aiInputSection" style="display: none; flex-direction: column; flex: 1;">
@@ -1853,6 +1854,17 @@
       </div>
     </div>
   </div>
+  <div id="txDetailSheet" class="bottom-sheet-backdrop" onclick="closeTxDetailSheet(event)">
+    <div class="bottom-sheet-pane" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <div style="width: 40px;"></div>
+        <div class="sheet-title">Chi tiết giao dịch</div>
+        <button class="sheet-btn" onclick="closeTxDetailSheet('force')" style="border:none; background:transparent; padding:0; color:var(--text-muted); font-size:14px;">Đóng</button>
+      </div>
+      <div class="sheet-list" id="txDetailContent" style="padding: 10px 20px 30px 20px; display: flex; flex-direction: column;">
+      </div>
+    </div>
+  </div>
 
   <script>
     // --- APP LOGIC ---
@@ -2101,9 +2113,29 @@
           topBarName.innerHTML = `Đã chọn ${selectedLedgerWallets.length} ví`;
        }
     }
+    let editingTxId = null;
+
     function openAddModal() {
+      editingTxId = null;
       currentAiEditIndex = null;
       document.getElementById('addTransactionModal').classList.add('open');
+      
+      document.getElementById('btnQueue').style.display = 'block';
+      document.getElementById('btnSaveBatch').style.display = 'block';
+      document.getElementById('btnUpdateEdit').style.display = 'none';
+      document.querySelector('.modal-title').innerText = "Thêm Giao Dịch";
+      
+      document.querySelector('.amount-input').value = "";
+      document.querySelector('.note-input').value = "";
+      if(document.getElementById('hiddenPerson')) document.getElementById('hiddenPerson').value = "";
+      
+      changeMainType('Khoản chi');
+      if (appConfig && appConfig.wallets && appConfig.wallets.length > 0) {
+        const defaultWallet = appConfig.wallets[0].name || appConfig.wallets[0];
+        document.getElementById('hiddenWallet').value = defaultWallet;
+        document.getElementById('mainWalletText').innerText = defaultWallet;
+      }
+      
       updateDateDisplay();
       switchInputMode('manual'); 
       setTimeout(() => { document.querySelector('.amount-input').focus(); }, 400);
@@ -2124,21 +2156,53 @@
 
     async function loadLedgerData() {
       const userEmail = document.getElementById('emailInput').value; 
+      let currentRange = getLedgerTimeRange('Tháng', 0);
+
+      const cacheKey = "ledgerData_" + userEmail;
+      
       try {
-        const userEmail = document.getElementById('emailInput').value;
-        const response = await fetch(GAS_WEB_APP_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "GET_TRANSACTIONS", email: userEmail }),
-        headers: { "Content-Type": "text/plain;charset=utf-8" }
-      });
-        const data = await response.json();
-        if (data.status === "success") {
-          allLedgerData = data.data;
-          renderLedgerTransactions(); 
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+          const parsedCache = JSON.parse(cachedData);
+          allLedgerData = parsedCache.transactions;
+          window.preCalculatedReport = parsedCache.report;
+          renderLedgerTransactions();
         }
-      } catch (err) {
-        console.log("Lỗi tải Sổ sách:", err);
-      }
+      } catch (e) {}
+
+      try {
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({ 
+            action: "GET_COMBO_DATA", 
+            email: userEmail,
+            reportStart: currentRange.start.getTime(),
+            reportEnd: currentRange.end.getTime(),
+            wallets: selectedLedgerWallets,
+            timeMode: 'Tháng',
+            timeOffset: 0
+          }),
+          headers: { "Content-Type": "text/plain;charset=utf-8" }
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          allLedgerData = data.data.transactions;
+          window.preCalculatedReport = data.data.report;
+          
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(data.data));
+          } catch (e) {}
+          
+          renderLedgerTransactions();
+          
+          let isCurrentMonth = (currentLedgerTimeMode === 'Tháng' && currentLedgerTimeOffset === 0);
+          if (isCurrentMonth && document.getElementById('reportModal').classList.contains('open')) {
+            renderReportUI(window.preCalculatedReport);
+          }
+        }
+      } catch (err) {}
     }
     async function loadAppConfig() {
       const userEmail = document.getElementById('emailInput').value;
@@ -4227,7 +4291,7 @@
               let sym = currencySymbols[tx.currency] || tx.currency;
               
               dayHtml += `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dashed var(--border-color);">
+                <div onclick="openTxDetail('${tx.id}')" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px dashed var(--border-color); cursor: pointer;">
                    <div style="display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0;">
                       <div class="color-icon" style="background: var(--bg-main); border: 1px solid var(--border-color); width: 38px; height: 38px; font-size: 18px; flex-shrink: 0;">${catIcon}</div>
                       <div style="flex: 1; min-width: 0; padding-right: 10px;">
@@ -4320,7 +4384,7 @@
                let subTitle = ledgerGroupMode === 'category-parent' ? tx.category.split(' - ').pop() : (tx.note || "Không có ghi chú");
 
                groupHtml += `
-                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border-color); margin-left: 53px;">
+                 <div onclick="openTxDetail('${tx.id}')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border-color); margin-left: 53px; cursor: pointer;">
                     <div style="flex: 1; min-width: 0; padding-right: 10px;">
                        <div style="font-weight: 500; font-size: 14px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${subTitle}</div>
                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${dateStr} • ${tx.wallet} ${tx.person ? '• 👤 '+tx.person : ''}</div>
@@ -4552,92 +4616,86 @@
         incomeColors: ['#34c759', '#32ade6', '#007aff', '#30b0c7', '#34aadc']
     };
 
-    function openReportModal() {
+    async function openReportModal() {
       document.getElementById('reportModal').classList.add('open');
       
-      let incomeTotal = 0;
-      let expenseTotal = 0;
-      reportDataCache.expenses = {};
-      reportDataCache.incomes = {};
+      let isCurrentMonth = (currentLedgerTimeMode === 'Tháng' && currentLedgerTimeOffset === 0);
       
-      let currentRange = getLedgerTimeRange(currentLedgerTimeMode, currentLedgerTimeOffset);
-      let startTime = currentRange.start.getTime();
-      let endTime = currentRange.end.getTime();
-      
-      let filteredData = allLedgerData.filter(tx => {
-         if (!selectedLedgerWallets.includes('all') && !selectedLedgerWallets.includes(tx.wallet)) return false;
-         if (currentLedgerTimeMode !== 'Tất cả') {
-            let txTime = new Date(tx.date).getTime();
-            if (txTime < startTime || txTime > endTime) return false;
-         }
-         return true;
-      });
-
-      filteredData.forEach(tx => {
-         let amt = Number(tx.amount) || 0;
-         let isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
-         let isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
-         
-         let catParts = tx.category.split(' - ');
-         let parentCat = catParts[0];
-
-         if (isIncome) {
-             incomeTotal += amt;
-             if (!reportDataCache.incomes[parentCat]) reportDataCache.incomes[parentCat] = 0;
-             reportDataCache.incomes[parentCat] += amt;
-         } else {
-             expenseTotal += amt;
-             if (!reportDataCache.expenses[parentCat]) reportDataCache.expenses[parentCat] = 0;
-             reportDataCache.expenses[parentCat] += amt;
-         }
-      });
-
-      let sym = "₫";
-      if (filteredData.length > 0) {
-          const currencySymbols = { "VND": "₫", "JPY": "¥", "USD": "$" };
-          sym = currencySymbols[filteredData[0].currency] || filteredData[0].currency;
+      if (isCurrentMonth && window.preCalculatedReport) {
+          document.getElementById('reportAiText').innerText = "Đang tải báo cáo...";
+          setTimeout(() => {
+              renderReportUI(window.preCalculatedReport);
+          }, 50);
+          return;
       }
 
-      document.getElementById('reportTotalIncome').innerText = `+${incomeTotal.toLocaleString()} ${sym}`;
-      document.getElementById('reportTotalExpense').innerText = `-${expenseTotal.toLocaleString()} ${sym}`;
+      document.getElementById('reportAiText').innerText = "Đang phân tích dữ liệu từ máy chủ...";
+      
+      let currentRange = getLedgerTimeRange(currentLedgerTimeMode, currentLedgerTimeOffset);
+      let userEmail = document.getElementById('emailInput').value;
 
-      let totalFlow = incomeTotal + expenseTotal;
-      let incPct = totalFlow === 0 ? 50 : (incomeTotal / totalFlow) * 100;
-      let expPct = totalFlow === 0 ? 50 : (expenseTotal / totalFlow) * 100;
+      try {
+        const response = await fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "GET_REPORT",
+            email: userEmail,
+            startDate: currentRange.start.getTime(),
+            endDate: currentRange.end.getTime(),
+            wallets: selectedLedgerWallets,
+            timeMode: currentLedgerTimeMode,
+            timeOffset: currentLedgerTimeOffset
+          }),
+          headers: { "Content-Type": "text/plain;charset=utf-8" }
+        });
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+          renderReportUI(data.data);
+        } else {
+          document.getElementById('reportAiText').innerText = "Không thể tải báo cáo lúc này.";
+        }
+      } catch (e) {
+        document.getElementById('reportAiText').innerText = "Lỗi kết nối đến máy chủ!";
+      }
+    }
+
+    function renderReportUI(reportData) {
+      reportDataCache.expenses = reportData.expenses;
+      reportDataCache.incomes = reportData.incomes;
+
+      let sym = reportData.currency;
+
+      document.getElementById('reportTotalIncome').innerText = `+${reportData.incomeTotal.toLocaleString()} ${sym}`;
+      document.getElementById('reportTotalExpense').innerText = `-${reportData.expenseTotal.toLocaleString()} ${sym}`;
+
+      let totalFlow = reportData.incomeTotal + reportData.expenseTotal;
+      let incPct = totalFlow === 0 ? 50 : (reportData.incomeTotal / totalFlow) * 100;
+      let expPct = totalFlow === 0 ? 50 : (reportData.expenseTotal / totalFlow) * 100;
       document.getElementById('reportIncomeBar').style.width = `${incPct}%`;
       document.getElementById('reportExpenseBar').style.width = `${expPct}%`;
 
-      let aiText = "";
       if (totalFlow === 0) {
-          aiText = "Sếp chưa có giao dịch nào trong giai đoạn này. Hãy nạp thêm dữ liệu nhé!";
           document.getElementById('reportAiInsight').style.background = 'var(--bg-card)';
           document.getElementById('reportAiInsight').style.color = 'var(--text-main)';
-      } else if (incomeTotal >= expenseTotal) {
-          aiText = `Tuyệt vời! Sếp đang thặng dư dương ${ (incomeTotal - expenseTotal).toLocaleString() } ${sym}. Cơ cấu dòng tiền rất khỏe!`;
+      } else if (reportData.incomeTotal >= reportData.expenseTotal) {
           document.getElementById('reportAiInsight').style.background = 'linear-gradient(135deg, #34c759 0%, #248a3d 100%)';
           document.getElementById('reportAiInsight').style.color = 'white';
       } else {
-          aiText = `Chú ý! Sếp đang thâm hụt ${ (expenseTotal - incomeTotal).toLocaleString() } ${sym}. Xu hướng chi tiêu đang vượt mức thu nhập!`;
           document.getElementById('reportAiInsight').style.background = 'linear-gradient(135deg, #ff3b30 0%, #b3241d 100%)';
           document.getElementById('reportAiInsight').style.color = 'white';
       }
-      document.getElementById('reportAiText').innerText = aiText;
+      document.getElementById('reportAiText').innerText = reportData.aiText;
 
       switchPieChart('expense');
 
-      let topExpenses = Object.keys(reportDataCache.expenses).map(cat => ({ name: cat, amount: reportDataCache.expenses[cat] }));
-      topExpenses.sort((a, b) => b.amount - a.amount);
-      let top3Exp = topExpenses.slice(0, 3);
-
-      let topIncomes = Object.keys(reportDataCache.incomes).map(cat => ({ name: cat, amount: reportDataCache.incomes[cat] }));
-      topIncomes.sort((a, b) => b.amount - a.amount);
-      let top1Inc = topIncomes.slice(0, 1);
-
       let topHtml = '';
-      if (top1Inc.length > 0) {
+      
+      if (reportData.topIncomes.length > 0) {
           topHtml += `<div style="font-size: 12px; font-weight: 800; color: #34c759; margin-bottom: 10px; letter-spacing: 1px;">🏆 NGUỒN THU CHÍNH</div>`;
-          let maxInc = topIncomes[0].amount;
-          let item = top1Inc[0];
+          let maxInc = reportData.topIncomes[0].amount;
+          let item = reportData.topIncomes[0];
           let pct = (item.amount / maxInc) * 100;
           topHtml += `
               <div style="margin-bottom: 20px;">
@@ -4652,10 +4710,10 @@
           `;
       }
 
-      if (top3Exp.length > 0) {
+      if (reportData.topExpenses.length > 0) {
           topHtml += `<div style="font-size: 12px; font-weight: 800; color: #ff3b30; margin-bottom: 10px; letter-spacing: 1px;">🔥 CHI TIÊU NHIỀU NHẤT</div>`;
-          let maxExp = top3Exp[0].amount;
-          top3Exp.forEach((item, idx) => {
+          let maxExp = reportData.topExpenses[0].amount;
+          reportData.topExpenses.forEach((item, idx) => {
               let pct = (item.amount / maxExp) * 100;
               topHtml += `
                   <div style="margin-bottom: 12px;">
@@ -4676,182 +4734,70 @@
       }
       document.getElementById('reportTopListContainer').innerHTML = topHtml;
 
-      let periodDuration = endTime - startTime;
-      let isSingleDay = Math.round(periodDuration / 86400000) <= 1;
-      let daysCount = isSingleDay ? 24 : Math.round(periodDuration / 86400000);
-      if (daysCount <= 0 || daysCount > 366) daysCount = 30;
-
-      let labels = isSingleDay 
-          ? Array.from({length: 24}, (_, i) => i + "h") 
-          : Array.from({length: daysCount}, (_, i) => i + 1);
-
-      function getCumulative(startT, endT) {
-          let data = new Array(daysCount).fill(0);
-          let pDuration = endT - startT;
-          allLedgerData.forEach(tx => {
-              if (!selectedLedgerWallets.includes('all') && !selectedLedgerWallets.includes(tx.wallet)) return;
-              let txTime = new Date(tx.date).getTime();
-              if (txTime >= startT && txTime <= endT) {
-                  let isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
-                  let isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
-                  if (!isIncome) {
-                      let step = isSingleDay 
-                          ? new Date(txTime).getHours() 
-                          : Math.floor(((txTime - startT) / pDuration) * daysCount);
-                      if(step >= daysCount) step = daysCount - 1;
-                      if(step < 0) step = 0;
-                      data[step] += (Number(tx.amount) || 0);
-                  }
-              }
-          });
-          let sum = 0;
-          return data.map(val => { sum += val; return sum; });
-      }
-
-      let currentCumul = getCumulative(startTime, endTime);
-      let prev1Cumul = getCumulative(startTime - periodDuration, endTime - periodDuration);
-      let prev2Cumul = getCumulative(startTime - 2 * periodDuration, endTime - 2 * periodDuration);
-      let prev3Cumul = getCumulative(startTime - 3 * periodDuration, endTime - 3 * periodDuration);
-      let avg3Cumul = currentCumul.map((_, i) => (prev1Cumul[i] + prev2Cumul[i] + prev3Cumul[i]) / 3);
-      let lastYearStart = new Date(startTime);
-      lastYearStart.setFullYear(lastYearStart.getFullYear() - 1);
-      let lastYearEnd = new Date(endTime);
-      lastYearEnd.setFullYear(lastYearEnd.getFullYear() - 1);
-      let lastYearCumul = getCumulative(lastYearStart.getTime(), lastYearEnd.getTime());
-      let toggleEl = document.getElementById('toggleLastYear');
-      if (toggleEl) toggleEl.checked = false;
-
-      let actualLine = [];
-      let forecastLine = [];
-      let now = new Date().getTime();
-      let currentStep = -1;
-
-      if (now >= startTime && now <= endTime) {
-          currentStep = Math.floor(((now - startTime) / periodDuration) * daysCount);
-      } else if (now > endTime) {
-          currentStep = daysCount;
-      }
-      let totalAvgSpent = avg3Cumul[daysCount - 1]; 
-      let historicalDailyRate = totalAvgSpent / daysCount;
-
-      for (let i = 0; i < daysCount; i++) {
-          if (currentStep === -1 || currentStep >= daysCount) {
-              actualLine.push(currentCumul[i]);
-              forecastLine.push(null);
-          } else {
-              if (i <= currentStep) {
-                  actualLine.push(currentCumul[i]);
-                  forecastLine.push(i === currentStep ? currentCumul[i] : null);
-              } else {
-                  actualLine.push(null);
-                  let daysRemaining = i - currentStep;
-                  forecastLine[i] = currentCumul[currentStep] + (historicalDailyRate * daysRemaining);
-              }
-          }
-      }
-
-      let forecastedEndValue = forecastLine[daysCount - 1] || actualLine[daysCount - 1];
-      let avgEndValue = avg3Cumul[daysCount - 1];
       document.getElementById('forecastText').innerHTML = 
-          `Dự báo cuối kỳ: <span style="color:#ff3b30">${Math.round(forecastedEndValue).toLocaleString()} ${sym}</span><br>` +
-          `<span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Trung bình 3 kỳ trước: ${Math.round(avgEndValue).toLocaleString()} ${sym})</span>`;
+          `Dự báo cuối kỳ: <span style="color:#ff3b30">${Math.round(reportData.forecastedEndValue).toLocaleString()} ${sym}</span><br>` +
+          `<span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Trung bình 3 kỳ trước: ${Math.round(reportData.avgEndValue).toLocaleString()} ${sym})</span>`;
 
       if (trendLineChartInstance) trendLineChartInstance.destroy();
       const ctxTrend = document.getElementById('trendLineChart').getContext('2d');
       trendLineChartInstance = new Chart(ctxTrend, {
           type: 'line',
           data: {
-              labels: labels,
+              labels: reportData.chartData.labels,
               datasets: [
-                  {
-                      label: 'Thực tế',
-                      data: actualLine,
-                      borderColor: '#ff3b30',
-                      borderWidth: 2,
-                      tension: 0.2,
-                      pointRadius: 0
-                  },
-                  {
-                      label: 'Dự báo',
-                      data: forecastLine,
-                      borderColor: '#ff3b30',
-                      borderWidth: 2,
-                      borderDash: [5, 5],
-                      tension: 0.2,
-                      pointRadius: 0
-                  },
-                  {
-                      label: 'Trung bình 3 kỳ',
-                      data: avg3Cumul,
-                      borderColor: '#007aff',
-                      borderWidth: 1.5,
-                      tension: 0.2,
-                      pointRadius: 0
-                  },
-                  {
-                      label: 'Kỳ trước',
-                      data: prev1Cumul,
-                      borderColor: '#8e8e93',
-                      borderWidth: 1.5,
-                      tension: 0.2,
-                      pointRadius: 0
-                  },
-                  {
-                      label: 'Năm ngoái',
-                      data: lastYearCumul,
-                      borderColor: '#34c759', 
-                      borderWidth: 1.5,
-                      borderDash: [3, 3],
-                      tension: 0.2,
-                      pointRadius: 0,
-                      hidden: true 
-                  }
+                  { label: 'Thực tế', data: reportData.chartData.actualLine, borderColor: '#ff3b30', borderWidth: 2, tension: 0.2, pointRadius: 0 },
+                  { label: 'Dự báo', data: reportData.chartData.forecastLine, borderColor: '#ff3b30', borderWidth: 2, borderDash: [5, 5], tension: 0.2, pointRadius: 0 },
+                  { label: 'Trung bình 3 kỳ', data: reportData.chartData.avg3Cumul, borderColor: '#007aff', borderWidth: 1.5, tension: 0.2, pointRadius: 0 },
+                  { label: 'Kỳ trước', data: reportData.chartData.prev1Cumul, borderColor: '#8e8e93', borderWidth: 1.5, tension: 0.2, pointRadius: 0 },
+                  { label: 'Năm ngoái', data: reportData.chartData.lastYearCumul, borderColor: '#34c759', borderWidth: 1.5, borderDash: [3, 3], tension: 0.2, pointRadius: 0, hidden: true }
               ]
           },
           options: { 
               responsive: true, 
               interaction: { mode: 'index', intersect: false },
               scales: { 
-                y: { 
-                  display: true,
-                  position: 'right', 
-                  ticks: {
-                    color: '#888',
-                    font: { size: 9 },
-                    callback: function(value) {
-                      if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
-                      if (value >= 1000) return (value / 1000) + 'k';
-                      return value;
-                    }
-                  },
-                  grid: {
-                    color: 'rgba(136, 136, 136, 0.1)',
-                    drawBorder: false
-                  }
-                }, 
-                x: { 
-                  ticks: { maxTicksLimit: 6, color: '#888', font: { size: 10 } }, 
-                  grid: { display: false } 
-                } 
+                  y: { 
+                      display: true,
+                      position: 'right', 
+                      ticks: {
+                          color: '#888',
+                          font: { size: 9 },
+                          callback: function(value) {
+                              if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                              if (value >= 1000) return (value / 1000) + 'k';
+                              return value;
+                          }
+                      },
+                      grid: {
+                          color: 'rgba(136, 136, 136, 0.1)',
+                          drawBorder: false
+                      }
+                  }, 
+                  x: { 
+                      ticks: { maxTicksLimit: 6, color: '#888', font: { size: 10 } }, 
+                      grid: { display: false } 
+                  } 
               }, 
               plugins: { 
-                legend: { 
-                  display: true, 
-                  position: 'bottom', 
-                  labels: { 
-                    boxWidth: 12, 
-                    font: {size: 10}, 
-                    color: '#888', 
-                    padding: 15,
-                    // Lọc bỏ nhãn "Năm ngoái" (index 4) khỏi phần chú thích
-                    filter: function(item, chart) {
-                        return item.datasetIndex < 4;
-                    }
+                  legend: { 
+                      display: true, 
+                      position: 'bottom', 
+                      labels: { 
+                          boxWidth: 12, 
+                          font: {size: 10}, 
+                          color: '#888', 
+                          padding: 15,
+                          filter: function(item, chart) {
+                              return item.datasetIndex < 4;
+                          }
+                      } 
                   } 
-                } 
               } 
           }
       });
+      
+      let toggleEl = document.getElementById('toggleLastYear');
+      if (toggleEl) toggleEl.checked = false;
     }
 
     function switchPieChart(type) {
@@ -4902,6 +4848,221 @@
 
     function closeReportModal() {
       document.getElementById('reportModal').classList.remove('open');
+    }
+    function openTxDetail(txId) {
+        if (!txId || txId === 'undefined') {
+            showToast("Giao dịch cũ chưa có mã ID, không thể xem chi tiết!");
+            return;
+        }
+
+        const tx = allLedgerData.find(t => t.id === txId);
+        if (!tx) return;
+        
+        const container = document.getElementById('txDetailContent');
+        const isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
+        const isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
+        const sign = isIncome ? "+" : "-";
+        const colorClass = isIncome ? "color-income" : "color-expense";
+        const catIcon = getAiCatIcon(tx.category, tx.type);
+        
+        let displayDate = tx.date;
+        if (displayDate && displayDate.includes('T')) {
+            let d = new Date(tx.date);
+            displayDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        } else if (displayDate && displayDate.includes('-')) {
+            let parts = displayDate.split('-');
+            if (parts.length === 3) displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        container.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 25px;">
+                <div class="color-icon" style="background: var(--form-bg); border: 1px solid var(--border-color); width: 64px; height: 64px; font-size: 30px; margin-bottom: 12px; margin-right: 0;">${catIcon}</div>
+                <div style="font-size: 15px; font-weight: bold; color: var(--text-main);">${tx.category}</div>
+                <div style="font-size: 32px; font-weight: 900; margin-top: 4px;" class="${colorClass}">${sign}${parseInt(tx.amount).toLocaleString()} <span style="font-size:16px;">${tx.currency}</span></div>
+            </div>
+            
+            <div style="background: var(--form-bg); border-radius: 16px; padding: 0 16px; border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-muted); font-size: 14px;">Ngày</span>
+                    <span style="color: var(--text-main); font-weight: 600; font-size: 14px;">${displayDate}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-muted); font-size: 14px;">Ví thanh toán</span>
+                    <span style="color: var(--text-main); font-weight: 600; font-size: 14px;">${tx.wallet}</span>
+                </div>
+                ${tx.person ? `
+                <div style="display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-muted); font-size: 14px;">Đối tác</span>
+                    <span style="color: var(--text-main); font-weight: 600; font-size: 14px;">👤 ${tx.person}</span>
+                </div>
+                ` : ''}
+                <div style="display: flex; justify-content: space-between; padding: 16px 0;">
+                    <span style="color: var(--text-muted); font-size: 14px; flex-shrink: 0; margin-right: 20px;">Ghi chú</span>
+                    <span style="color: var(--text-main); font-weight: 600; font-size: 14px; text-align: right; line-height: 1.4;">${tx.note || 'Không có'}</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 25px;">
+                <button onclick="editTx('${tx.id}')" style="flex: 1; background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 16px; border-radius: 16px; font-weight: bold; font-size: 15px; cursor: pointer;">Sửa</button>
+                <button onclick="deleteTx('${tx.id}')" style="flex: 1; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); color: #ff3b30; padding: 16px; border-radius: 16px; font-weight: bold; font-size: 15px; cursor: pointer;">Xóa</button>
+            </div>
+        `;
+        
+        document.getElementById('txDetailSheet').classList.add('open');
+    }
+    
+    function closeTxDetailSheet(eventOrAction) {
+        if (eventOrAction !== 'force' && eventOrAction.target !== document.getElementById('txDetailSheet')) return;
+        document.getElementById('txDetailSheet').classList.remove('open');
+    }
+    function editTx(txId) {
+        const tx = allLedgerData.find(t => t.id === txId);
+        if (!tx) return;
+
+        closeTxDetailSheet('force');
+        editingTxId = txId;
+        currentAiEditIndex = null;
+
+        document.getElementById('addTransactionModal').classList.add('open');
+        switchInputMode('manual');
+        
+        document.querySelector('.modal-title').innerText = "Sửa Giao Dịch";
+        document.getElementById('btnQueue').style.display = 'none';
+        document.getElementById('btnSaveBatch').style.display = 'none';
+        document.getElementById('btnUpdateEdit').style.display = 'block';
+
+        changeMainType(tx.type);
+        
+        document.getElementById('hiddenWallet').value = tx.wallet;
+        document.getElementById('mainWalletText').innerText = tx.wallet;
+        
+        document.querySelector('.currency-select').value = tx.currency;
+        document.querySelector('.amount-input').value = parseInt(tx.amount).toLocaleString('en-US');
+        
+        document.getElementById('hiddenCategory').value = tx.category;
+        document.getElementById('mainCategoryText').innerText = tx.category.split(' - ').pop();
+        document.getElementById('mainCategoryText').style.color = "var(--text-main)";
+        
+        const catIconNode = document.getElementById('mainCategoryIcon');
+        if (catIconNode) {
+            catIconNode.className = "color-icon";
+            catIconNode.style.backgroundColor = "var(--form-bg)";
+            catIconNode.style.border = "1px solid var(--border-color)";
+            catIconNode.style.width = "20px";
+            catIconNode.style.height = "20px";
+            catIconNode.style.marginRight = "0"; 
+            catIconNode.style.fontSize = "11px"; 
+            catIconNode.innerHTML = getAiCatIcon(tx.category, tx.type);
+        }
+
+        if (document.getElementById('hiddenPerson')) {
+            document.getElementById('hiddenPerson').value = tx.person || "";
+            document.getElementById('mainPersonText').innerText = tx.person || "Chọn đối tác";
+            document.getElementById('mainPersonText').style.color = tx.person ? "var(--text-main)" : "#ff3b30";
+        }
+
+        document.querySelector('.note-input').value = tx.note || "";
+
+        let displayDate = tx.date;
+        if (displayDate && displayDate.includes('T')) {
+            let d = new Date(tx.date);
+            currentDate = d;
+        } else if (displayDate && displayDate.includes('-')) {
+            let parts = displayDate.split('-');
+            if (parts.length === 3) {
+                currentDate = new Date(`${parts[0]}-${parts[1]}-${parts[2]}`);
+            }
+        }
+        updateDateDisplay();
+    }
+
+    async function submitEdit() {
+        const rawAmount = document.querySelector('.amount-input').value;
+        const amount = rawAmount.replace(/\D/g, ''); 
+        
+        if (!amount || amount === "0") {
+            showToast("Sếp chưa nhập số tiền!");
+            return;
+        }
+        const category = document.getElementById('hiddenCategory').value;
+        if (!category) {
+            showToast("Sếp vui lòng chọn nhóm!");
+            return;
+        }
+
+        const btn = document.getElementById('btnUpdateEdit');
+        btn.innerText = "Đang lưu...";
+        btn.disabled = true;
+
+        const userEmail = document.getElementById('emailInput').value;
+
+        const updatedTx = {
+            action: "EDIT_TX",
+            email: userEmail,
+            id: editingTxId,
+            type: currentMainType,
+            wallet: document.getElementById('hiddenWallet').value,
+            currency: document.querySelector('.currency-select').value,
+            amount: amount,
+            category: category,
+            person: document.getElementById('hiddenPerson') ? document.getElementById('hiddenPerson').value : "",
+            note: document.querySelector('.note-input').value,
+            date: document.getElementById('nativeDateInput').value
+        };
+
+        try {
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify(updatedTx),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const data = await response.json();
+            
+            if (data.status === "success") {
+                showToast("✅ Đã cập nhật thành công!");
+                closeAddModal();
+                loadLedgerData(); 
+            } else {
+                showToast("❌ Lỗi: " + data.message);
+            }
+        } catch (e) {
+            showToast("❌ Lỗi đường truyền, không thể cập nhật!");
+        }
+
+        btn.innerText = "Cập nhật";
+        btn.disabled = false;
+    }
+
+    async function deleteTx(txId) {
+        const confirmDelete = confirm("Sếp có chắc chắn muốn xóa giao dịch này không?");
+        if (!confirmDelete) return;
+        
+        closeTxDetailSheet('force');
+        showToast("⏳ Đang xóa giao dịch...");
+        
+        const userEmail = document.getElementById('emailInput').value;
+        
+        try {
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({ 
+                    action: "DELETE_TX", 
+                    email: userEmail,
+                    id: txId
+                }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            
+            const data = await response.json();
+            if (data.status === "success") {
+                showToast("✅ Đã xóa thành công!");
+                loadLedgerData();
+            } else {
+                showToast("❌ Xóa thất bại: " + data.message);
+            }
+        } catch (e) {
+            showToast("❌ Lỗi đường truyền, không thể xóa!");
+        }
     }
   </script>
 </body>
