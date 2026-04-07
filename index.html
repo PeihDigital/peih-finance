@@ -1314,6 +1314,69 @@
     }
     .split-sub-content { display: none; flex-direction: column; flex: 1; }
     .split-sub-content.active { display: flex; animation: slideDown 0.2s ease-out forwards; }
+    .ios-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      appearance: none;
+      background: var(--border-color);
+      border-radius: 12px;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      flex-shrink: 0;
+      margin: 0;
+    }
+    .ios-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #ffffff;
+      border-radius: 50%;
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .ios-switch:checked {
+      background: #34c759;
+    }
+    .ios-switch:checked::after {
+      transform: translateX(20px);
+    }
+    .limit-inline-input {
+      background: transparent;
+      border: none;
+      text-align: right;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      outline: none;
+      width: 110px;
+    }
+    .limit-inline-input::placeholder {
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 13px;
+    }
+    .limit-inline-input:read-only {
+      color: #007aff; 
+    }
+    .limit-inline-input:read-only::placeholder {
+      color: #007aff;
+    }
+    .btn-delete-pill {
+      background: transparent;
+      border: 1px solid #ff3b30;
+      color: #ff3b30;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -1466,70 +1529,28 @@
       <div id="budget-limit" class="budget-sub-content active">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
           <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Chi tiết hạn mức</span>
-          <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;">+ Thêm</span>
+          <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;" onclick="openBudgetSettingsModal('limit')">+ Thêm</span>
         </div>
-        <div class="form-container" style="padding: 0 15px; margin-bottom: 20px;">
-          <div class="form-row" style="flex-direction: column; align-items: stretch; padding: 15px 0;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-              <div style="display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; color: var(--text-main);"><span style="font-size: 18px;">🍜</span> Ăn uống</div>
-              <div style="font-weight: 700; font-size: 14px; color: var(--text-main);">¥ 35,000 <span style="color: var(--text-muted); font-weight: 500;">/ ¥ 40,000</span></div>
-            </div>
-            <div class="budget-progress-wrap" style="background-color: var(--bg-main);"><div class="budget-fill fill-warn" style="width: 87.5%;"></div></div>
-          </div>
-          <div class="form-row" style="flex-direction: column; align-items: stretch; padding: 15px 0; border-bottom: none;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-              <div style="display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; color: var(--text-main);"><span style="font-size: 18px;">🛒</span> Mua sắm</div>
-              <div style="font-weight: 700; font-size: 14px; color: var(--text-main);">¥ 5,000 <span style="color: var(--text-muted); font-weight: 500;">/ ¥ 15,000</span></div>
-            </div>
-            <div class="budget-progress-wrap" style="background-color: var(--bg-main);"><div class="budget-fill fill-safe" style="width: 33.3%;"></div></div>
-          </div>
+        <div class="form-container" style="padding: 0 15px; margin-bottom: 20px;" id="dynamicCategoryLimits">
+           <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;">Đang tải hạn mức...</div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
           <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Quỹ mục tiêu (Tích lũy)</span>
-          <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;">+ Tạo quỹ</span>
+          <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;" onclick="openBudgetSettingsModal('fund')">+ Tạo quỹ</span>
         </div>
-        <div class="form-container" style="padding: 0 15px;">
-          <div class="form-row" style="padding: 15px 0; border-bottom: none;">
-            <div style="width: 40px; height: 40px; border-radius: 12px; background-color: var(--bg-main); display: flex; justify-content: center; align-items: center; font-size: 20px; margin-right: 15px;">✈️</div>
-            <div style="flex: 1;">
-              <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px; color: var(--text-main);">Du lịch Hokkaido</div>
-              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">
-                <span style="color: var(--text-main);">¥ 40,000</span>
-                <span>Mục tiêu: ¥ 100,000</span>
-              </div>
-              <div class="budget-progress-wrap" style="height: 6px; background-color: var(--bg-main);"><div class="budget-fill" style="background-color: #007aff; width: 40%;"></div></div>
-            </div>
-          </div>
+        <div class="form-container" id="dynamicGoalFunds" style="padding: 0 15px;">
+           <div style="padding: 20px 0; color: var(--text-muted); font-size: 13px; text-align: center;">Đang tải dữ liệu quỹ...</div>
         </div>
       </div>
 
       <div id="budget-fixed" class="budget-sub-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
           <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Các khoản định kỳ</span>
-          <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;">+ Thêm</span>
+          <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;" onclick="openBudgetSettingsModal('fixed')">+ Thêm</span>
         </div>
-        <div class="form-container" style="padding: 0 15px;">
-          <div class="form-row" style="padding: 15px 0;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div class="minimal-checkbox checked"></div>
-              <div>
-                <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">Tiền nhà (Yachin)</div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Đã thanh toán</div>
-              </div>
-            </div>
-            <div style="font-weight: 800; font-size: 15px; color: var(--text-main);">¥ 65,000</div>
-          </div>
-          <div class="form-row" style="padding: 15px 0; border-bottom: none;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div class="minimal-checkbox"></div>
-              <div>
-                <div style="font-weight: 600; font-size: 15px; color: #ff3b30;">Gói mạng Internet</div>
-                <div style="font-size: 12px; color: #ff3b30; margin-top: 2px; font-weight: 600;">Đến hạn hôm nay!</div>
-              </div>
-            </div>
-            <div style="font-weight: 800; font-size: 15px; color: var(--text-main);">¥ 4,500</div>
-          </div>
+        <div class="form-container" id="dynamicFixedExpenses" style="padding: 0 15px;">
+           <div style="padding: 20px 0; color: var(--text-muted); font-size: 13px; text-align: center;">Đang tải khoản cố định...</div>
         </div>
       </div>
 
@@ -1875,6 +1896,89 @@
         </div>
     </div>
   </div>
+
+  <div id="budgetSettingsModal" class="sub-modal">
+    <div class="sub-modal-header">
+      <button class="btn-icon-circle" onclick="closeBudgetSettingsModal()">‹</button>
+      <span id="budgetSettingsTitle">Cài đặt Ngân Sách</span>
+      <div style="width: 38px;"></div>
+    </div>
+    
+    <div style="padding: 15px 15px 0 15px;">
+      <div class="transaction-type-segment" id="budgetSettingsToggle" style="margin-bottom: 0;">
+        <div class="type-btn active" onclick="switchBudgetSettingsTab('limit', this)">Hạn mức</div>
+        <div class="type-btn" onclick="switchBudgetSettingsTab('fund', this)">Quỹ mục tiêu</div>
+        <div class="type-btn" onclick="switchBudgetSettingsTab('fixed', this)">Khoản định kỳ</div>
+      </div>
+    </div>
+
+    <div class="modal-content" style="background-color: var(--bg-main); padding-top: 15px; overflow-y: auto;">
+      
+      <div id="budgetSettings-limit" class="budget-settings-content active">
+        <div class="form-container" style="padding: 15px; margin-bottom: 25px;">
+          <div style="font-weight: 700; font-size: 14px; margin-bottom: 12px; color: var(--text-main);">TỔNG NGÂN SÁCH</div>
+          <div class="transaction-type-segment" id="totalLimitModeToggle" style="margin-bottom: 15px; border-radius: 30px;">
+            <div class="type-btn active" style="border-radius: 26px;" onclick="switchTotalLimitMode('sum', this)">Đã cài</div>
+            <div class="type-btn" style="border-radius: 26px;" onclick="switchTotalLimitMode('auto', this)">Thu nhập</div>
+            <div class="type-btn" style="border-radius: 26px;" onclick="switchTotalLimitMode('custom', this)">Tuỳ chọn</div>
+          </div>
+          <div id="customTotalLimitWrapper" style="display: none;">
+            <input type="text" id="setting-limit-total" inputmode="numeric" value="" placeholder="Nhập số tiền..." oninput="formatCurrency(this)" style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; font-size: 16px; font-weight: bold; color: var(--text-main); outline: none;">
+          </div>
+          <div id="autoTotalLimitDesc" style="font-size: 12px; color: var(--text-muted); text-align: center;">Hệ thống sẽ lấy tổng của các nhóm đã cài đặt.</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Các nhóm đã giới hạn</div>
+          <button onclick="openLimitPickerSheet()" style="background: transparent; border: 1px solid #007aff; color: #007aff; font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 12px; cursor: pointer;">+ Thêm nhóm</button>
+        </div>
+
+        <div id="activeLimitInputsContainer" style="display: flex; flex-direction: column;">
+        </div>
+
+        <button onclick="saveBudgetLimits()" style="width: 100%; background-color: #007aff; color: white; border: none; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 20px;">Lưu thiết lập</button>
+      </div>
+
+  <div id="limitPickerSheet" class="bottom-sheet-backdrop" onclick="closeLimitPickerSheet(event)">
+    <div class="bottom-sheet-pane" style="max-height: 80vh;" onclick="event.stopPropagation()">
+      <div class="sheet-header" style="border-bottom: 1px solid var(--border-color);">
+        <button class="sheet-btn" style="background: transparent; border: none; color: var(--text-muted);" onclick="closeLimitPickerSheet('force')">Đóng</button>
+        <div class="sheet-title">Chọn nhóm quản lý</div>
+        <button class="sheet-btn" style="background: #007aff; color: white; border: none;" onclick="applyLimitPicker()">Xong</button>
+      </div>
+      
+      <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 700; font-size: 15px; color: var(--text-main);">Chọn tất cả</span>
+        <input type="checkbox" id="toggleAllLimits" class="ios-switch" onchange="toggleAllLimitCategories(this.checked)">
+      </div>
+
+      <div class="sheet-list" id="limitPickerList" style="padding: 10px 20px 30px 20px;">
+      </div>
+    </div>
+  </div>
+
+      <div id="budgetSettings-fund" class="budget-settings-content" style="display: none;">
+         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div style="font-size: 13px; color: var(--text-muted);">Danh sách quỹ hiện tại</div>
+            <button onclick="addNewFundRow()" style="background: transparent; border: 1px solid #007aff; color: #007aff; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 8px; cursor: pointer;">+ Thêm Quỹ</button>
+         </div>
+         <div id="fundSettingsContainer" style="display: flex; flex-direction: column; gap: 10px;">
+           </div>
+         <button onclick="saveBudgetFunds()" style="width: 100%; background-color: #007aff; color: white; border: none; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 20px;">Lưu Quỹ</button>
+      </div>
+
+      <div id="budgetSettings-fixed" class="budget-settings-content" style="display: none;">
+         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div style="font-size: 13px; color: var(--text-muted);">Các khoản đóng hàng tháng</div>
+            <button onclick="addNewFixedRow()" style="background: transparent; border: 1px solid #007aff; color: #007aff; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 8px; cursor: pointer;">+ Thêm khoản</button>
+         </div>
+         <div id="fixedSettingsContainer" style="display: flex; flex-direction: column; gap: 10px;">
+           </div>
+         <button onclick="saveBudgetFixed()" style="width: 100%; background-color: #007aff; color: white; border: none; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 20px;">Lưu Khoản Cố Định</button>
+      </div>
+    </div>
+  </div>
+  
   <div id="personModal" class="sub-modal">
     <div class="sub-modal-header">
       <button class="btn-icon-circle" onclick="closePersonModal()">‹</button>
@@ -4521,7 +4625,7 @@
          filteredData.forEach(tx => {
             let parts = tx.category.split(' - ');
             let parentCat = parts[0];
-            let childCat = parts.length > 1 ? parts[1] : parts[0];
+            let childCat = parts.length > 1 ? parts.slice(1).join(' - ') : parts[0];
             
             // Lọc theo Cha hay Con tùy vào nút gạt
             let groupKey = ledgerGroupMode === 'category-parent' ? parentCat : tx.category;
@@ -5309,6 +5413,9 @@
       if (allLedgerData.length === 0) return;
       renderBudgetLimits();
       renderBudgetDebts();
+      renderBudgetCategoryLimits();
+      renderBudgetFunds();
+      renderBudgetFixed();
     }
 
     function renderBudgetLimits() {
@@ -5317,20 +5424,46 @@
         let today = new Date();
         return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
       });
-
-      let totalExpense = 0;
+      let totalExpenseAll = 0;
+      let totalIncome = 0;
+      let totalExpenseSetOnly = 0;
+      let categoryLimits = (appConfig && appConfig.categoryLimits) ? appConfig.categoryLimits : {};
+      let totalSetLimits = 0;
+      for (let k in categoryLimits) {
+          totalSetLimits += Number(categoryLimits[k]) || 0;
+      }
+      let isAnyLimitSet = totalSetLimits > 0;
+      let targetCurrency = document.getElementById('globalCurrencySelect').value || 'VND';
+      let rates = window.exchangeRates || { "USD": 1, "VND": 25400, "JPY": 152 };
 
       currentMonthTxs.forEach(tx => {
         let isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
         let isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
         
-        if (!isIncome) {
-          totalExpense += (Number(tx.amount) || 0);
+        let txCurr = tx.currency || 'VND';
+        let amt = Number(tx.amount) || 0;
+        if (txCurr !== targetCurrency && rates[txCurr] && rates[targetCurrency]) {
+            amt = (amt / rates[txCurr]) * rates[targetCurrency];
+        }
+        
+        if (isIncome) {
+          totalIncome += amt;
+        } else {
+          totalExpenseAll += amt;
+          if (isAnyLimitSet) {
+              let parts = tx.category.split(' - ');
+              let pCat = parts[0];
+              if (categoryLimits[tx.category] > 0 || categoryLimits[pCat] > 0) {
+                  totalExpenseSetOnly += amt;
+              }
+          }
         }
       });
 
-      let totalLimit = appConfig && appConfig.totalLimit ? appConfig.totalLimit : 10000000;
-      let percentUsed = totalLimit > 0 ? Math.round((totalExpense / totalLimit) * 100) : 0;
+      let displayLimit = isAnyLimitSet ? totalSetLimits : totalIncome;
+      let displayExpense = isAnyLimitSet ? totalExpenseSetOnly : totalExpenseAll;
+      
+      let percentUsed = displayLimit > 0 ? Math.round((displayExpense / displayLimit) * 100) : (displayExpense > 0 ? 100 : 0);
       if (percentUsed > 100) percentUsed = 100;
 
       let donutColor = percentUsed < 80 ? '#34c759' : (percentUsed < 100 ? '#ff9500' : '#ff3b30');
@@ -5346,33 +5479,255 @@
 
       let expenseUI = document.getElementById('budgetTotalExpenseUI');
       let limitUI = document.getElementById('budgetTotalLimitUI');
-      let currentCurrency = document.getElementById('globalCurrencySelect').value || 'VND';
-      let sym = currentCurrency === 'VND' ? '₫' : (currentCurrency === 'JPY' ? '¥' : '$');
+      let sym = targetCurrency === 'VND' ? '₫' : (targetCurrency === 'JPY' ? '¥' : '$');
+      if (expenseUI) expenseUI.innerText = `${Math.round(displayExpense).toLocaleString()} ${sym}`;
+      if (limitUI) limitUI.innerText = `${Math.round(displayLimit).toLocaleString()} ${sym}`;
+    }
 
-      if (expenseUI) expenseUI.innerText = `${totalExpense.toLocaleString()} ${sym}`;
-      if (limitUI) limitUI.innerText = `${totalLimit.toLocaleString()} ${sym}`;
+    function renderBudgetCategoryLimits() {
+      let currentMonthTxs = allLedgerData.filter(tx => {
+        let d = new Date(tx.date);
+        let today = new Date();
+        return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+      });
+
+      let totalIncome = 0;
+      let totalExpense = 0;
+      let expenseByParent = {};
+      let configLimits = (appConfig && appConfig.categoryLimits) ? appConfig.categoryLimits : {};
+
+      let targetCurrency = document.getElementById('globalCurrencySelect').value || 'VND';
+      let rates = window.exchangeRates || { "USD": 1, "VND": 25400, "JPY": 152 };
+
+      currentMonthTxs.forEach(tx => {
+        let isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
+        let isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
+        
+        let txCurr = tx.currency || 'VND';
+        let amt = Number(tx.amount) || 0;
+        if (txCurr !== targetCurrency && rates[txCurr] && rates[targetCurrency]) {
+            amt = (amt / rates[txCurr]) * rates[targetCurrency];
+        }
+        
+        if (isIncome) {
+          totalIncome += amt;
+        } else {
+          totalExpense += amt; 
+          let parts = tx.category.split(' - ');
+          let parentCat = parts[0];
+          let childCat = parts.length > 1 ? parts.slice(1).join(' - ') : parentCat;
+
+          if (!expenseByParent[parentCat]) {
+            expenseByParent[parentCat] = { spent: 0, children: {}, icon: getAiCatIcon(tx.category, tx.type) || "📊" };
+          }
+          expenseByParent[parentCat].spent += amt;
+
+          if (!expenseByParent[parentCat].children[childCat]) {
+            expenseByParent[parentCat].children[childCat] = { spent: 0, fullCat: tx.category };
+          }
+          expenseByParent[parentCat].children[childCat].spent += amt;
+        }
+      });
+
+      let totalSetLimits = 0;
+      let unsetParentsCount = 0;
+
+      for (let pCat in expenseByParent) {
+          let pLimit = configLimits[pCat] ? Number(configLimits[pCat]) : 0;
+          let cLimitSum = 0;
+          for (let cCat in expenseByParent[pCat].children) {
+              let full = expenseByParent[pCat].children[cCat].fullCat;
+              cLimitSum += (configLimits[full] ? Number(configLimits[full]) : 0);
+          }
+          
+          if (pLimit > 0) {
+              totalSetLimits += pLimit; 
+          } else if (cLimitSum > 0) {
+              totalSetLimits += cLimitSum;
+          } else {
+              unsetParentsCount++;
+          }
+      }
+
+      let unallocatedPool = Math.max(0, totalIncome - totalSetLimits);
+      let autoParentLimit = unsetParentsCount > 0 ? (unallocatedPool / unsetParentsCount) : 0;
+
+      let hasLimitGroups = [];
+      let noLimitGroups = [];
+
+      for (let pCat in expenseByParent) {
+        let pData = expenseByParent[pCat];
+        let pLimit = configLimits[pCat] ? Number(configLimits[pCat]) : 0;
+        let cLimitSum = 0;
+        let unsetChildrenCount = 0;
+        
+        for (let cCat in pData.children) {
+            let full = pData.children[cCat].fullCat;
+            let cLimit = configLimits[full] ? Number(configLimits[full]) : 0;
+            if (cLimit > 0) cLimitSum += cLimit;
+            else unsetChildrenCount++;
+        }
+
+        let isUnsetGroup = (pLimit === 0 && cLimitSum === 0);
+        let assignedParentLimit = pLimit;
+        
+        if (isUnsetGroup) {
+            assignedParentLimit = autoParentLimit; 
+        } else if (pLimit === 0 && cLimitSum > 0) {
+            assignedParentLimit = cLimitSum;
+        }
+
+        pData.limit = assignedParentLimit;
+        pData.name = pCat;
+        pData.childrenArr = [];
+
+        for (let cCat in pData.children) {
+            let cData = pData.children[cCat];
+            let cLimit = configLimits[cData.fullCat] ? Number(configLimits[cData.fullCat]) : 0;
+            let assignedChildLimit = cLimit;
+
+            if (cLimit === 0) {
+                if (isUnsetGroup) {
+                    assignedChildLimit = unsetChildrenCount > 0 ? (autoParentLimit / unsetChildrenCount) : 0;
+                } else if (pLimit > 0) {
+                    let remaining = Math.max(0, pLimit - cLimitSum);
+                    assignedChildLimit = unsetChildrenCount > 0 ? (remaining / unsetChildrenCount) : 0;
+                } else {
+                    assignedChildLimit = 0;
+                }
+            }
+
+            pData.childrenArr.push({ 
+                name: cCat, 
+                spent: cData.spent, 
+                limit: assignedChildLimit, 
+                fullCat: cData.fullCat 
+            });
+        }
+
+        pData.childrenArr.sort((a,b) => b.spent - a.spent);
+
+        if (isUnsetGroup) {
+            noLimitGroups.push(pData);
+        } else {
+            hasLimitGroups.push(pData);
+        }
+      }
+
+      hasLimitGroups.sort((a, b) => b.spent - a.spent);
+      noLimitGroups.sort((a, b) => b.spent - a.spent);
+
+      let sym = targetCurrency === 'VND' ? '₫' : (targetCurrency === 'JPY' ? '¥' : '$');
+
+      function createBarHtml(name, spent, limit, isChild, icon, isUnset) {
+        let pct = 0;
+        let colorClass = '';
+        let displayLimit = '';
+        let customColorStyle = '';
+        
+        if (isUnset) {
+            pct = totalExpense > 0 ? Math.min((spent / totalExpense) * 100, 100) : 0;
+            customColorStyle = 'background-color: #af52de;'; 
+            displayLimit = '';
+        } else {
+            pct = limit > 0 ? Math.min((spent / limit) * 100, 100) : (spent > 0 ? 100 : 0);
+            colorClass = pct < 80 ? 'fill-safe' : (pct < 100 ? 'fill-warn' : 'fill-danger');
+            displayLimit = limit > 0 ? `<span style="color: var(--text-muted); font-weight: 500;">/ ${sym} ${Math.round(limit).toLocaleString()}</span>` : ``;
+        }
+        
+        let padding = isChild ? 'padding: 12px 0 12px 20px;' : 'padding: 15px 0;';
+        let fontSize = isChild ? '13px' : '15px';
+        let iconHtml = icon ? `<span style="font-size: 18px; margin-right: 8px;">${icon}</span>` : '';
+        if (isChild) iconHtml = `<span style="color: var(--text-muted); margin-right: 12px; font-size: 18px; font-weight: 800;">↳</span>`;
+
+        return `
+          <div class="form-row" style="flex-direction: column; align-items: stretch; ${padding} border-bottom: 1px dashed var(--border-color);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <div style="display: flex; align-items: center; font-weight: 600; font-size: ${fontSize}; color: var(--text-main);">${iconHtml}${name}</div>
+              <div style="font-weight: 700; font-size: 13px; color: var(--text-main);">${sym} ${Math.round(spent).toLocaleString()} ${displayLimit}</div>
+            </div>
+            <div class="budget-progress-wrap" style="background-color: var(--bg-main); height: 6px;">
+              <div class="budget-fill ${colorClass}" style="width: ${pct}%; ${customColorStyle}"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      let html = '';
+
+      if (hasLimitGroups.length === 0 && noLimitGroups.length === 0) {
+        html = '<div style="padding: 20px 0; color: var(--text-muted); font-size: 14px; text-align: center; font-weight: 500;">Tháng này sếp chưa tiêu đồng nào!</div>';
+      } else {
+        hasLimitGroups.forEach(p => {
+          html += `<div class="form-container" style="padding: 0 15px; margin-bottom: 15px;">`;
+          let groupHtml = createBarHtml(p.name, p.spent, p.limit, false, p.icon, false);
+          if (p.childrenArr.length > 1 || (p.childrenArr.length === 1 && p.childrenArr[0].name !== p.name)) {
+            p.childrenArr.forEach(c => {
+              groupHtml += createBarHtml(c.name, c.spent, c.limit, true, null, false);
+            });
+          }
+          groupHtml = groupHtml.replace(/border-bottom: 1px dashed var\(--border-color\);(?!.*border-bottom: 1px dashed var\(--border-color\);)/, 'border-bottom: none;');
+          html += groupHtml + `</div>`;
+        });
+
+        if (noLimitGroups.length > 0) {
+          html += `
+            <div class="form-container" style="padding: 0 15px; margin-bottom: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; cursor: pointer;" onclick="document.getElementById('noLimitBody').classList.toggle('active'); document.getElementById('noLimitArrow').classList.toggle('open');">
+                <div style="font-weight: 700; font-size: 14px; color: var(--text-main);">Chưa đặt hạn mức</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Liệt kê thực tế</span>
+                  <div id="noLimitArrow" class="ai-arrow">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                </div>
+              </div>
+              <div id="noLimitBody" class="budget-sub-content">
+          `;
+          
+          let noLimitHtml = '';
+          noLimitGroups.forEach(p => {
+            noLimitHtml += createBarHtml(p.name, p.spent, 0, false, p.icon, true); 
+            if (p.childrenArr.length > 1 || (p.childrenArr.length === 1 && p.childrenArr[0].name !== p.name)) {
+              p.childrenArr.forEach(c => {
+                noLimitHtml += createBarHtml(c.name, c.spent, 0, true, null, true);
+              });
+            }
+          });
+          noLimitHtml = noLimitHtml.replace(/border-bottom: 1px dashed var\(--border-color\);(?!.*border-bottom: 1px dashed var\(--border-color\);)/, 'border-bottom: none;');
+          html += noLimitHtml + `</div></div>`;
+        }
+      }
+
+      let container = document.getElementById('dynamicCategoryLimits');
+      if (container) container.innerHTML = html;
     }
 
     function renderBudgetDebts() {
       let debtBalances = {};
+
       allLedgerData.forEach(tx => {
         if (tx.type === "Vay/Nợ" && tx.person) {
-          if (!debtBalances[tx.person]) {
-            debtBalances[tx.person] = { 
+          let person = tx.person;
+          let curr = tx.currency || 'VND';
+
+          if (!debtBalances[person]) debtBalances[person] = {};
+          if (!debtBalances[person][curr]) {
+            debtBalances[person][curr] = { 
               phaiThu: 0, 
               phaiTra: 0, 
-              currency: tx.currency || 'VND',
               latestNote: tx.note || 'Không có ghi chú' 
             };
           }
+          
           let amt = Number(tx.amount) || 0;
           let cat = tx.category.toLowerCase();
           
-          if (cat.includes("cho vay")) debtBalances[tx.person].phaiThu += amt;
-          if (cat.includes("thu nợ")) debtBalances[tx.person].phaiThu -= amt;
+          if (cat.includes("cho vay")) debtBalances[person][curr].phaiThu += amt;
+          if (cat.includes("thu nợ")) debtBalances[person][curr].phaiThu -= amt;
           
-          if (cat.includes("đi vay")) debtBalances[tx.person].phaiTra += amt;
-          if (cat.includes("trả nợ")) debtBalances[tx.person].phaiTra -= amt;
+          if (cat.includes("đi vay")) debtBalances[person][curr].phaiTra += amt;
+          if (cat.includes("trả nợ")) debtBalances[person][curr].phaiTra -= amt;
         }
       });
 
@@ -5380,48 +5735,53 @@
       let htmlTra = '';
 
       for (let person in debtBalances) {
-        let thu = debtBalances[person].phaiThu;
-        let tra = debtBalances[person].phaiTra;
-        let net = thu - tra;
-        
-        let sym = debtBalances[person].currency === 'VND' ? '₫' : (debtBalances[person].currency === 'JPY' ? '¥' : '$');
-        let note = debtBalances[person].latestNote; 
+        for (let curr in debtBalances[person]) {
+          let data = debtBalances[person][curr];
+          let thu = data.phaiThu;
+          let tra = data.phaiTra;
+          let net = thu - tra;
+          
+          if (net === 0) continue;
+          
+          let sym = curr === 'VND' ? '₫' : (curr === 'JPY' ? '¥' : '$');
+          let note = data.latestNote;
 
-        if (net > 0) {
-          htmlThu += `
-            <div class="form-container" style="padding: 15px; margin-bottom: 12px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">${person}</div>
-                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${note}</div>
-                </div>
-                <div style="text-align: right;">
-                  <div style="font-weight: 800; font-size: 16px; color: #34c759;">+ ${sym} ${net.toLocaleString()}</div>
-                  <button onclick="openAddModalWithDebt('${person}', 'Thu nợ')" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 11px; padding: 4px 10px; border-radius: 8px; margin-top: 6px; font-weight: bold; cursor: pointer;">Thu nợ</button>
-                </div>
-              </div>
-            </div>
-          `;
-        } else if (net < 0) {
-          htmlTra += `
-            <div class="form-container" style="padding: 15px; margin-bottom: 12px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">${person}</div>
-                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${note}</div>
-                </div>
-                <div style="text-align: right;">
-                  <div style="font-weight: 800; font-size: 16px; color: #ff3b30;">- ${sym} ${Math.abs(net).toLocaleString()}</div>
-                  <button onclick="openAddModalWithDebt('${person}', 'Trả nợ')" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 11px; padding: 4px 10px; border-radius: 8px; margin-top: 6px; font-weight: bold; cursor: pointer;">Trả nợ</button>
+          if (net > 0) {
+            htmlThu += `
+              <div class="form-container" style="padding: 15px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-weight: 800; font-size: 17px; color: var(--text-main);">${person}</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${note}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-weight: 800; font-size: 16px; color: #34c759;">+ ${sym} ${net.toLocaleString()}</div>
+                    <button onclick="openAddModalWithDebt('${person}', 'Thu nợ', '${curr}')" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 11px; padding: 4px 10px; border-radius: 8px; margin-top: 6px; font-weight: bold; cursor: pointer;">Thu nợ</button>
+                  </div>
                 </div>
               </div>
-            </div>
-          `;
+            `;
+          } else if (net < 0) {
+            htmlTra += `
+              <div class="form-container" style="padding: 15px; margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-weight: 800; font-size: 17px; color: var(--text-main);">${person}</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${note}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-weight: 800; font-size: 16px; color: #ff3b30;">- ${sym} ${Math.abs(net).toLocaleString()}</div>
+                    <button onclick="openAddModalWithDebt('${person}', 'Trả nợ', '${curr}')" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 11px; padding: 4px 10px; border-radius: 8px; margin-top: 6px; font-weight: bold; cursor: pointer;">Trả nợ</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
         }
       }
+
       if (htmlThu === '') htmlThu = '<div class="form-container" style="padding: 12px 15px; color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 12px; font-weight: 500;">Không ai nợ sếp cả!</div>';
       if (htmlTra === '') htmlTra = '<div class="form-container" style="padding: 12px 15px; color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 12px; font-weight: 500;">Sếp không nợ ai cả!</div>';
-
       let budgetDebtContainer = document.getElementById('budget-debt');
       if (budgetDebtContainer) {
         budgetDebtContainer.innerHTML = `
@@ -5432,8 +5792,93 @@
         `;
       }
     }
+    function renderBudgetFunds() {
+      let funds = (appConfig && appConfig.goalFunds) ? appConfig.goalFunds : [];
+      let container = document.getElementById('dynamicGoalFunds');
+      if (!container) return;
 
-    function openAddModalWithDebt(person, typeCat) {
+      if (funds.length === 0) {
+        container.innerHTML = '<div style="padding: 20px 0; color: var(--text-muted); font-size: 13px; text-align: center; font-weight: 500;">Sếp chưa lập quỹ mục tiêu nào.</div>';
+        return;
+      }
+
+      let currentCurrency = document.getElementById('globalCurrencySelect').value || 'VND';
+      let sym = currentCurrency === 'VND' ? '₫' : (currentCurrency === 'JPY' ? '¥' : '$');
+
+      let html = '';
+      funds.forEach((fund, index) => {
+        let borderBottom = index === funds.length - 1 ? 'border-bottom: none;' : 'border-bottom: 1px dashed var(--border-color);';
+        let pct = fund.target > 0 ? Math.min((fund.saved / fund.target) * 100, 100) : 0;
+        
+        html += `
+          <div class="form-row" style="padding: 15px 0; ${borderBottom}">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background-color: var(--bg-main); display: flex; justify-content: center; align-items: center; font-size: 20px; margin-right: 15px;">${fund.icon || '🎯'}</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px; color: var(--text-main);">${fund.name}</div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">
+                <span style="color: var(--text-main);">${sym} ${Math.round(fund.saved).toLocaleString()}</span>
+                <span>Mục tiêu: ${sym} ${Math.round(fund.target).toLocaleString()}</span>
+              </div>
+              <div class="budget-progress-wrap" style="height: 6px; background-color: var(--bg-main);">
+                <div class="budget-fill" style="background-color: #007aff; width: ${pct}%;"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderBudgetFixed() {
+      let fixedExps = (appConfig && appConfig.fixedExpenses) ? appConfig.fixedExpenses : [];
+      let container = document.getElementById('dynamicFixedExpenses');
+      if (!container) return;
+
+      if (fixedExps.length === 0) {
+        container.innerHTML = '<div style="padding: 20px 0; color: var(--text-muted); font-size: 13px; text-align: center; font-weight: 500;">Chưa có khoản cố định nào.</div>';
+        return;
+      }
+
+      let currentCurrency = document.getElementById('globalCurrencySelect').value || 'VND';
+      let sym = currentCurrency === 'VND' ? '₫' : (currentCurrency === 'JPY' ? '¥' : '$');
+      let currentMonthTxs = allLedgerData.filter(tx => {
+        let d = new Date(tx.date);
+        let today = new Date();
+        return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+      });
+
+      let html = '';
+      let today = new Date().getDate();
+
+      fixedExps.forEach((exp, index) => {
+        let isPaid = currentMonthTxs.some(tx => 
+          (tx.category && tx.category.toLowerCase().includes(exp.name.toLowerCase())) || 
+          (tx.note && tx.note.toLowerCase().includes(exp.name.toLowerCase()))
+        );
+        
+        let borderBottom = index === fixedExps.length - 1 ? 'border-bottom: none;' : 'border-bottom: 1px dashed var(--border-color);';
+        let statusText = isPaid ? "Đã thanh toán" : `Đến hạn ngày ${exp.dueDate}`;
+        let statusColor = isPaid ? "var(--text-muted)" : (today >= exp.dueDate ? "#ff3b30" : "var(--text-muted)");
+        let titleColor = isPaid ? "var(--text-main)" : (today >= exp.dueDate ? "#ff3b30" : "var(--text-main)");
+        let checkboxClass = isPaid ? "minimal-checkbox checked" : "minimal-checkbox";
+        if (!isPaid && today >= exp.dueDate) statusText = "Quá hạn / Đến hạn hôm nay!";
+        html += `
+          <div class="form-row" style="padding: 15px 0; ${borderBottom}">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="${checkboxClass}"></div>
+              <div>
+                <div style="font-weight: 600; font-size: 15px; color: ${titleColor};">${exp.name}</div>
+                <div style="font-size: 12px; color: ${statusColor}; margin-top: 2px; font-weight: ${isPaid ? 'normal' : '600'};">${statusText}</div>
+              </div>
+            </div>
+            <div style="font-weight: 800; font-size: 15px; color: var(--text-main);">${sym} ${Math.round(exp.amount).toLocaleString()}</div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function openAddModalWithDebt(person, typeCat, currency) {
       openAddModal();
       changeMainType('Vay/Nợ');
       
@@ -5444,6 +5889,382 @@
       document.getElementById('hiddenPerson').value = person;
       document.getElementById('mainPersonText').innerText = person;
       document.getElementById('mainPersonText').style.color = "var(--text-main)";
+
+      // Tự động nhảy đúng loại tiền tệ khi bấm nút Thu nợ/Trả nợ
+      if (currency) {
+          document.getElementById('manualCurrencySelect').value = currency;
+      }
+    }
+    // --- LOGIC CHO CỬA SỔ CÀI ĐẶT NGÂN SÁCH ---
+    function openBudgetSettingsModal(tabName) {
+      if (!appConfig) return showToast("Dữ liệu chưa tải xong!");
+      document.getElementById('budgetSettingsModal').classList.add('open');
+      
+      // Bấm tab nào ở ngoài thì vào trong mở đúng tab đó
+      let btnElement = document.querySelector(`#budgetSettingsToggle .type-btn[onclick*="'${tabName}'"]`);
+      if (btnElement) switchBudgetSettingsTab(tabName, btnElement);
+    }
+
+    function closeBudgetSettingsModal() {
+      document.getElementById('budgetSettingsModal').classList.remove('open');
+    }
+
+    function switchBudgetSettingsTab(tabName, btnElement) {
+      document.querySelectorAll('#budgetSettingsToggle .type-btn').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+      moveSlider('budgetSettingsToggle', btnElement);
+
+      document.querySelectorAll('.budget-settings-content').forEach(c => c.style.display = 'none');
+      document.getElementById(`budgetSettings-${tabName}`).style.display = 'block';
+
+      // Nạp dữ liệu tương ứng khi chuyển tab
+      if (tabName === 'limit') loadLimitSettings();
+      if (tabName === 'fund') loadFundSettings();
+      if (tabName === 'fixed') loadFixedSettings();
+    }
+
+    let activeLimitMode = 'sum';
+    let selectedLimitCats = [];
+
+    function switchTotalLimitMode(mode, btnElement) {
+      document.querySelectorAll('#totalLimitModeToggle .type-btn').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+      moveSlider('totalLimitModeToggle', btnElement);
+
+      activeLimitMode = mode;
+      
+      let inputWrap = document.getElementById('customTotalLimitWrapper');
+      let descWrap = document.getElementById('autoTotalLimitDesc');
+
+      if (mode === 'custom') {
+        inputWrap.style.display = 'block';
+        descWrap.style.display = 'none';
+      } else {
+        inputWrap.style.display = 'none';
+        descWrap.style.display = 'block';
+        if (mode === 'auto') descWrap.innerText = "Hệ thống sẽ tự động lấy Tổng thu nhập thực tế.";
+        if (mode === 'sum') descWrap.innerText = "Sẽ tự động tính tổng của các nhóm đã cài đặt bên dưới.";
+      }
+    }
+
+    function loadLimitSettings() {
+      let currentLimits = (appConfig && appConfig.categoryLimits) ? appConfig.categoryLimits : {};
+      selectedLimitCats = Object.keys(currentLimits).filter(k => Number(currentLimits[k]) > 0);
+      
+      let totalLimit = appConfig.totalLimit || 0;
+      activeLimitMode = appConfig.totalLimitMode || 'sum'; 
+      
+      let btnToClick = document.querySelector(`#totalLimitModeToggle .type-btn[onclick*="'${activeLimitMode}'"]`);
+      if (btnToClick) {
+        switchTotalLimitMode(activeLimitMode, btnToClick);
+      }
+      
+      if (totalLimit > 0) {
+        document.getElementById('setting-limit-total').value = totalLimit.toLocaleString();
+      }
+
+      renderActiveLimitInputs();
+    }
+
+    function renderActiveLimitInputs() {
+      let container = document.getElementById('activeLimitInputsContainer');
+      let html = '';
+      let currentLimits = (appConfig && appConfig.categoryLimits) ? appConfig.categoryLimits : {};
+
+      if (selectedLimitCats.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;">Chưa có nhóm nào được chọn.</div>';
+        return;
+      }
+
+      let groupedSelected = {};
+      selectedLimitCats.forEach(cat => {
+        let parts = cat.split(' - ');
+        let pCat = parts[0];
+        let cCat = parts.length > 1 ? parts.slice(1).join(' - ') : null;
+        
+        if (!groupedSelected[pCat]) groupedSelected[pCat] = { parentSelected: false, children: [] };
+        
+        if (cCat === null) {
+          groupedSelected[pCat].parentSelected = true;
+        } else {
+          groupedSelected[pCat].children.push(cCat);
+        }
+      });
+
+      for (let pCat in groupedSelected) {
+        html += `<div class="form-container" style="padding: 0 15px; margin-bottom: 15px;">`;
+        let icon = getAiCatIcon(pCat, "Khoản chi") || '📊';
+        
+        let gData = groupedSelected[pCat];
+        let hasChildren = gData.children.length > 0;
+        
+        let pVal = currentLimits[pCat] ? currentLimits[pCat].toLocaleString() : '';
+        let btnDeleteParent = gData.parentSelected ? `<button class="btn-delete-pill" onclick="removeActiveLimit('${pCat}')">Xóa</button>` : '';
+        let pBorder = hasChildren ? 'border-bottom: 1px dashed var(--border-color);' : 'border-bottom: none;';
+        
+        html += `
+          <div class="form-row" style="flex-direction: row; justify-content: space-between; align-items: center; padding: 15px 0; ${pBorder}">
+            <div style="display: flex; align-items: center; font-weight: 600; font-size: 15px; color: var(--text-main);">
+              <span style="font-size: 18px; margin-right: 8px;">${icon}</span>${pCat}
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="text" class="limit-inline-input" data-cat="${pCat}" data-parent="${pCat}" data-ischild="false" value="${pVal}" placeholder="Đặt hạn mức" oninput="formatCurrency(this)">
+              ${btnDeleteParent}
+            </div>
+          </div>
+        `;
+        
+        gData.children.forEach((cCat, idx) => {
+          let fullCat = pCat + ' - ' + cCat;
+          let cVal = currentLimits[fullCat] ? currentLimits[fullCat].toLocaleString() : '';
+          let cBorder = idx === gData.children.length - 1 ? 'border-bottom: none;' : 'border-bottom: 1px dashed var(--border-color);';
+          
+          html += `
+            <div class="form-row" style="flex-direction: row; justify-content: space-between; align-items: center; padding: 12px 0 12px 20px; ${cBorder}">
+              <div style="display: flex; align-items: center; font-weight: 600; font-size: 13px; color: var(--text-main);">
+                <span style="color: var(--text-muted); margin-right: 12px; font-size: 18px; font-weight: 800;">↳</span>${cCat}
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="text" class="limit-inline-input" data-cat="${fullCat}" data-parent="${pCat}" data-ischild="true" value="${cVal}" placeholder="Đặt hạn mức" oninput="formatCurrency(this); recalcParentLimit('${pCat}')">
+                <button class="btn-delete-pill" onclick="removeActiveLimit('${fullCat}')">Xóa</button>
+              </div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+      container.innerHTML = html;
+      
+      for (let pCat in groupedSelected) {
+        if (groupedSelected[pCat].children.length > 0) recalcParentLimit(pCat);
+      }
+    }
+
+    function recalcParentLimit(parentName) {
+      let childInputs = document.querySelectorAll(`.limit-inline-input[data-parent="${parentName}"][data-ischild="true"]`);
+      let parentInput = document.querySelector(`.limit-inline-input[data-cat="${parentName}"][data-ischild="false"]`);
+      
+      if (!parentInput) return;
+
+      if (childInputs.length === 0) {
+        parentInput.removeAttribute('readonly');
+        parentInput.placeholder = "Đặt hạn mức";
+        return;
+      }
+
+      let sum = 0;
+      childInputs.forEach(inp => {
+        sum += Number(inp.value.replace(/\D/g, '')) || 0;
+      });
+
+      if (sum > 0) {
+          parentInput.value = sum.toLocaleString();
+      } else {
+          parentInput.value = '';
+      }
+      
+      parentInput.setAttribute('readonly', 'true');
+      parentInput.placeholder = "Từ nhóm con";
+    }
+
+    function renderLimitPickerList() {
+      let container = document.getElementById('limitPickerList');
+      let html = '';
+      let expensesCat = (appConfig && appConfig.categories && appConfig.categories["Khoản chi"]) ? appConfig.categories["Khoản chi"] : {};
+
+      for (let pCat in expensesCat) {
+        let pChecked = selectedLimitCats.includes(pCat) ? 'checked' : '';
+        let hasChildren = expensesCat[pCat].length > 0;
+        let pBorder = hasChildren ? 'border-bottom: 1px dashed var(--border-color);' : 'border-bottom: none;';
+        
+        // Bọc form-container cho từng cụm Cha - Con
+        html += `<div class="form-container" style="padding: 0 15px; margin-bottom: 12px;">`;
+        html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; ${pBorder}">
+            <span style="font-weight: 600; font-size: 15px; color: var(--text-main);">${pCat}</span>
+            <input type="checkbox" class="ios-switch picker-switch" data-cat="${pCat}" ${pChecked} onchange="togglePickerCat('${pCat}', this.checked)">
+          </div>
+        `;
+        
+        expensesCat[pCat].forEach((c, idx) => {
+           let cName = c.name || c;
+           let fullCat = pCat + " - " + cName;
+           let cChecked = selectedLimitCats.includes(fullCat) ? 'checked' : '';
+           let cBorder = idx === expensesCat[pCat].length - 1 ? 'border-bottom: none;' : 'border-bottom: 1px dashed var(--border-color);';
+           
+           html += `
+             <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0 12px 20px; ${cBorder}">
+                <span style="font-weight: 500; font-size: 14px; color: var(--text-muted);"><span style="margin-right: 8px;">↳</span>${cName}</span>
+                <input type="checkbox" class="ios-switch picker-switch" data-cat="${fullCat}" ${cChecked} onchange="togglePickerCat('${fullCat}', this.checked)">
+             </div>
+           `;
+        });
+        html += `</div>`;
+      }
+      container.innerHTML = html;
+      checkAllToggleState();
+    }
+
+    function removeActiveLimit(catFull) {
+      selectedLimitCats = selectedLimitCats.filter(c => c !== catFull);
+      renderActiveLimitInputs();
+    }
+
+    function openLimitPickerSheet() {
+      document.getElementById('limitPickerSheet').classList.add('open');
+      renderLimitPickerList();
+    }
+
+    function closeLimitPickerSheet(eventOrAction) {
+      if (eventOrAction !== 'force' && eventOrAction.target !== document.getElementById('limitPickerSheet')) return;
+      document.getElementById('limitPickerSheet').classList.remove('open');
+    }
+
+    function applyLimitPicker() {
+      closeLimitPickerSheet('force');
+      renderActiveLimitInputs();
+    }
+
+    function togglePickerCat(catFull, isChecked) {
+      if (isChecked && !selectedLimitCats.includes(catFull)) {
+        selectedLimitCats.push(catFull);
+      } else if (!isChecked) {
+        selectedLimitCats = selectedLimitCats.filter(c => c !== catFull);
+      }
+      checkAllToggleState();
+    }
+
+    function toggleAllLimitCategories(isChecked) {
+      let expensesCat = (appConfig && appConfig.categories && appConfig.categories["Khoản chi"]) ? appConfig.categories["Khoản chi"] : {};
+      selectedLimitCats = [];
+      
+      if (isChecked) {
+        for (let pCat in expensesCat) {
+          selectedLimitCats.push(pCat);
+          expensesCat[pCat].forEach(c => {
+             selectedLimitCats.push(pCat + " - " + (c.name || c));
+          });
+        }
+      }
+      renderLimitPickerList();
+    }
+
+    function checkAllToggleState() {
+      let switches = document.querySelectorAll('.picker-switch');
+      let allChecked = Array.from(switches).every(s => s.checked);
+      document.getElementById('toggleAllLimits').checked = (switches.length > 0 && allChecked);
+    }
+
+    function loadFundSettings() {
+      let container = document.getElementById('fundSettingsContainer');
+      let funds = (appConfig && appConfig.goalFunds) ? appConfig.goalFunds : [];
+      if (funds.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">Sếp bấm + Thêm Quỹ ở góc trên nhé!</div>';
+        return;
+      }
+      
+      let html = '';
+      funds.forEach((f, idx) => {
+        html += `
+          <div class="form-container fund-row-setting" style="padding: 15px; position: relative;">
+            <button onclick="this.parentElement.remove()" style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 12px; background: #ff3b30; color: white; border: none; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 12px; z-index: 10;">✕</button>
+            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+              <input type="text" class="fund-icon-input" value="${f.icon}" placeholder="Icon" style="width: 45px; text-align: center; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; font-size: 18px; outline: none; color: var(--text-main);">
+              <input type="text" class="fund-name-input" value="${f.name}" placeholder="Tên quỹ (VD: Mua xe)" style="flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; color: var(--text-main); outline: none; padding: 5px;">
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+               <div style="flex: 1;">
+                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Đã gom được</div>
+                 <input type="text" class="fund-saved-input" inputmode="numeric" value="${f.saved > 0 ? f.saved.toLocaleString() : ''}" placeholder="0" oninput="formatCurrency(this)" style="width: 100%; text-align: right; background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-size: 14px; font-weight: 600; color: #34c759; outline: none;">
+               </div>
+               <div style="flex: 1;">
+                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Mục tiêu</div>
+                 <input type="text" class="fund-target-input" inputmode="numeric" value="${f.target > 0 ? f.target.toLocaleString() : ''}" placeholder="0" oninput="formatCurrency(this)" style="width: 100%; text-align: right; background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); outline: none;">
+               </div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function addNewFundRow() {
+      let container = document.getElementById('fundSettingsContainer');
+      if (container.innerText.includes('Thêm Quỹ ở góc trên')) container.innerHTML = '';
+      
+      let html = `
+          <div class="form-container fund-row-setting" style="padding: 15px; position: relative;">
+            <button onclick="this.parentElement.remove()" style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 12px; background: #ff3b30; color: white; border: none; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 12px; z-index: 10;">✕</button>
+            <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+              <input type="text" class="fund-icon-input" value="🎯" placeholder="Icon" style="width: 45px; text-align: center; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; font-size: 18px; outline: none; color: var(--text-main);">
+              <input type="text" class="fund-name-input" value="" placeholder="Tên quỹ (VD: Mua xe)" style="flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; color: var(--text-main); outline: none; padding: 5px;">
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+               <div style="flex: 1;">
+                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Đã gom được</div>
+                 <input type="text" class="fund-saved-input" inputmode="numeric" value="" placeholder="0" oninput="formatCurrency(this)" style="width: 100%; text-align: right; background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-size: 14px; font-weight: 600; color: #34c759; outline: none;">
+               </div>
+               <div style="flex: 1;">
+                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Mục tiêu</div>
+                 <input type="text" class="fund-target-input" inputmode="numeric" value="" placeholder="0" oninput="formatCurrency(this)" style="width: 100%; text-align: right; background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); outline: none;">
+               </div>
+            </div>
+          </div>
+      `;
+      container.insertAdjacentHTML('afterbegin', html);
+    }
+
+    function loadFixedSettings() {
+      let container = document.getElementById('fixedSettingsContainer');
+      let fixedExps = (appConfig && appConfig.fixedExpenses) ? appConfig.fixedExpenses : [];
+      if (fixedExps.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">Sếp bấm + Thêm khoản ở góc trên nhé!</div>';
+        return;
+      }
+      
+      let html = '';
+      fixedExps.forEach((exp, idx) => {
+        html += `
+          <div class="form-container fixed-row-setting" style="padding: 15px; position: relative;">
+            <button onclick="this.parentElement.remove()" style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 12px; background: #ff3b30; color: white; border: none; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 12px; z-index: 10;">✕</button>
+            <input type="text" class="fixed-name-input" value="${exp.name}" placeholder="Tên khoản (VD: Tiền nhà)" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; color: var(--text-main); outline: none; padding: 5px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+               <div style="width: 80px;">
+                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Ngày đóng</div>
+                 <input type="number" class="fixed-day-input" min="1" max="31" value="${exp.dueDate}" placeholder="Ngày" style="width: 100%; text-align: center; background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); outline: none;">
+               </div>
+               <div style="flex: 1;">
+                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Số tiền</div>
+                 <input type="text" class="fixed-amount-input" inputmode="numeric" value="${exp.amount > 0 ? exp.amount.toLocaleString() : ''}" placeholder="0" oninput="formatCurrency(this)" style="width: 100%; text-align: right; background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); outline: none;">
+               </div>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function addNewFixedRow() {
+      let container = document.getElementById('fixedSettingsContainer');
+      if (container.innerText.includes('Thêm khoản ở góc trên')) container.innerHTML = '';
+      
+      let html = `
+          <div class="form-container fixed-row-setting" style="padding: 15px; position: relative;">
+            <button onclick="this.parentElement.remove()" style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 12px; background: #ff3b30; color: white; border: none; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 12px; z-index: 10;">✕</button>
+            <input type="text" class="fixed-name-input" value="" placeholder="Tên khoản (VD: Tiền nhà)" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: bold; color: var(--text-main); outline: none; padding: 5px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+               <div style="width: 80px;">
+                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Ngày đóng</div>
+                 <input type="number" class="fixed-day-input" min="1" max="31" value="1" placeholder="Ngày" style="width: 100%; text-align: center; background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); outline: none;">
+               </div>
+               <div style="flex: 1;">
+                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Số tiền</div>
+                 <input type="text" class="fixed-amount-input" inputmode="numeric" value="" placeholder="0" oninput="formatCurrency(this)" style="width: 100%; text-align: right; background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); outline: none;">
+               </div>
+            </div>
+          </div>
+      `;
+      container.insertAdjacentHTML('afterbegin', html);
     }
   </script>
 </body>
