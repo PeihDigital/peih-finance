@@ -809,8 +809,33 @@
       font-weight: bold;
       cursor: pointer;
     }
+    .budget-progress-wrap {
+      width: 100%;
+      height: 6px;
+      background-color: var(--border-color);
+      border-radius: 3px;
+      overflow: hidden;
+    }
 
-    /* Queue UI Styles */
+    .budget-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .fill-safe { background-color: #34c759; }
+    .fill-warn { background-color: #ff9500; }
+    .fill-danger { background-color: #ff3b30; }
+
+    .budget-sub-content {
+      display: none;
+    }
+    
+    .budget-sub-content.active {
+      display: block;
+      animation: slideDown 0.2s ease-out forwards;
+    }
+    
     .queue-container {
       margin-top: 15px;
       display: flex;
@@ -1268,6 +1293,27 @@
       font-size: 14px;
       font-weight: bold;
     }
+    .css-donut {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .donut-inner {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background-color: var(--form-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 800;
+      font-size: 18px;
+    }
+    .split-sub-content { display: none; flex-direction: column; flex: 1; }
+    .split-sub-content.active { display: flex; animation: slideDown 0.2s ease-out forwards; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -1388,7 +1434,135 @@
       
     </div>
     <div id="tab-pantry" class="tab-content">...</div>
-    <div id="tab-budget" class="tab-content">...</div>
+    <div id="tab-budget" class="tab-content">
+      <div class="dashboard-header" style="margin-bottom: 20px;">
+        <div class="header-label" style="font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Kế hoạch tài chính</div>
+        <div class="total-amount" style="font-size: 26px;">Tháng 4/2026</div>
+      </div>
+
+      <div class="transaction-type-segment" id="budgetTabToggle" style="margin-bottom: 15px; border-radius: 30px;">
+        <div class="type-btn active" style="border-radius: 26px;" onclick="switchGenericSubTab('budgetTabToggle', 'budget-sub-content', 'budget-limit', this)">Hạn mức</div>
+        <div class="type-btn" style="border-radius: 26px;" onclick="switchGenericSubTab('budgetTabToggle', 'budget-sub-content', 'budget-fixed', this)">Cố định</div>
+        <div class="type-btn" style="border-radius: 26px;" onclick="switchGenericSubTab('budgetTabToggle', 'budget-sub-content', 'budget-debt', this)">Sổ nợ</div>
+      </div>
+
+      <div class="form-container" style="padding: 20px 15px; margin-bottom: 15px;">
+        <div style="font-weight: 800; font-size: 17px; margin-bottom: 4px; color: var(--text-main);">Tổng Ngân Sách</div>
+        <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Sếp đã sử dụng bao nhiêu % hạn mức?</div>
+        
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div class="css-donut" style="background: conic-gradient(#34c759 39%, var(--border-color) 0);">
+            <div class="donut-inner" style="color: #34c759;">39%</div>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Đã chi tiêu</div>
+            <div id="budgetTotalExpenseUI" style="font-size: 24px; font-weight: 800; margin-bottom: 10px; color: var(--text-main);">¥ 0</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Tổng hạn mức</div>
+            <div id="budgetTotalLimitUI" style="font-size: 18px; font-weight: 800; color: var(--text-main);">¥ 0</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="budget-limit" class="budget-sub-content active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
+          <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Chi tiết hạn mức</span>
+          <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;">+ Thêm</span>
+        </div>
+        <div class="form-container" style="padding: 0 15px; margin-bottom: 20px;">
+          <div class="form-row" style="flex-direction: column; align-items: stretch; padding: 15px 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; color: var(--text-main);"><span style="font-size: 18px;">🍜</span> Ăn uống</div>
+              <div style="font-weight: 700; font-size: 14px; color: var(--text-main);">¥ 35,000 <span style="color: var(--text-muted); font-weight: 500;">/ ¥ 40,000</span></div>
+            </div>
+            <div class="budget-progress-wrap" style="background-color: var(--bg-main);"><div class="budget-fill fill-warn" style="width: 87.5%;"></div></div>
+          </div>
+          <div class="form-row" style="flex-direction: column; align-items: stretch; padding: 15px 0; border-bottom: none;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; color: var(--text-main);"><span style="font-size: 18px;">🛒</span> Mua sắm</div>
+              <div style="font-weight: 700; font-size: 14px; color: var(--text-main);">¥ 5,000 <span style="color: var(--text-muted); font-weight: 500;">/ ¥ 15,000</span></div>
+            </div>
+            <div class="budget-progress-wrap" style="background-color: var(--bg-main);"><div class="budget-fill fill-safe" style="width: 33.3%;"></div></div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
+          <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Quỹ mục tiêu (Tích lũy)</span>
+          <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;">+ Tạo quỹ</span>
+        </div>
+        <div class="form-container" style="padding: 0 15px;">
+          <div class="form-row" style="padding: 15px 0; border-bottom: none;">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background-color: var(--bg-main); display: flex; justify-content: center; align-items: center; font-size: 20px; margin-right: 15px;">✈️</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 15px; margin-bottom: 4px; color: var(--text-main);">Du lịch Hokkaido</div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">
+                <span style="color: var(--text-main);">¥ 40,000</span>
+                <span>Mục tiêu: ¥ 100,000</span>
+              </div>
+              <div class="budget-progress-wrap" style="height: 6px; background-color: var(--bg-main);"><div class="budget-fill" style="background-color: #007aff; width: 40%;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="budget-fixed" class="budget-sub-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
+          <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Các khoản định kỳ</span>
+          <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;">+ Thêm</span>
+        </div>
+        <div class="form-container" style="padding: 0 15px;">
+          <div class="form-row" style="padding: 15px 0;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="minimal-checkbox checked"></div>
+              <div>
+                <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">Tiền nhà (Yachin)</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Đã thanh toán</div>
+              </div>
+            </div>
+            <div style="font-weight: 800; font-size: 15px; color: var(--text-main);">¥ 65,000</div>
+          </div>
+          <div class="form-row" style="padding: 15px 0; border-bottom: none;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="minimal-checkbox"></div>
+              <div>
+                <div style="font-weight: 600; font-size: 15px; color: #ff3b30;">Gói mạng Internet</div>
+                <div style="font-size: 12px; color: #ff3b30; margin-top: 2px; font-weight: 600;">Đến hạn hôm nay!</div>
+              </div>
+            </div>
+            <div style="font-weight: 800; font-size: 15px; color: var(--text-main);">¥ 4,500</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="budget-debt" class="budget-sub-content">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; padding: 0 5px;">Ai nợ mình (Phải thu)</div>
+        <div class="form-container" style="padding: 0 15px; margin-bottom: 20px;">
+          <div class="form-row" style="padding: 15px 0; border-bottom: none;">
+            <div>
+              <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">Nguyễn Văn A</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Tiền đi nhậu hôm qua</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-weight: 800; font-size: 16px; color: #34c759;">+ ¥ 3,000</div>
+              <button style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 11px; padding: 4px 10px; border-radius: 8px; margin-top: 6px; font-weight: bold;">Đã nhận</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; padding: 0 5px;">Mình nợ ai (Phải trả)</div>
+        <div class="form-container" style="padding: 0 15px;">
+          <div class="form-row" style="padding: 15px 0; border-bottom: none;">
+            <div>
+              <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">Trần Thị B</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Vay mua giày</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-weight: 800; font-size: 16px; color: #ff3b30;">- ₫ 500,000</div>
+              <button style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 11px; padding: 4px 10px; border-radius: 8px; margin-top: 6px; font-weight: bold;">Trả nợ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div id="tab-settings" class="tab-content">
       <div class="dashboard-header">
@@ -1571,11 +1745,11 @@
       <div id="splitBillSection" style="display: none; flex-direction: column; flex: 1;">
         
         <div class="transaction-type-segment" id="splitTypeToggle" style="margin-bottom: 20px;">
-          <div class="type-btn active" onclick="switchSplitMode('nhap-nhanh', this)">Nhập nhanh</div>
-          <div class="type-btn" onclick="switchSplitMode('quet-bill', this)">Quét hoá đơn</div>
+          <div class="type-btn active" onclick="switchGenericSubTab('splitTypeToggle', 'split-sub-content', 'splitQuickSection', this)">Nhập nhanh</div>
+          <div class="type-btn" onclick="switchGenericSubTab('splitTypeToggle', 'split-sub-content', 'splitScanSection', this)">Quét hoá đơn</div>
         </div>
 
-        <div id="splitQuickSection" style="display: flex; flex-direction: column; flex: 1;">
+        <div id="splitQuickSection" class="split-sub-content active">
           <div class="form-container">
 
             <div class="form-row" onclick="currentAiEditIndex = null; openWalletModal()">
@@ -1628,7 +1802,7 @@
           </div>
         </div>
 
-        <div id="splitScanSection" style="display: none; flex-direction: column; flex: 1;">
+        <div id="splitScanSection" class="split-sub-content">
           <input type="file" id="billCaptureInput" accept="image/*" multiple style="display: none;" onchange="executeRealAiBillParse(event)">
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 10px;">
@@ -1925,9 +2099,23 @@
       document.getElementById('tab-' + tabId).classList.add('active');
       element.classList.add('active');
       if (tabId === 'ledger') renderTimeTabs();
+      if (tabId === 'budget') renderBudgetTab();
       if (tabId === 'settings') {
         setTimeout(() => applyTheme(localStorage.getItem('peih_theme') || 'light'), 50);
       }
+      if (tabId === 'budget') {
+        setTimeout(() => {
+          const activeBudgetBtn = document.querySelector('#budgetTabToggle .type-btn.active');
+          if (activeBudgetBtn) moveSlider('budgetTabToggle', activeBudgetBtn);
+        }, 50);
+      }
+    }
+    function switchGenericSubTab(groupId, contentClass, targetId, btnElement) {
+       document.querySelectorAll(`#${groupId} .type-btn`).forEach(b => b.classList.remove('active'));
+       btnElement.classList.add('active');
+       document.querySelectorAll(`.${contentClass}`).forEach(c => c.classList.remove('active'));
+       document.getElementById(targetId).classList.add('active');
+       moveSlider(groupId, btnElement);
     }
 
     function moveSlider(containerId, btnElement) {
@@ -2208,6 +2396,7 @@
           let currentTargetCurr = document.getElementById('globalCurrencySelect').value;
           window.peihReportCache[currentTargetCurr] = data.data.report;
           window.exchangeRates = data.data.rates;
+          renderBudgetTab();
           
           try {
             localStorage.setItem(cacheKey, JSON.stringify(data.data));
@@ -2728,32 +2917,13 @@
         if (btnSplit) btnSplit.classList.add('active');
         if (document.getElementById('splitBillSection')) document.getElementById('splitBillSection').style.display = 'flex';
         if (btnSplit) moveSlider('topModeToggle', btnSplit);
+        setTimeout(() => {
+          const activeSplitBtn = document.querySelector('#splitTypeToggle .type-btn.active');
+          if (activeSplitBtn) moveSlider('splitTypeToggle', activeSplitBtn);
+        }, 50);
       }
     }
 
-    function switchSplitMode(mode, btnElement) {
-      const btns = document.querySelectorAll('#splitTypeToggle .type-btn');
-      btns.forEach(b => {
-        if(b.innerText.toLowerCase().includes(mode.replace('-', ' '))) {
-          b.classList.add('active');
-          if(!btnElement) btnElement = b;
-        } else {
-          b.classList.remove('active');
-        }
-      });
-
-      if (btnElement && btnElement.offsetWidth > 0) moveSlider('splitTypeToggle', btnElement);
-
-      if (mode === 'nhap-nhanh') {
-        document.getElementById('splitQuickSection').style.display = 'flex';
-        document.getElementById('splitScanSection').style.display = 'none';
-      } else {
-        document.getElementById('splitQuickSection').style.display = 'none';
-        document.getElementById('splitScanSection').style.display = 'flex';
-      }
-    }
-
-    // Hàm định dạng số tự động (Gắn dấu phẩy)
     function formatCurrency(input) {
       let value = input.value.replace(/\D/g, '');
       if (value === "") {
@@ -5134,6 +5304,146 @@
         } catch (e) {
             showToast("❌ Lỗi đường truyền, không thể xóa!");
         }
+    }
+    function renderBudgetTab() {
+      if (allLedgerData.length === 0) return;
+      renderBudgetLimits();
+      renderBudgetDebts();
+    }
+
+    function renderBudgetLimits() {
+      let currentMonthTxs = allLedgerData.filter(tx => {
+        let d = new Date(tx.date);
+        let today = new Date();
+        return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+      });
+
+      let totalExpense = 0;
+
+      currentMonthTxs.forEach(tx => {
+        let isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
+        let isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
+        
+        if (!isIncome) {
+          totalExpense += (Number(tx.amount) || 0);
+        }
+      });
+
+      let totalLimit = appConfig && appConfig.totalLimit ? appConfig.totalLimit : 10000000;
+      let percentUsed = totalLimit > 0 ? Math.round((totalExpense / totalLimit) * 100) : 0;
+      if (percentUsed > 100) percentUsed = 100;
+
+      let donutColor = percentUsed < 80 ? '#34c759' : (percentUsed < 100 ? '#ff9500' : '#ff3b30');
+      
+      let donutEl = document.querySelector('.css-donut');
+      let donutInnerEl = document.querySelector('.donut-inner');
+      
+      if (donutEl && donutInnerEl) {
+        donutEl.style.background = `conic-gradient(${donutColor} ${percentUsed}%, var(--border-color) 0)`;
+        donutInnerEl.innerText = `${percentUsed}%`;
+        donutInnerEl.style.color = donutColor;
+      }
+
+      let expenseUI = document.getElementById('budgetTotalExpenseUI');
+      let limitUI = document.getElementById('budgetTotalLimitUI');
+      let currentCurrency = document.getElementById('globalCurrencySelect').value || 'VND';
+      let sym = currentCurrency === 'VND' ? '₫' : (currentCurrency === 'JPY' ? '¥' : '$');
+
+      if (expenseUI) expenseUI.innerText = `${totalExpense.toLocaleString()} ${sym}`;
+      if (limitUI) limitUI.innerText = `${totalLimit.toLocaleString()} ${sym}`;
+    }
+
+    function renderBudgetDebts() {
+      let debtBalances = {};
+      allLedgerData.forEach(tx => {
+        if (tx.type === "Vay/Nợ" && tx.person) {
+          if (!debtBalances[tx.person]) {
+            debtBalances[tx.person] = { 
+              phaiThu: 0, 
+              phaiTra: 0, 
+              currency: tx.currency || 'VND',
+              latestNote: tx.note || 'Không có ghi chú' 
+            };
+          }
+          let amt = Number(tx.amount) || 0;
+          let cat = tx.category.toLowerCase();
+          
+          if (cat.includes("cho vay")) debtBalances[tx.person].phaiThu += amt;
+          if (cat.includes("thu nợ")) debtBalances[tx.person].phaiThu -= amt;
+          
+          if (cat.includes("đi vay")) debtBalances[tx.person].phaiTra += amt;
+          if (cat.includes("trả nợ")) debtBalances[tx.person].phaiTra -= amt;
+        }
+      });
+
+      let htmlThu = '';
+      let htmlTra = '';
+
+      for (let person in debtBalances) {
+        let thu = debtBalances[person].phaiThu;
+        let tra = debtBalances[person].phaiTra;
+        let net = thu - tra;
+        
+        let sym = debtBalances[person].currency === 'VND' ? '₫' : (debtBalances[person].currency === 'JPY' ? '¥' : '$');
+        let note = debtBalances[person].latestNote; 
+
+        if (net > 0) {
+          htmlThu += `
+            <div class="form-container" style="padding: 15px; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">${person}</div>
+                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${note}</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-weight: 800; font-size: 16px; color: #34c759;">+ ${sym} ${net.toLocaleString()}</div>
+                  <button onclick="openAddModalWithDebt('${person}', 'Thu nợ')" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 11px; padding: 4px 10px; border-radius: 8px; margin-top: 6px; font-weight: bold; cursor: pointer;">Thu nợ</button>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (net < 0) {
+          htmlTra += `
+            <div class="form-container" style="padding: 15px; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">${person}</div>
+                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${note}</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-weight: 800; font-size: 16px; color: #ff3b30;">- ${sym} ${Math.abs(net).toLocaleString()}</div>
+                  <button onclick="openAddModalWithDebt('${person}', 'Trả nợ')" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-size: 11px; padding: 4px 10px; border-radius: 8px; margin-top: 6px; font-weight: bold; cursor: pointer;">Trả nợ</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+      if (htmlThu === '') htmlThu = '<div class="form-container" style="padding: 12px 15px; color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 12px; font-weight: 500;">Không ai nợ sếp cả!</div>';
+      if (htmlTra === '') htmlTra = '<div class="form-container" style="padding: 12px 15px; color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 12px; font-weight: 500;">Sếp không nợ ai cả!</div>';
+
+      let budgetDebtContainer = document.getElementById('budget-debt');
+      if (budgetDebtContainer) {
+        budgetDebtContainer.innerHTML = `
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; padding: 0 5px;">Ai nợ mình (Phải thu)</div>
+          ${htmlThu}
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; margin-top: 20px; padding: 0 5px;">Mình nợ ai (Phải trả)</div>
+          ${htmlTra}
+        `;
+      }
+    }
+
+    function openAddModalWithDebt(person, typeCat) {
+      openAddModal();
+      changeMainType('Vay/Nợ');
+      
+      document.getElementById('hiddenCategory').value = typeCat;
+      document.getElementById('mainCategoryText').innerText = typeCat;
+      document.getElementById('mainCategoryText').style.color = "var(--text-main)";
+      
+      document.getElementById('hiddenPerson').value = person;
+      document.getElementById('mainPersonText').innerText = person;
+      document.getElementById('mainPersonText').style.color = "var(--text-main)";
     }
   </script>
 </body>
