@@ -1509,7 +1509,8 @@
         <div class="type-btn" style="border-radius: 26px;" onclick="switchGenericSubTab('budgetTabToggle', 'budget-sub-content', 'budget-debt', this)">Sổ nợ</div>
       </div>
 
-      <div class="form-container" style="padding: 20px 15px; margin-bottom: 15px;">
+      <div id="budget-limit" class="budget-sub-content active">
+        <div class="form-container" style="padding: 20px 15px; margin-bottom: 15px;">
         <div style="font-weight: 800; font-size: 17px; margin-bottom: 4px; color: var(--text-main);">Tổng Ngân Sách</div>
         <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Sếp đã sử dụng bao nhiêu % hạn mức?</div>
         
@@ -1524,9 +1525,7 @@
             <div id="budgetTotalLimitUI" style="font-size: 18px; font-weight: 800; color: var(--text-main);">¥ 0</div>
           </div>
         </div>
-      </div>
-
-      <div id="budget-limit" class="budget-sub-content active">
+        </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
           <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Chi tiết hạn mức</span>
           <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;" onclick="openBudgetSettingsModal('limit')">+ Thêm</span>
@@ -1545,6 +1544,22 @@
       </div>
 
       <div id="budget-fixed" class="budget-sub-content">
+        <div class="form-container" style="padding: 20px 15px; margin-bottom: 15px;">
+        <div style="font-weight: 800; font-size: 17px; margin-bottom: 4px; color: var(--text-main);">Tổng Chi Định Kỳ</div>
+        <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Tiến độ các khoản cần thanh toán trong tháng!</div>
+        
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div id="fixedDonut" class="css-donut" style="background: conic-gradient(var(--border-color) 100%);">
+            <div id="fixedDonutInner" class="donut-inner" style="color: var(--text-main);">0%</div>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Đã chi tiêu</div>
+            <div id="fixedTotalDueUI" style="font-size: 24px; font-weight: 800; margin-bottom: 10px; color: var(--text-main);">0</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Tổng các khoản</div>
+            <div id="fixedTotalAllUI" style="font-size: 18px; font-weight: 800; color: var(--text-main);">0</div>
+          </div>
+        </div>
+      </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
           <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Các khoản định kỳ</span>
           <span style="color: #007aff; font-weight: 600; font-size: 13px; cursor: pointer;" onclick="openBudgetSettingsModal('fixed')">+ Thêm</span>
@@ -2543,6 +2558,14 @@
       } catch (err) { 
         alert("Lỗi đường truyền! Kiểm tra lại internet nhé!");
       }
+    }
+    async function syncConfigToBackend(){
+    showToast("⏳ Đang lưu thiết lập lên máy chủ...");
+    try{
+      let res=await fetch(GAS_WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"SAVE_CONFIG",email:document.getElementById('emailInput').value,config:appConfig}),headers:{"Content-Type":"text/plain;charset=utf-8"}});
+      let data=await res.json();
+      if(data.status==="success"){showToast("🤩 Đã lưu thiết lập thành công!"); renderBudgetTab();}else{showToast("😫 Lỗi lưu dữ liệu!");}
+    }catch(e){showToast("😫 Lỗi đường truyền!");}
     }
 
     function initDefaultValues() {
@@ -5370,14 +5393,14 @@
             const data = await response.json();
             
             if (data.status === "success") {
-                showToast("✅ Đã cập nhật thành công!");
+                showToast("🤩 Đã cập nhật thành công!");
                 closeAddModal();
                 loadLedgerData(); 
             } else {
-                showToast("❌ Lỗi: " + data.message);
+                showToast("😫 Lỗi: " + data.message);
             }
         } catch (e) {
-            showToast("❌ Lỗi đường truyền, không thể cập nhật!");
+            showToast("😭 Lỗi đường truyền, không thể cập nhật!");
         }
 
         btn.innerText = "Cập nhật";
@@ -5406,13 +5429,13 @@
             
             const data = await response.json();
             if (data.status === "success") {
-                showToast("✅ Đã xóa thành công!");
+                showToast("🤩 Đã xóa thành công!");
                 loadLedgerData();
             } else {
-                showToast("❌ Xóa thất bại: " + data.message);
+                showToast("😭 Xóa thất bại: " + data.message);
             }
         } catch (e) {
-            showToast("❌ Lỗi đường truyền, không thể xóa!");
+            showToast("😭 Lỗi đường truyền, không thể xóa!");
         }
     }
     function renderBudgetTab() {
@@ -5757,7 +5780,7 @@
               <div class="form-container" style="padding: 15px; margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <div>
-                    <div style="font-weight: 800; font-size: 17px; color: var(--text-main);">${person}</div>
+                    <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">${person}</div>
                     <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${note}</div>
                   </div>
                   <div style="text-align: right;">
@@ -5772,7 +5795,7 @@
               <div class="form-container" style="padding: 15px; margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <div>
-                    <div style="font-weight: 800; font-size: 17px; color: var(--text-main);">${person}</div>
+                    <div style="font-weight: 600; font-size: 15px; color: var(--text-main);">${person}</div>
                     <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${note}</div>
                   </div>
                   <div style="text-align: right;">
@@ -5788,14 +5811,14 @@
 
       if (htmlThu === '') htmlThu = '<div class="form-container" style="padding: 12px 15px; color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 12px; font-weight: 500;">Không ai nợ sếp cả!</div>';
       if (htmlTra === '') htmlTra = '<div class="form-container" style="padding: 12px 15px; color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 12px; font-weight: 500;">Sếp không nợ ai cả!</div>';
+      let totalReceivable = 0; let totalPayable = 0; let targetCurrency = document.getElementById('globalCurrencySelect').value || 'VND'; let rates = window.exchangeRates || { "USD": 1, "VND": 25400, "JPY": 152 }; let targetSym = targetCurrency === 'VND' ? '₫' : (targetCurrency === 'JPY' ? '¥' : '$');
+      for (let person in debtBalances) { for (let curr in debtBalances[person]) { let data = debtBalances[person][curr]; let net = data.phaiThu - data.phaiTra; if (net === 0) continue; let convertedNet = net; if (curr !== targetCurrency && rates[curr] && rates[targetCurrency]) { convertedNet = (net / rates[curr]) * rates[targetCurrency]; } if (net > 0) totalReceivable += convertedNet; else if (net < 0) totalPayable += Math.abs(convertedNet); } }
+      let netTotal = totalReceivable - totalPayable; let totalDebtFlow = totalReceivable + totalPayable; let donutGradient = 'conic-gradient(var(--border-color) 100%)'; let innerText = '0'; let innerColor = 'var(--text-main)'; let innerSign = '';
+      if (totalDebtFlow > 0) { let thuPct = (totalReceivable / totalDebtFlow) * 100; donutGradient = `conic-gradient(#34c759 0% ${thuPct}%, #ff3b30 ${thuPct}% 100%)`; if (netTotal > 0) { innerColor = '#34c759'; innerSign = '+'; } else if (netTotal < 0) { innerColor = '#ff3b30'; innerSign = '-'; } innerText = `<div style="font-size:11px;font-weight:bold;">${innerSign}${targetSym}</div><div style="font-size:12px;letter-spacing:-0.5px;">${Math.round(Math.abs(netTotal)).toLocaleString()}</div>`; }
+      let summaryHtml = `<div class="form-container" style="padding: 20px 15px; margin-bottom: 25px;"><div style="font-weight: 800; font-size: 17px; margin-bottom: 4px; color: var(--text-main);">Tổng Công Nợ</div><div style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Thực nhận sau khi cấn trừ</div><div style="display: flex; align-items: center; gap: 20px;"><div class="css-donut" style="background: ${donutGradient}; flex-shrink: 0;"><div class="donut-inner" style="color: ${innerColor}; display: flex; flex-direction: column; line-height: 1.2;">${innerText}</div></div><div style="flex: 1; min-width: 0;"><div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Tổng Phải Thu</div><div style="font-size: 18px; font-weight: 800; margin-bottom: 10px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${targetSym} ${Math.round(totalReceivable).toLocaleString()}</div><div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 2px;">Tổng Phải Trả</div><div style="font-size: 18px; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${targetSym} ${Math.round(totalPayable).toLocaleString()}</div></div></div></div>`;
       let budgetDebtContainer = document.getElementById('budget-debt');
       if (budgetDebtContainer) {
-        budgetDebtContainer.innerHTML = `
-          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; padding: 0 5px;">Ai nợ mình (Phải thu)</div>
-          ${htmlThu}
-          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; margin-top: 20px; padding: 0 5px;">Mình nợ ai (Phải trả)</div>
-          ${htmlTra}
-        `;
+        budgetDebtContainer.innerHTML = summaryHtml + `<div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; padding: 0 5px;">Ai nợ mình (Phải thu)</div>${htmlThu} <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; margin-top: 20px; padding: 0 5px;">Mình nợ ai (Phải trả)</div>${htmlTra}`;
       }
     }
     function renderBudgetFunds() {
@@ -5840,50 +5863,100 @@
       let container = document.getElementById('dynamicFixedExpenses');
       if (!container) return;
 
+      let currentCurrency = document.getElementById('globalCurrencySelect').value || 'VND';
+      let sym = currentCurrency === 'VND' ? '₫' : (currentCurrency === 'JPY' ? '¥' : '$');
+      let currentMonthTxs = allLedgerData.filter(tx => {
+        let d = new Date(tx.date);
+        let todayObj = new Date();
+        return d.getMonth() === todayObj.getMonth() && d.getFullYear() === todayObj.getFullYear();
+      });
+
+      let html = '';
+      let today = new Date().getDate();
+      let colors = [
+      '#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#32ade6', '#007aff', '#5856d6', 
+      '#af52de', '#ff2d55', '#a2845e', '#4cd964', '#00bfff', '#ff6b22', '#b66dff', 
+      '#ff8a80', '#34aadc', '#c69c6d', '#8e8e93', '#ffb340', '#64d2ff'
+      ];
+
+      let totalFixed = 0;
+      let totalDue = 0;
+      fixedExps.forEach(exp => {
+        totalFixed += (Number(exp.amount) || 0);
+        if (today >= exp.dueDate) totalDue += (Number(exp.amount) || 0);
+      });
+
+      // Cập nhật khung Summary
+      let dueUI = document.getElementById('fixedTotalDueUI');
+      let allUI = document.getElementById('fixedTotalAllUI');
+      if (dueUI) dueUI.innerText = `${Math.round(totalDue).toLocaleString()} ${sym}`;
+      if (allUI) allUI.innerText = `${Math.round(totalFixed).toLocaleString()} ${sym}`;
+
+      let donutEl = document.getElementById('fixedDonut');
+      let donutInner = document.getElementById('fixedDonutInner');
+      
+      if (donutEl && donutInner) {
+        if (totalFixed === 0) {
+            donutEl.style.background = `conic-gradient(var(--border-color) 100%)`;
+            donutInner.innerText = `0%`;
+        } else {
+            let gradientParts = [];
+            let currentPct = 0;
+            fixedExps.forEach((exp, idx) => {
+                let itemAmt = Number(exp.amount) || 0;
+                if (itemAmt > 0) {
+                    let pct = (itemAmt / totalFixed) * 100;
+                    gradientParts.push(`${colors[idx % colors.length]} ${currentPct}% ${currentPct + pct}%`);
+                    currentPct += pct;
+                }
+            });
+            donutEl.style.background = `conic-gradient(${gradientParts.join(', ')})`;
+            let percentDue = Math.round((totalDue / totalFixed) * 100);
+            donutInner.innerText = `${percentDue}%`;
+            donutInner.style.color = percentDue >= 100 ? '#ff3b30' : (percentDue >= 80 ? '#ff9500' : '#34c759');
+        }
+      }
+
       if (fixedExps.length === 0) {
         container.innerHTML = '<div style="padding: 20px 0; color: var(--text-muted); font-size: 13px; text-align: center; font-weight: 500;">Chưa có khoản cố định nào.</div>';
         return;
       }
 
-      let currentCurrency = document.getElementById('globalCurrencySelect').value || 'VND';
-      let sym = currentCurrency === 'VND' ? '₫' : (currentCurrency === 'JPY' ? '¥' : '$');
-      let currentMonthTxs = allLedgerData.filter(tx => {
-        let d = new Date(tx.date);
-        let today = new Date();
-        return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
-      });
-
-      let html = '';
-      let today = new Date().getDate();
-
+      // Render danh sách các khoản
       fixedExps.forEach((exp, index) => {
         let isPaid = currentMonthTxs.some(tx => 
           (tx.category && tx.category.toLowerCase().includes(exp.name.toLowerCase())) || 
           (tx.note && tx.note.toLowerCase().includes(exp.name.toLowerCase()))
         );
         
+        let itemAmt = Number(exp.amount) || 0;
+        let itemPct = totalFixed > 0 ? Math.round((itemAmt / totalFixed) * 100) : 0;
+        let itemColor = colors[index % colors.length]; // Lấy màu tương ứng với biểu đồ
+
         let borderBottom = index === fixedExps.length - 1 ? 'border-bottom: none;' : 'border-bottom: 1px dashed var(--border-color);';
-        let statusText = isPaid ? "Đã thanh toán" : `Đến hạn ngày ${exp.dueDate}`;
         let statusColor = isPaid ? "var(--text-muted)" : (today >= exp.dueDate ? "#ff3b30" : "var(--text-muted)");
-        let titleColor = isPaid ? "var(--text-main)" : (today >= exp.dueDate ? "#ff3b30" : "var(--text-main)");
         let checkboxClass = isPaid ? "minimal-checkbox checked" : "minimal-checkbox";
-        if (!isPaid && today >= exp.dueDate) statusText = "Quá hạn / Đến hạn hôm nay!";
+        
         html += `
           <div class="form-row" style="padding: 15px 0; ${borderBottom}">
-            <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+              <div style="width: 4px; height: 16px; border-radius: 2px; background-color: ${itemColor}; flex-shrink: 0;"></div>
+              
               <div class="${checkboxClass}"></div>
-              <div>
-                <div style="font-weight: 600; font-size: 15px; color: ${titleColor};">${exp.name}</div>
-                <div style="font-size: 12px; color: ${statusColor}; margin-top: 2px; font-weight: ${isPaid ? 'normal' : '600'};">${statusText}</div>
+              <div style="overflow: hidden;">
+                <div style="font-weight: 600; font-size: 15px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${exp.name}</div>
+                <div style="font-size: 12px; color: ${statusColor}; margin-top: 2px;">Ngày ${exp.dueDate} ${isPaid ? '• Đã xong' : ''}</div>
               </div>
             </div>
-            <div style="font-weight: 800; font-size: 15px; color: var(--text-main);">${sym} ${Math.round(exp.amount).toLocaleString()}</div>
+            <div style="text-align: right; flex-shrink: 0; margin-left: 10px;">
+              <div style="font-weight: 800; font-size: 15px; color: var(--text-main);">${sym} ${Math.round(itemAmt).toLocaleString()}</div>
+              <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">${itemPct}%</div>
+            </div>
           </div>
         `;
       });
       container.innerHTML = html;
     }
-
     function openAddModalWithDebt(person, typeCat, currency) {
       openAddModal();
       changeMainType('Vay/Nợ');
@@ -6271,6 +6344,44 @@
           </div>
       `;
       container.insertAdjacentHTML('afterbegin', html);
+    }
+    function saveBudgetFixed(){
+    let fixedExps=[];
+    document.querySelectorAll('.fixed-row-setting').forEach(row=>{
+      let name=row.querySelector('.fixed-name-input').value.trim();
+      let day=row.querySelector('.fixed-day-input').value;
+      let amt=row.querySelector('.fixed-amount-input').value.replace(/\D/g,'');
+      if(name&&day&&amt) fixedExps.push({name:name,dueDate:parseInt(day),amount:parseInt(amt)});
+    });
+    if(!appConfig) appConfig={};
+    appConfig.fixedExpenses=fixedExps;
+    syncConfigToBackend();
+    }
+    function saveBudgetFunds(){
+      let funds=[];
+      document.querySelectorAll('.fund-row-setting').forEach(row=>{
+      let icon=row.querySelector('.fund-icon-input').value.trim();
+      let name=row.querySelector('.fund-name-input').value.trim();
+      let saved=row.querySelector('.fund-saved-input').value.replace(/\D/g,'');
+      let target=row.querySelector('.fund-target-input').value.replace(/\D/g,'');
+      if(name&&target) funds.push({icon:icon||"🎯",name:name,saved:parseInt(saved||0),target:parseInt(target)});
+      });
+      if(!appConfig) appConfig={};
+      appConfig.goalFunds=funds;
+      syncConfigToBackend();
+    }
+    function saveBudgetLimits(){
+      let limits={};
+      document.querySelectorAll('.limit-long-input').forEach(inp=>{
+      let cat=inp.getAttribute('data-cat');
+      let val=inp.value.replace(/\D/g,'');
+      if(val) limits[cat]=parseInt(val);
+      });
+      if(!appConfig) appConfig={};
+      appConfig.categoryLimits=limits;
+      appConfig.totalLimitMode=activeLimitMode;
+      appConfig.totalLimit=parseInt(document.getElementById('setting-limit-total').value.replace(/\D/g,'')||0);
+      syncConfigToBackend();
     }
   </script>
 </body>
