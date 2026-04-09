@@ -2411,7 +2411,7 @@
           } else {
               logout(); 
               if (splash) splash.style.display = 'none';
-              showToast("Phiên làm việc đã hết hạn hoặc bị hủy. Sếp đăng nhập lại nhé!");
+              showToast("Phiên làm việc đã hết hạn. Sếp đăng nhập lại nhé!");
           }
       } catch (e) {
           if (splash) splash.style.display = 'none';
@@ -7057,57 +7057,95 @@
             currSelect.style.appearance = 'none';
         }
     }
+    let stagedHealthImages = [];
+
     function openHealthAnalysis() {
         document.getElementById('healthReportModal').classList.add('open');
         document.getElementById('health-height').value = localStorage.getItem('peih_h_height') || '';
         document.getElementById('health-weight').value = localStorage.getItem('peih_h_weight') || '';
         document.getElementById('health-goal').value = localStorage.getItem('peih_h_goal') || '';
+        stagedHealthImages = []; // Reset ảnh cũ
+        renderHealthPreviews();
     }
 
-    async function processHealthAnalysis(event) {
-        const file = event.target.files[0]; if (!file) return;
+    async function handleHealthImages(event) {
+        const files = event.target.files;
+        if (!files) return;
+
+        const toBase64 = file => new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve({ base64: reader.result.split(',')[1], preview: reader.result, type: file.type });
+        });
+
+        const newImgs = await Promise.all(Array.from(files).map(f => toBase64(f)));
+        stagedHealthImages = [...stagedHealthImages, ...newImgs];
+        renderHealthPreviews();
+        event.target.value = '';
+    }
+
+    function renderHealthPreviews() {
+        const container = document.getElementById('healthImagePreview');
+        const btnStart = document.getElementById('btnStartHealthAi');
+        container.innerHTML = '';
+        stagedHealthImages.forEach((img, idx) => {
+            const div = document.createElement('div');
+            div.className = 'image-preview-wrapper';
+            div.innerHTML = `<img src="${img.preview}"><button class="btn-remove-img" onclick="stagedHealthImages.splice(${idx},1);renderHealthPreviews();">✕</button>`;
+            container.appendChild(div);
+        });
+        btnStart.style.display = stagedHealthImages.length > 0 ? 'block' : 'none';
+    }
+
+    async function startHealthAnalysis() {
         const h = document.getElementById('health-height').value;
         const w = document.getElementById('health-weight').value;
         const g = document.getElementById('health-goal').value;
         localStorage.setItem('peih_h_height', h); localStorage.setItem('peih_h_weight', w); localStorage.setItem('peih_h_goal', g);
-        const healthResultDiv = document.getElementById('healthAiResult');
-        healthResultDiv.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Peih đang soi món ăn và tra cứu dữ liệu...</div>';
-        const reader = new FileReader(); reader.readAsDataURL(file);
-        reader.onload = async () => {
-            const base64Data = reader.result.split(',')[1];
-            try {
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        action: "ANALYZE_HEALTH", image: base64Data, mimeType: file.type,
-                        userProfile: { height: h || 'Không rõ', weight: w || 'Không rõ', goal: g || 'Sức khỏe tổng quát' }
-                    }),
-                    headers: { "Content-Type": "text/plain;charset=utf-8" }
-                });
-                const data = await response.json();
-                if (data.status === "success") {
-                    healthResultDiv.innerHTML = `<div class="card" style="padding:15px; background:var(--form-bg); border-left: 4px solid #ff9500; border-radius:12px;">${data.report.replace(/\n/g, '<br>')}</div>`;
-                } else { healthResultDiv.innerHTML = "😫 Lỗi: " + data.message; }
-            } catch (e) { healthResultDiv.innerHTML = "😭 Lỗi kết nối!"; }
-        };
-        event.target.value = '';
+
+        const resultDiv = document.getElementById('healthAiResult');
+        resultDiv.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Peih đang tổng hợp dữ liệu từ '+stagedHealthImages.length+' ảnh...</div>';
+
+        try {
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "ANALYZE_HEALTH",
+                    images: stagedHealthImages.map(img => ({ base64: img.base64, mimeType: img.type })),
+                    userProfile: { height: h || '177', weight: w || '85', goal: g || 'Sức khỏe tổng quát' }
+                }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const data = await response.json();
+            if (data.status === "success") {
+                resultDiv.innerHTML = `<div class="card" style="padding:15px; background:var(--form-bg); border-left: 4px solid #ff9500; border-radius:12px; white-space: pre-line;">${data.report}</div>`;
+            } else { resultDiv.innerHTML = "😫 Lỗi: " + data.message; }
+        } catch (e) { resultDiv.innerHTML = "😭 Lỗi kết nối!"; }
     }
   </script>
   <div id="healthReportModal" class="sub-modal">
     <div class="sub-modal-header"><button class="btn-icon-circle" onclick="document.getElementById('healthReportModal').classList.remove('open')">‹</button><span>Peih Health ✨</span><div style="width:38px;"></div></div>
-    <div class="modal-content" style="background:var(--bg-main); padding: 20px; overflow-y: auto;">
-      <div class="section-title" style="margin-top:0;">CHỈ SỐ CỦA SẾP (TÙY CHỌN)</div>
-      <div class="form-container" style="padding: 15px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div class="modal-content" style="background:var(--bg-main); padding: 20px; display: flex; flex-direction: column;">
+      
+      <div class="section-title" style="margin-top:0;">CHỈ SỐ CỦA SẾP</div>
+      <div class="form-container" style="padding: 15px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
         <div><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Chiều cao (cm)</div><input type="number" id="health-height" placeholder="177" style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none;"></div>
         <div><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Cân nặng (kg)</div><input type="number" id="health-weight" placeholder="85" style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none;"></div>
-        <div style="grid-column: span 2;"><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Mục tiêu sức khỏe</div><input type="text" id="health-goal" placeholder="VD: Giảm cân, tăng cơ, chạy bộ..." style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none;"></div>
+        <div style="grid-column: span 2;"><input type="text" id="health-goal" placeholder="Mục tiêu: Giảm cân, tăng cơ..." style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none;"></div>
       </div>
-      <div id="healthAiResult" style="line-height: 1.6; font-size: 14px; min-height: 100px; margin-bottom: 20px;"><div style="text-align:center; padding:20px; color:var(--text-muted); border: 1px dashed var(--border-color); border-radius: 16px;">Sếp chụp món ăn để Peih soi nhé!</div></div>
-      <div style="position: sticky; bottom: 0; background: var(--bg-main); padding-top: 10px;">
-        <button onclick="document.getElementById('healthPhotoInput').click()" style="width:100%; background:#ff9500; color:white; border:none; padding:16px; border-radius:16px; font-weight:bold; font-size:16px; box-shadow: 0 4px 15px rgba(255,149,0,0.3);">📸 PHÂN TÍCH MÓN ĂN</button>
-        <input type="file" id="healthPhotoInput" accept="image/*" style="display:none;" onchange="processHealthAnalysis(event)">
+
+      <div id="healthImagePreview" class="pending-images-container" style="margin-bottom: 15px; min-height: 0;"></div>
+
+      <div id="healthAiResult" style="line-height: 1.6; font-size: 14px; flex: 1; overflow-y: auto; margin-bottom: 20px;">
+          <div style="text-align:center; padding:20px; color:var(--text-muted); border: 1px dashed var(--border-color); border-radius: 16px;">Sếp chụp món ăn (có thể chụp nhiều tấm góc khác nhau) để Peih soi nhé!</div>
       </div>
+
+      <div style="display: flex; gap: 10px; margin-top: auto; padding-bottom: 10px;">
+        <button onclick="document.getElementById('healthPhotoInput').click()" style="flex: 1; background: var(--form-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; border-radius: 16px; font-weight: bold;">📸 THÊM ẢNH</button>
+        <button id="btnStartHealthAi" onclick="startHealthAnalysis()" style="flex: 1.5; background: #ff9500; color: white; border: none; padding: 16px; border-radius: 16px; font-weight: bold; display: none;">🔥 PHÂN TÍCH NGAY</button>
+        <input type="file" id="healthPhotoInput" accept="image/*" multiple style="display:none;" onchange="handleHealthImages(event)">
+      </div>
+    </div>
   </div>
-</div>
 </body>
 </html>
