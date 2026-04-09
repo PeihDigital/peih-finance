@@ -1454,10 +1454,10 @@
       <div class="login-title">PEIH FINANCE</div>
       <div class="login-subtitle">AUTHENTICATION REQUIRED</div>
       <div class="input-group">
-        <input type="email" id="emailInput" class="input-field" placeholder="Email sếp">
+        <input type="email" id="emailInput" class="input-field" placeholder="Email sếp" readonly onfocus="this.removeAttribute('readonly');">
       </div>
       <div class="input-group">
-        <input type="password" id="passwordInput" class="input-field" placeholder="Mật khẩu">
+        <input type="password" id="passwordInput" class="input-field" placeholder="Mật khẩu" readonly onfocus="this.removeAttribute('readonly');">
       </div>
       <button class="btn-submit" onclick="handleLogin()">XÁC NHẬN VÀO HỆ THỐNG</button>
     </div>
@@ -2313,7 +2313,6 @@
     function initDefaultCurrency(){let savedCurrency=localStorage.getItem('peih_default_currency')||'VND';let settingSelect=document.getElementById('defaultCurrencySetting');let ledgerSelect=document.getElementById('globalCurrencySelect');if(settingSelect) settingSelect.value=savedCurrency;if(ledgerSelect) ledgerSelect.value=savedCurrency;}
     function changeDefaultCurrency(val){localStorage.setItem('peih_default_currency',val);let ledgerSelect=document.getElementById('globalCurrencySelect');if(ledgerSelect){ledgerSelect.value=val;renderLedgerTransactions();}}
 
-    // --- BỘ XỬ LÝ MẬT KHẨU & AUTO LOGIN ---
     async function hashPassword(message) {
         const msgUint8 = new TextEncoder().encode(message);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -2544,7 +2543,6 @@
     function addNewWallet(){let name=prompt("Nhập tên ví mới (VD: Tiền mặt, Techcombank):"); if(name&&name.trim()!==''){if(!appConfig.wallets) appConfig.wallets=[]; let defaultCurr=localStorage.getItem('peih_default_currency')||"VND"; appConfig.wallets.push({name:name.trim(), icon:"💳", currency:defaultCurr}); syncConfigToBackend(); renderSettingsWalletList();}}
     function removeWallet(idx){if(appConfig.wallets.length<=1) return showToast("Sếp phải giữ lại ít nhất 1 ví để dùng chứ!"); if(confirm("Sếp có chắc muốn xóa ví này?")){appConfig.wallets.splice(idx,1); syncConfigToBackend(); renderSettingsWalletList();}}
 
-    // --- MODAL & DATE LOGIC ---
     let currentDate = new Date();
 
     function updateDateDisplay() {
@@ -2569,7 +2567,7 @@
         updateDateDisplay();
       }
     }
-    // --- LOGIC CHỌN VÍ SỔ SÁCH (MULTI-SELECT) ---
+    
     let selectedLedgerWallets = ['all']; 
 
     function openLedgerWalletMenu() {
@@ -2672,7 +2670,6 @@
       document.getElementById('addTransactionModal').classList.remove('open');
     }
 
-    // --- BACKEND & CONFIG LOGIC ---
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMlOvI6Fbw4AqnAf-09WgFlviIH9XOecyP6LBzgILvPnIXcXpTkwWKUqHjrwYaBi2kuw/exec";
     const originalFetch = window.fetch;
     window.fetch = async function(resource, config) {
@@ -2728,7 +2725,7 @@
             wallets: selectedLedgerWallets,
             timeMode: 'Tháng',
             timeOffset: 0,
-            targetCurrency: document.getElementById('globalCurrencySelect').value // <-- THÊM DÒNG NÀY
+            targetCurrency: document.getElementById('globalCurrencySelect').value 
           }),
           headers: { "Content-Type": "text/plain;charset=utf-8" }
         });
@@ -3360,8 +3357,6 @@
       }
 
       let html = '';
-
-      // --- CHIA ĐỀU ---
       if (splitType === 'deu') {
         let perPersonExact = total / numPeople;
         let baseAmount = Math.round(perPersonExact);
@@ -3410,7 +3405,6 @@
           `;
         }
       } 
-      // --- TUỲ CHỈNH ---
       else if (splitType === 'tuy-chinh') {
         if (customSplitValues.length !== numPeople) {
            customSplitValues = new Array(numPeople).fill('');
@@ -3734,15 +3728,11 @@
       const currentCurrency = document.getElementById('aiCurrencySelect').value;
       
       aiParsedResults.forEach((tx, index) => {
-        // Kiểm tra xem giao dịch này có phải Vay/Nợ không
         const isDebt = tx.type === "Vay/Nợ" || tx.category.includes("vay") || tx.category.includes("nợ");
         const isIncome = (tx.type === "Khoản thu" || (isDebt && (tx.category.includes("Đi vay") || tx.category.includes("Thu nợ"))));
         const sign = isIncome ? "+" : "-";
         const colorClass = isIncome ? "color-income" : "color-expense";
-        
         const isOpenClass = (keepOpenIndex === index) ? "open" : "";
-
-        // Icon tam giác cảnh báo tối giản (chỉ sinh ra nếu là Vay/Nợ)
         const warningIcon = isDebt ? `<svg style="width:18px; height:18px; stroke:#ff3b30; fill:none; margin-right:6px; vertical-align:text-bottom;" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>` : '';
 
         let displayDate = tx.date;
@@ -3854,8 +3844,6 @@
       
       editor.value = aiParsedResults[index].note || "";
       modal.style.display = 'flex';
-      
-      // Hiệu ứng mượt mà
       setTimeout(() => {
         modal.style.opacity = '1';
         modal.children[0].style.transform = 'scale(1)';
@@ -3928,7 +3916,7 @@
       renderQueue(); 
       switchInputMode('manual'); 
     }
-    // --- LOGIC QUẢN LÝ ĐỐI TÁC (VAY/NỢ) ---
+    
     function openPersonModal() {
       document.getElementById('personModal').classList.add('open');
       renderPersonList();
@@ -4097,7 +4085,6 @@
     function getLedgerTimeRange(mode, offset) {
       let label = "";
       let today = new Date();
-      // Khởi tạo ngày bắt đầu cực chuẩn
       let start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
       
       if (mode === 'Ngày') {
@@ -4137,7 +4124,6 @@
         else label = "NĂM " + start.getFullYear();
       }
       
-      // Ngày kết thúc bám sát hoàn toàn vào ngày bắt đầu
       let end = new Date(start.getTime());
       
       if (mode === 'Tuần') {
@@ -4916,8 +4902,6 @@
             let parts = tx.category.split(' - ');
             let parentCat = parts[0];
             let childCat = parts.length > 1 ? parts.slice(1).join(' - ') : parts[0];
-            
-            // Lọc theo Cha hay Con tùy vào nút gạt
             let groupKey = ledgerGroupMode === 'category-parent' ? parentCat : tx.category;
             let displayCatName = ledgerGroupMode === 'category-parent' ? parentCat : childCat;
             
@@ -6146,8 +6130,6 @@
         totalFixed += (Number(exp.amount) || 0);
         if (today >= exp.dueDate) totalDue += (Number(exp.amount) || 0);
       });
-
-      // Cập nhật khung Summary
       let dueUI = document.getElementById('fixedTotalDueUI');
       let allUI = document.getElementById('fixedTotalAllUI');
       if (dueUI) dueUI.innerText = `${Math.round(totalDue).toLocaleString()} ${sym}`;
@@ -6182,8 +6164,6 @@
         container.innerHTML = '<div style="padding: 20px 0; color: var(--text-muted); font-size: 13px; text-align: center; font-weight: 500;">Chưa có khoản cố định nào.</div>';
         return;
       }
-
-      // Render danh sách các khoản
       fixedExps.forEach((exp, index) => {
         let isPaid = currentMonthTxs.some(tx => 
           (tx.category && tx.category.toLowerCase().includes(exp.name.toLowerCase())) || 
@@ -6192,7 +6172,7 @@
         
         let itemAmt = Number(exp.amount) || 0;
         let itemPct = totalFixed > 0 ? Math.round((itemAmt / totalFixed) * 100) : 0;
-        let itemColor = colors[index % colors.length]; // Lấy màu tương ứng với biểu đồ
+        let itemColor = colors[index % colors.length];
 
         let borderBottom = index === fixedExps.length - 1 ? 'border-bottom: none;' : 'border-bottom: 1px dashed var(--border-color);';
         let statusColor = isPaid ? "var(--text-muted)" : (today >= exp.dueDate ? "#ff3b30" : "var(--text-muted)");
@@ -6229,18 +6209,13 @@
       document.getElementById('hiddenPerson').value = person;
       document.getElementById('mainPersonText').innerText = person;
       document.getElementById('mainPersonText').style.color = "var(--text-main)";
-
-      // Tự động nhảy đúng loại tiền tệ khi bấm nút Thu nợ/Trả nợ
       if (currency) {
           document.getElementById('manualCurrencySelect').value = currency;
       }
     }
-    // --- LOGIC CHO CỬA SỔ CÀI ĐẶT NGÂN SÁCH ---
     function openBudgetSettingsModal(tabName) {
       if (!appConfig) return showToast("Dữ liệu chưa tải xong!");
       document.getElementById('budgetSettingsModal').classList.add('open');
-      
-      // Bấm tab nào ở ngoài thì vào trong mở đúng tab đó
       let btnElement = document.querySelector(`#budgetSettingsToggle .type-btn[onclick*="'${tabName}'"]`);
       if (btnElement) switchBudgetSettingsTab(tabName, btnElement);
     }
@@ -6257,7 +6232,6 @@
       document.querySelectorAll('.budget-settings-content').forEach(c => c.style.display = 'none');
       document.getElementById(`budgetSettings-${tabName}`).style.display = 'flex';
 
-      // Nạp dữ liệu tương ứng khi chuyển tab
       if (tabName === 'limit') loadLimitSettings();
       if (tabName === 'fund') loadFundSettings();
       if (tabName === 'fixed') loadFixedSettings();
@@ -6417,7 +6391,6 @@
         let hasChildren = expensesCat[pCat].length > 0;
         let pBorder = hasChildren ? 'border-bottom: 1px dashed var(--border-color);' : 'border-bottom: none;';
         
-        // Bọc form-container cho từng cụm Cha - Con
         html += `<div class="form-container" style="padding: 0 15px; margin-bottom: 12px;">`;
         html += `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0; ${pBorder}">
@@ -6680,7 +6653,7 @@
             if(mode === 'select') {
                 box.onclick = () => {
                     closeIconPicker();
-                    if(currentIconCallback) currentIconCallback(key); // Chỉ lưu cái KEY (ID) thôi sếp nhé
+                    if(currentIconCallback) currentIconCallback(key); 
                 };
             }
             grid.appendChild(box);
