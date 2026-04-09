@@ -1454,10 +1454,10 @@
       <div class="login-title">PEIH FINANCE</div>
       <div class="login-subtitle">AUTHENTICATION REQUIRED</div>
       <div class="input-group">
-        <input type="email" id="emailInput" class="input-field" placeholder="Email sếp" readonly onfocus="this.removeAttribute('readonly');">
+        <input type="email" id="emailInput" class="input-field" placeholder="Email sếp" autocomplete="username">
       </div>
       <div class="input-group">
-        <input type="password" id="passwordInput" class="input-field" placeholder="Mật khẩu" readonly onfocus="this.removeAttribute('readonly');">
+        <input type="text" id="passwordInput" class="input-field" placeholder="Mật khẩu" autocomplete="current-password" onfocus="this.type='password';">
       </div>
       <button class="btn-submit" onclick="handleLogin()">XÁC NHẬN VÀO HỆ THỐNG</button>
     </div>
