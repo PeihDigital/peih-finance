@@ -74,11 +74,17 @@
     }
 
     #loginScreen {
-      justify-content: flex-start;
-      padding-top: 15vh;
-      align-items: center;
-      padding-left: 20px;
-      padding-right: 20px;
+        position: fixed; 
+        top: 0; left: 0; 
+        width: 100vw; height: 100vh;
+        background: var(--bg-main); 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: flex-start;
+        padding-top: 15vh; 
+        align-items: center; 
+        z-index: 1000; 
+        overflow: hidden; 
     }
 
     .login-container {
@@ -1457,7 +1463,7 @@
     </div>
   </div>
 
-  <div id="mainApp">
+  <div id="mainApp" style="display: none; padding-bottom: 90px; overflow-y: auto; height: 100vh;">
     
     <div id="tab-dashboard" class="tab-content active">
       <div class="dashboard-header">
@@ -2361,10 +2367,12 @@
         const savedHash = localStorage.getItem('peih_hash');
         const splash = document.getElementById('splashScreen');
         const loginScreen = document.getElementById('loginScreen');
+        const mainApp = document.getElementById('mainApp');
         if (!savedEmail || !savedHash) {
-            splash.style.display = 'none'; 
+            if (splash) splash.style.display = 'none';
+            mainApp.style.display = 'none'; 
             loginScreen.style.display = 'flex'; 
-            return;
+            return; 
         }
         try {
             const response = await fetch(GAS_WEB_APP_URL, {
@@ -2375,19 +2383,20 @@
             const data = await response.json();
 
             if (data.status === "success") {
-                splash.style.display = 'none';
-                document.getElementById('mainApp').style.display = 'flex';
+                if (splash) splash.style.display = 'none';
+                loginScreen.style.display = 'none';
+                mainApp.style.display = 'flex'; 
                 loadLedgerData();
                 loadAppConfig();
             } else {
                 logout(); 
-                splash.style.display = 'none';
-                loginScreen.style.display = 'flex';
+                if (splash) splash.style.display = 'none';
                 showToast("Phiên đăng nhập hết hạn, sếp vào lại nhé!");
             }
         } catch (e) {
-            splash.style.display = 'none';
+            if (splash) splash.style.display = 'none';
             loginScreen.style.display = 'flex';
+            mainApp.style.display = 'none';
             showToast("Lỗi kết nối, sếp kiểm tra mạng nhé!");
         }
     }
@@ -2395,16 +2404,14 @@
     function logout() {
         localStorage.removeItem('peih_email');
         localStorage.removeItem('peih_hash');
-        document.getElementById('passwordInput').value = '';
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('passwordInput').value = ''; 
+        document.getElementById('mainApp').style.display = 'none'; 
+        document.getElementById('loginScreen').style.display = 'flex'; 
         const loginBtn = document.querySelector('.btn-submit');
         loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
         loginBtn.disabled = false;
         switchTab('dashboard', document.querySelectorAll('.nav-item')[0]);
     }
-
-    // Tự động kiểm tra login ngay khi App vừa mở lên
     window.addEventListener('DOMContentLoaded', checkAutoLogin);
 
     function switchTab(tabId, element) {
@@ -2693,7 +2700,7 @@
     let allLedgerData = []; 
 
     async function loadLedgerData() {
-      const userEmail = document.getElementById('emailInput').value; 
+      const userEmail = document.getElementById('emailInput').value || localStorage.getItem('peih_email'); 
       let currentRange = getLedgerTimeRange('Tháng', 0);
 
       const cacheKey = "ledgerData_" + userEmail;
@@ -2748,7 +2755,7 @@
       } catch (err) {}
     }
     async function loadAppConfig() {
-      const userEmail = document.getElementById('emailInput').value;
+      const userEmail = document.getElementById('emailInput').value || localStorage.getItem('peih_email');
       sessionStorage.clear();
       try {
         const response = await fetch(GAS_WEB_APP_URL, {
@@ -2773,7 +2780,7 @@
     async function syncConfigToBackend(){
     showToast("⏳ Đang lưu thiết lập lên máy chủ...");
     try{
-      let res=await fetch(GAS_WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"SAVE_CONFIG",email:document.getElementById('emailInput').value,config:appConfig}),headers:{"Content-Type":"text/plain;charset=utf-8"}});
+      let res=await fetch(GAS_WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"SAVE_CONFIG",email:(document.getElementById('emailInput').value || localStorage.getItem('peih_email')),config:appConfig}),headers:{"Content-Type":"text/plain;charset=utf-8"}});
       let data=await res.json();
       if(data.status==="success"){showToast("🤩 Đã lưu thiết lập thành công!"); renderBudgetTab();}else{showToast("😫 Lỗi lưu dữ liệu!");}
     }catch(e){showToast("😫 Lỗi đường truyền!");}
