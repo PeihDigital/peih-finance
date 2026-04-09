@@ -188,7 +188,8 @@
       margin-bottom: 15px;
       margin-top: 20px;
     }
-
+    .glass-scroll-box { background:var(--bg-card); border:1px solid var(--border-color); border-radius:20px; padding:5px 20px; margin-bottom:20px; max-height:160px; overflow-y:auto; scrollbar-width:none; }
+    .glass-scroll-box::-webkit-scrollbar { display:none; }
     .card {
       background-color: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -521,6 +522,11 @@
       justify-content: center;
       align-items: center;
       font-size: 12px;
+    }
+    .color-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--text-main);
     }
 
     .search-bar-container {
@@ -1377,10 +1383,14 @@
       cursor: pointer;
       flex-shrink: 0;
     }
+    #iconGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 15px; padding: 20px; overflow-y: auto; }
+    .icon-box { background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 16px; height: 65px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-main); cursor: pointer; transition: 0.2s; }
+    .icon-box:active { transform: scale(0.9); }
+    .icon-box svg { width: 28px; height: 28px; stroke-width: 2; margin-bottom: 4px; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body data-theme="light">
+<body data-theme="light" ontouchstart="">
   <div id="loginScreen">
     <div class="login-container">
       <div class="login-title">PEIH FINANCE</div>
@@ -1602,7 +1612,7 @@
 
     <div id="tab-settings" class="tab-content">
       <div class="dashboard-header">
-        <div class="header-label">HỆ THỐNG</div>
+        <div class="header-label">PEIH FINANCE</div>
         <div class="total-amount">Cài đặt</div>
       </div>
       <div class="section-title">GIAO DIỆN</div>
@@ -1610,6 +1620,55 @@
         <div class="type-btn" id="btnThemeLight" onclick="setThemePreference('light')">Sáng</div>
         <div class="type-btn" id="btnThemeDark" onclick="setThemePreference('dark')">Tối</div>
         <div class="type-btn" id="btnThemeAuto" onclick="setThemePreference('auto')">Tự động</div>
+      </div>
+      <div class="section-title">DỮ LIỆU CÁ NHÂN</div>
+      <div class="glass-scroll-box">
+        <div class="form-row" style="padding:12px 0; border-bottom:1px dashed var(--border-color); cursor:pointer;" onclick="openSettingsWalletModal()"><div class="row-left"><span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></span><span style="font-weight:600; font-size:15px;">Quản lý Ví</span></div><span class="arrow">›</span></div>
+        <div class="form-row" style="padding:12px 0; border-bottom:1px dashed var(--border-color); cursor:pointer;" onclick="openCategoryModal()"><div class="row-left"><span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span><span style="font-weight:600; font-size:15px;">Quản lý Nhóm</span></div><span class="arrow">›</span></div>
+
+        <div class="form-row" style="padding:12px 0; border-bottom:none;"><div class="row-left"><span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><line x1="12" y1="18" x2="12" y2="22"></line><line x1="12" y1="2" x2="12" y2="6"></line></svg></span><span style="font-weight:600; font-size:15px;">Tiền tệ mặc định</span></div><select id="defaultCurrencySetting" class="currency-select" style="margin-top:0; background:var(--form-bg);" onchange="changeDefaultCurrency(this.value)"><option value="VND">VND</option><option value="JPY">JPY</option><option value="USD">USD</option></select></div>
+      </div>
+      <div class="card" style="padding: 5px 20px; margin-bottom: 20px;">
+        <div class="form-row" style="padding:12px 0; border-bottom:none; cursor:pointer;" onclick="openIconPicker('view')">
+          <div class="row-left">
+            <span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            </span>
+            <span style="font-weight:600; font-size:15px;">Danh sách biểu tượng</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+      </div>
+
+      <div class="section-title">NGÂN SÁCH & KẾ HOẠCH</div>
+      <div class="card" style="padding: 5px 20px; margin-bottom: 20px;">
+        <div class="form-row" style="padding:12px 0; border-bottom:1px dashed var(--border-color); cursor:pointer;" onclick="openBudgetSettingsModal('limit')">
+          <div class="row-left">
+            <span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+            </span>
+            <span style="font-weight:600; font-size:15px;">Thiết lập hạn mức</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+        <div class="form-row" style="padding:12px 0; border-bottom:1px dashed var(--border-color); cursor:pointer;" onclick="openBudgetSettingsModal('fund')">
+          <div class="row-left">
+            <span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+            </span>
+            <span style="font-weight:600; font-size:15px;">Quản lý quỹ mục tiêu</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+        <div class="form-row" style="padding:12px 0; border-bottom:none; cursor:pointer;" onclick="openBudgetSettingsModal('fixed')">
+          <div class="row-left">
+            <span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </span>
+            <span style="font-weight:600; font-size:15px;">Các khoản chi định kỳ</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
       </div>
       <div class="card">
         <button class="settings-btn" onclick="logout()" style="color: #ff4d4d; border-color: #ff4d4d;">ĐĂNG XUẤT</button>
@@ -1879,9 +1938,13 @@
     <div class="sub-modal-header">
       <button class="btn-icon-circle" onclick="closeCategoryModal()">‹</button>
       <span>Chọn nhóm</span>
-      <button class="btn-icon-circle">
-        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-      </button>
+      <div style="display:flex; align-items:center; justify-content:flex-end;">
+        <div id="catHeaderEditActions" style="display:none; gap:15px; align-items:center;">
+           <button onclick="addParentCategory()" style="background:transparent; border:none; color:#007aff; font-size:28px; font-weight:300; cursor:pointer; line-height:1; padding-bottom:4px; margin-right:5px;">+</button>
+           <button onclick="toggleCategoryEditMode()" style="background:transparent; border:none; color:#007aff; font-size:15px; font-weight:bold; cursor:pointer;">Lưu</button>
+        </div>
+        <button id="btnCatEditToggle" onclick="toggleCategoryEditMode()" style="background:transparent; border:none; color:#007aff; font-size:15px; font-weight:bold; cursor:pointer;">Sửa</button>
+      </div>
     </div>
     
     <div style="padding: 15px 15px 0 15px;">
@@ -1893,11 +1956,19 @@
     </div>
 
     <div id="categoryTreeContainer" class="list-container">
-      </div>
+    </div>
 
     <div class="search-bar-container">
       <input type="text" class="search-input" placeholder="Tìm kiếm nhóm...">
     </div>
+  </div>
+  <div id="iconPickerModal" class="sub-modal">
+    <div class="sub-modal-header">
+      <button class="btn-icon-circle" onclick="closeIconPicker()">‹</button>
+      <span>Chọn Biểu tượng</span>
+      <div style="width:38px;"></div>
+    </div>
+    <div id="iconGrid"></div>
   </div>
 
   <div id="walletModal" class="sub-modal">
@@ -2166,6 +2237,7 @@
       </div>
     </div>
   </div>
+  <div id="settingsWalletModal" class="sub-modal"><div class="sub-modal-header"><button class="btn-icon-circle" onclick="closeSettingsWalletModal()">‹</button><span>Quản lý Ví</span><button class="btn-icon-circle" onclick="addNewWallet()">+</button></div><div id="settingsWalletList" class="list-container" style="padding-top:15px;"></div></div>
   <div id="txDetailSheet" class="bottom-sheet-backdrop" onclick="closeTxDetailSheet(event)">
     <div class="bottom-sheet-pane" onclick="event.stopPropagation()">
       <div class="sheet-header">
@@ -2180,43 +2252,108 @@
 
   <script>
     // --- APP LOGIC ---
-    async function handleLogin() {
-      const email = document.getElementById('emailInput').value.trim();
-      const pass = document.getElementById('passwordInput').value;
-      const loginBtn = document.querySelector('.btn-submit');
-      
-      if (email === "" || pass === "") {
-        showToast("Sếp vui lòng nhập đủ Email và Mật khẩu!");
-        return;
-      }
+    function initDefaultCurrency(){let savedCurrency=localStorage.getItem('peih_default_currency')||'VND';let settingSelect=document.getElementById('defaultCurrencySetting');let ledgerSelect=document.getElementById('globalCurrencySelect');if(settingSelect) settingSelect.value=savedCurrency;if(ledgerSelect) ledgerSelect.value=savedCurrency;}
+    function changeDefaultCurrency(val){localStorage.setItem('peih_default_currency',val);let ledgerSelect=document.getElementById('globalCurrencySelect');if(ledgerSelect){ledgerSelect.value=val;renderLedgerTransactions();}}
 
-      loginBtn.innerText = "ĐANG KIỂM TRA BẢO MẬT...";
-      loginBtn.disabled = true;
-
-      try {
-        const response = await fetch(GAS_WEB_APP_URL, {
-          method: "POST",
-          body: JSON.stringify({ action: "LOGIN", email: email, password: pass }),
-          headers: { "Content-Type": "text/plain;charset=utf-8" }
-        });
-        
-        const data = await response.json();
-
-        if (data.status === "success") {
-          document.getElementById('loginScreen').style.display = 'none';
-          document.getElementById('mainApp').style.display = 'flex';
-          loadLedgerData();
-          loadAppConfig(); 
-        } else {
-          alert(data.message || "Đăng nhập thất bại!");
-        }
-      } catch (e) {
-        alert("Lỗi kết nối máy chủ! Sếp kiểm tra lại mạng nhé.");
-      }
-      
-      loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
-      loginBtn.disabled = false;
+    // --- BỘ XỬ LÝ MẬT KHẨU & AUTO LOGIN ---
+    async function hashPassword(message) {
+        const msgUint8 = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
+
+    async function handleLogin() {
+        const email = document.getElementById('emailInput').value.trim();
+        const pass = document.getElementById('passwordInput').value;
+        const loginBtn = document.querySelector('.btn-submit');
+        
+        if (email === "" || pass === "") {
+            return showToast("Sếp vui lòng nhập đủ Email và Mật khẩu!");
+        }
+
+        loginBtn.innerText = "ĐANG MÃ HÓA & KIỂM TRA...";
+        loginBtn.disabled = true;
+
+        const hashedPass = await hashPassword(pass);
+
+        try {
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "LOGIN", email: email, hash: hashedPass }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const data = await response.json();
+
+            if (data.status === "success") {
+                localStorage.setItem('peih_email', email);
+                localStorage.setItem('peih_hash', hashedPass);
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                loadLedgerData();
+                loadAppConfig(); 
+            } else {
+                alert(data.message || "Đăng nhập thất bại!");
+                loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
+                loginBtn.disabled = false;
+            }
+        } catch (e) {
+            alert("Lỗi kết nối máy chủ! Sếp kiểm tra lại mạng nhé.");
+            loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
+            loginBtn.disabled = false;
+        }
+    }
+
+    async function checkAutoLogin() {
+        const savedEmail = localStorage.getItem('peih_email');
+        const savedHash = localStorage.getItem('peih_hash');
+        
+        if (savedEmail && savedHash) {
+            document.getElementById('emailInput').value = savedEmail;
+            const loginBtn = document.querySelector('.btn-submit');
+            loginBtn.innerText = "ĐANG XÁC THỰC TỰ ĐỘNG...";
+            loginBtn.disabled = true;
+            
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "LOGIN", email: savedEmail, hash: savedHash }),
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }
+                });
+                const data = await response.json();
+                
+                if (data.status === "success") {
+                    showToast("✅ Xác thực tự động thành công!");
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'flex';
+                    loadLedgerData();
+                    loadAppConfig(); 
+                } else {
+                    showToast("Phiên đăng nhập hết hạn hoặc mật khẩu đã đổi!");
+                    logout(); 
+                }
+            } catch (e) {
+                showToast("Lỗi mạng! Không thể xác thực tự động.");
+                loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
+                loginBtn.disabled = false;
+            }
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('peih_email');
+        localStorage.removeItem('peih_hash');
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+        const loginBtn = document.querySelector('.btn-submit');
+        loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
+        loginBtn.disabled = false;
+        switchTab('dashboard', document.querySelectorAll('.nav-item')[0]);
+    }
+
+    // Tự động kiểm tra login ngay khi App vừa mở lên
+    window.addEventListener('DOMContentLoaded', checkAutoLogin);
 
     function switchTab(tabId, element) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -2337,12 +2474,14 @@
     }
 
     initTheme();
+    initDefaultCurrency();
 
-    function logout() {
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('mainApp').style.display = 'none';
-      switchTab('dashboard', document.querySelectorAll('.nav-item')[0]);
-    }
+    function openSettingsWalletModal(){if(!appConfig) return showToast("Chưa tải xong dữ liệu!"); document.getElementById('settingsWalletModal').classList.add('open'); renderSettingsWalletList();}
+    function closeSettingsWalletModal(){document.getElementById('settingsWalletModal').classList.remove('open');}
+    function renderSettingsWalletList(){let container=document.getElementById('settingsWalletList'); container.innerHTML=''; if(!appConfig.wallets || appConfig.wallets.length===0){container.innerHTML='<div style="text-align:center; padding:20px; color:var(--text-muted);">Sếp chưa có ví nào!</div>'; return;} appConfig.wallets.forEach((w,idx)=>{let wName=w.name||w; let wIcon=w.icon||"💳"; let wCurr=w.currency||localStorage.getItem('peih_default_currency')||"VND"; let row=document.createElement('div'); row.className='form-container'; row.style.padding='15px'; row.style.marginBottom='10px'; row.innerHTML=`<div style="display:flex; justify-content:space-between; align-items:center;"><div style="display:flex; align-items:center; gap:12px;"><div class="color-icon" style="background:var(--bg-main); border:1px solid var(--border-color); width:36px; height:36px; font-size:16px;">${wIcon}</div><div style="display:flex; flex-direction:column; justify-content:center;"><span style="font-weight:600; font-size:15px; color:var(--text-main);">${wName}</span><select class="currency-select" style="margin-top:4px; padding:2px 8px; font-size:11px; width:fit-content; background:var(--bg-main);" onchange="updateWalletCurrency(${idx}, this.value)"><option value="VND" ${wCurr==='VND'?'selected':''}>VND</option><option value="JPY" ${wCurr==='JPY'?'selected':''}>JPY</option><option value="USD" ${wCurr==='USD'?'selected':''}>USD</option></select></div></div><button onclick="removeWallet(${idx})" style="background:rgba(255,59,48,0.1); border:none; color:#ff3b30; font-size:12px; font-weight:bold; padding:6px 12px; border-radius:10px; cursor:pointer;">Xóa</button></div>`; container.appendChild(row);});}
+    function updateWalletCurrency(idx,val){if(typeof appConfig.wallets[idx]==='string'){appConfig.wallets[idx]={name:appConfig.wallets[idx],icon:"💳",currency:val};}else{appConfig.wallets[idx].currency=val;} syncConfigToBackend();}
+    function addNewWallet(){let name=prompt("Nhập tên ví mới (VD: Tiền mặt, Techcombank):"); if(name&&name.trim()!==''){if(!appConfig.wallets) appConfig.wallets=[]; let defaultCurr=localStorage.getItem('peih_default_currency')||"VND"; appConfig.wallets.push({name:name.trim(), icon:"💳", currency:defaultCurr}); syncConfigToBackend(); renderSettingsWalletList();}}
+    function removeWallet(idx){if(appConfig.wallets.length<=1) return showToast("Sếp phải giữ lại ít nhất 1 ví để dùng chứ!"); if(confirm("Sếp có chắc muốn xóa ví này?")){appConfig.wallets.splice(idx,1); syncConfigToBackend(); renderSettingsWalletList();}}
 
     // --- MODAL & DATE LOGIC ---
     let currentDate = new Date();
@@ -2474,6 +2613,26 @@
 
     // --- BACKEND & CONFIG LOGIC ---
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMlOvI6Fbw4AqnAf-09WgFlviIH9XOecyP6LBzgILvPnIXcXpTkwWKUqHjrwYaBi2kuw/exec";
+    const originalFetch = window.fetch;
+    window.fetch = async function(resource, config) {
+      if (resource === GAS_WEB_APP_URL && config && config.method === "POST" && config.body) {
+        try {
+          let bodyData = JSON.parse(config.body);
+          const email = localStorage.getItem('peih_email') || bodyData.email || "";
+          const baseHash = localStorage.getItem('peih_hash') || bodyData.hash || "";
+
+          if (bodyData.action === "LOGIN") {
+            bodyData.token = bodyData.hash; 
+          } else {
+            const nowTs = Math.floor(Date.now() / 60000);
+            bodyData.token = await hashPassword(baseHash + nowTs);
+            bodyData.email = email;
+          }
+          config.body = JSON.stringify(bodyData);
+        } catch(e) { console.error("Middleware Error:", e); }
+      }
+      return originalFetch(resource, config);
+    };
 
     let appConfig = null;
     let transactionQueue = [];
@@ -2612,136 +2771,177 @@
       if(btnElement && btnElement.offsetWidth > 0) moveSlider('manualTypeToggle', btnElement);
     }
 
+    let isCategoryEditMode = false;
+    
+    function toggleCategoryEditMode() {
+        isCategoryEditMode = !isCategoryEditMode;
+        let btnEdit = document.getElementById('btnCatEditToggle');
+        let actions = document.getElementById('catHeaderEditActions');
+        if(btnEdit) btnEdit.style.display = isCategoryEditMode ? 'none' : 'block';
+        if(actions) actions.style.display = isCategoryEditMode ? 'flex' : 'none';
+        switchCategoryTab(currentMainType);
+    }
+    
     function openCategoryModal() {
-      if(!appConfig) return;
-      document.getElementById('categoryModal').classList.add('open');
-      switchCategoryTab(currentMainType); 
+        if(!appConfig) { showToast("Dữ liệu chưa tải xong!"); return; }
+        isCategoryEditMode = false;
+        let btnEdit = document.getElementById('btnCatEditToggle');
+        let actions = document.getElementById('catHeaderEditActions');
+        if(btnEdit) btnEdit.style.display = 'block';
+        if(actions) actions.style.display = 'none';
+        document.getElementById('categoryModal').classList.add('open');
+        switchCategoryTab(currentMainType);
     }
-
+    
     function closeCategoryModal() {
-      document.getElementById('categoryModal').classList.remove('open');
+        document.getElementById('categoryModal').classList.remove('open');
     }
-
-    function closeWalletModal() {
-      document.getElementById('walletModal').classList.remove('open');
-    }
-
-    function openWalletModal() {
-      if(!appConfig) return;
-      document.getElementById('walletModal').classList.add('open');
-      
-      const groupDiv = document.getElementById('walletListGroup');
-      groupDiv.innerHTML = '';
-
-      if (!appConfig.wallets || appConfig.wallets.length === 0) {
-        groupDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Sếp chưa cài đặt Ví nào!</div>';
-        return;
-      }
-
-      appConfig.wallets.forEach(wallet => {
-        const walletName = wallet.name ? wallet.name : wallet;
-        const walletIcon = wallet.icon ? wallet.icon : "💳";
-
-        const row = document.createElement('div');
-        row.className = 'tree-parent'; 
-        row.style.borderBottom = "1px solid var(--border-color)";
-        row.innerHTML = `<div class="color-icon" style="background-color: var(--form-bg); border: 1px solid var(--border-color);">${walletIcon}</div><span>${walletName}</span>`;
-        row.onclick = () => {
-          if (currentAiEditIndex !== null) {
-            aiParsedResults[currentAiEditIndex].wallet = walletName;
-            renderAiList(currentAiEditIndex);
-          } else {
-            document.getElementById('mainWalletText').innerText = walletName;
-            let splitText = document.getElementById('splitWalletText');
-            if (splitText) splitText.innerText = walletName;
-            document.getElementById('hiddenWallet').value = walletName;
-          }
-          closeWalletModal();
-        };
-        groupDiv.appendChild(row);
-      });
-      if(groupDiv.lastChild) groupDiv.lastChild.style.borderBottom = "none";
-    }
-
+    
     function switchCategoryTab(typeStr, btnElement) {
-      const tabBtns = document.querySelectorAll('#catTypeToggle .cat-tab-btn');
-      tabBtns.forEach(b => {
+    currentMainType = typeStr;
+    const tabBtns = document.querySelectorAll('#catTypeToggle .cat-tab-btn');
+    tabBtns.forEach(b => {
         if(b.innerText === typeStr) {
-          b.classList.add('active');
-          if(!btnElement) btnElement = b;
+            b.classList.add('active');
+            if(!btnElement) btnElement = b;
         } else {
-          b.classList.remove('active');
+            b.classList.remove('active');
         }
-      });
-
-      if(btnElement && btnElement.offsetWidth > 0) moveSlider('catTypeToggle', btnElement);
-
-      const container = document.getElementById('categoryTreeContainer');
-      container.innerHTML = '';
-      
-      if (!appConfig || !appConfig.categories || !appConfig.categories[typeStr]) return;
-      const typeData = appConfig.categories[typeStr];
-      
-      if (Object.keys(typeData).length === 0) {
+    });
+    
+    if(btnElement && btnElement.offsetWidth > 0) moveSlider('catTypeToggle', btnElement);
+    
+    const container = document.getElementById('categoryTreeContainer');
+    container.innerHTML = '';
+    if (!appConfig || !appConfig.categories || !appConfig.categories[typeStr]) return;
+    
+    const typeData = appConfig.categories[typeStr];
+    if (Object.keys(typeData).length === 0) {
         container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Sếp chưa cài đặt Nhóm nào cho loại này!</div>';
         return;
-      }
-
-      const colors = ['#f1c40f', '#1abc9c', '#e74c3c', '#3498db', '#9b59b6'];
-      let colorIndex = 0;
-
-      for (const parent in typeData) {
-        const bgIconColor = colors[colorIndex % colors.length];
-        colorIndex++;
-
+    }
+    
+    let isVayNo = (typeStr === 'Vay/Nợ');
+    let lockIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+    
+    for (const parent in typeData) {
         const groupDiv = document.createElement('div');
         groupDiv.className = 'tree-group';
-
+        
+        let isLockedParent = (isVayNo || parent === 'Hoá đơn & Sinh hoạt cố định');
+        let addBtnHtml = (isLockedParent || !isCategoryEditMode) ? '' : `<button onclick="event.stopPropagation(); addChildCategory('${parent}')" style="background:rgba(0,122,255,0.1); border:none; color:#007aff; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:8px; cursor:pointer;">+ Con</button>`;
+        
+        let deleteBtnHtml = '';
+        if (isCategoryEditMode) {
+            deleteBtnHtml = isLockedParent ? `<button onclick="event.stopPropagation(); showToast('Nhóm này được khoá mặc định')" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; padding:4px 10px; display:flex; align-items:center;">${lockIcon}</button>` : `<button onclick="event.stopPropagation(); deleteParentCategory('${parent}')" style="background:rgba(255,59,48,0.1); border:none; color:#ff3b30; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:8px; cursor:pointer;">Xóa</button>`;
+        }
+        
         const parentRow = document.createElement('div');
         parentRow.className = 'tree-parent';
-        parentRow.innerHTML = `<div class="color-icon" style="background-color: ${bgIconColor}; color: #000;">${parent.charAt(0)}</div><span>${parent}</span>`;
+        parentRow.style.justifyContent = 'space-between';
+        parentRow.innerHTML = `<div style="font-weight:bold; color:var(--text-main); font-size:15px;">${parent}</div><div style="display:flex; gap:8px; align-items:center;">${addBtnHtml}${deleteBtnHtml}</div>`;
         groupDiv.appendChild(parentRow);
-
-        typeData[parent].forEach(child => {
-          const childName = child.name ? child.name : child;
-          const childIcon = child.icon ? child.icon : "✨";
-
-          const childRow = document.createElement('div');
-          childRow.className = 'tree-child';
-          
-          childRow.innerHTML = `<div class="color-icon" style="background-color: var(--form-bg); border: 1px solid var(--border-color);">${childIcon}</div><span>${childName}</span>`;
-          
-          childRow.onclick = () => {
-            const fullCatName = parent + " - " + childName;
+        
+        typeData[parent].forEach((child, idx) => {
+            const childName = child.name ? child.name : child;
+            const rawIcon = child.icon ? child.icon : "✨";
+            const childIconHtml = getIconHtml(rawIcon);
             
-            if (currentAiEditIndex !== null) {
-              aiParsedResults[currentAiEditIndex].category = fullCatName;
-              aiParsedResults[currentAiEditIndex].type = typeStr;
-              renderAiList(currentAiEditIndex);
-            } else {
-              changeMainType(typeStr);
-              document.getElementById('mainCategoryText').innerText = childName;
-              document.getElementById('mainCategoryText').style.color = "var(--text-main)";
-              document.getElementById('hiddenCategory').value = fullCatName;
-              const catIconNode = document.getElementById('mainCategoryIcon');
-              if (catIconNode) {
-                catIconNode.className = "color-icon";
-                catIconNode.style.backgroundColor = "var(--form-bg)";
-                catIconNode.style.border = "1px solid var(--border-color)";
-                catIconNode.style.width = "20px";
-                catIconNode.style.height = "20px";
-                catIconNode.style.marginRight = "0"; 
-                catIconNode.style.fontSize = "11px"; 
-                
-                catIconNode.innerHTML = childIcon;
-              }
+            let childDeleteBtnHtml = '';
+            if (isCategoryEditMode) {
+                childDeleteBtnHtml = isVayNo ? `<button onclick="event.stopPropagation(); showToast('Mặc định hệ thống không thay đổi được')" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; padding:4px; display:flex; align-items:center;">${lockIcon}</button>` : `<button onclick="event.stopPropagation(); deleteChildCategory('${parent}',${idx})" style="background:transparent; border:none; color:#ff3b30; font-size:16px; font-weight:bold; cursor:pointer; padding:4px 10px;">✕</button>`;
             }
-            closeCategoryModal();
-          };
-          groupDiv.appendChild(childRow);
+            
+            const childRow = document.createElement('div');
+            childRow.className = 'tree-child';
+            childRow.style.justifyContent = 'space-between';
+            childRow.style.paddingLeft = '20px';
+            childRow.style.setProperty('--tree-line', 'transparent');
+            childRow.style.cursor = isCategoryEditMode ? 'pointer' : 'default';
+            
+            childRow.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><div class="color-icon" style="background:var(--bg-main); border:1px solid var(--border-color); width:28px; height:28px; font-size:14px; margin:0; display:flex; justify-content:center; align-items:center;">${childIconHtml}</div><span style="color:var(--text-main); font-size:14px; font-weight:500;">${childName}</span></div>${childDeleteBtnHtml}`;
+            
+            childRow.onclick = () => {
+                if (isCategoryEditMode) {
+                    if(isVayNo) return showToast("Mặc định hệ thống không thay đổi được");
+                    let newName = prompt("Sửa tên nhóm con (hoặc hủy để giữ nguyên):", childName);
+                    if(newName !== null && newName.trim() !== "") {
+                        openIconPicker('select', function(selectedIcon) {
+                            appConfig.categories[currentMainType][parent][idx] = {name: newName.trim(), icon: selectedIcon};
+                            syncConfigToBackend();
+                            switchCategoryTab(currentMainType);
+                        });
+                    }
+                    return;
+                }
+                const fullCatName = parent + " - " + childName;
+                if (currentAiEditIndex !== null) {
+                    aiParsedResults[currentAiEditIndex].category = fullCatName;
+                    aiParsedResults[currentAiEditIndex].type = typeStr;
+                    renderAiList(currentAiEditIndex);
+                } else {
+                    changeMainType(typeStr);
+                    document.getElementById('mainCategoryText').innerText = childName;
+                    document.getElementById('mainCategoryText').style.color = "var(--text-main)";
+                    document.getElementById('hiddenCategory').value = fullCatName;
+                    const catIconNode = document.getElementById('mainCategoryIcon');
+                    if (catIconNode) {
+                        catIconNode.className = "color-icon";
+                        catIconNode.style.backgroundColor = "var(--form-bg)";
+                        catIconNode.style.border = "1px solid var(--border-color)";
+                        catIconNode.style.width = "20px";
+                        catIconNode.style.height = "20px";
+                        catIconNode.style.marginRight = "0";
+                        catIconNode.style.fontSize = "11px";
+                        catIconNode.innerHTML = childIconHtml;
+                    }
+                }
+                closeCategoryModal();
+            };
+            groupDiv.appendChild(childRow);
         });
         container.appendChild(groupDiv);
       }
+    }
+
+    function addParentCategory() {
+        if(currentMainType === 'Vay/Nợ') return showToast("Mặc định hệ thống không thêm được");
+        let name = prompt(`Nhập tên NHÓM CHA mới cho [${currentMainType}]:`);
+        if(name && name.trim() !== '') {
+            name = name.trim();
+            if(!appConfig.categories[currentMainType]) appConfig.categories[currentMainType] = {};
+            if(appConfig.categories[currentMainType][name]) return showToast("Nhóm cha này đã tồn tại!");
+            appConfig.categories[currentMainType][name] = [];
+            syncConfigToBackend();
+            switchCategoryTab(currentMainType);
+        }
+    }
+
+    function addChildCategory(parentName) {
+        let name = prompt(`Nhập tên NHÓM CON cho [${parentName}]:`);
+        if(name && name.trim() !== '') {
+            openIconPicker('select', function(selectedIcon) {
+                appConfig.categories[currentMainType][parentName].push({name: name.trim(), icon: selectedIcon});
+                syncConfigToBackend();
+                switchCategoryTab(currentMainType);
+            });
+        }
+    }
+
+    function deleteParentCategory(parentName) {
+        if(confirm(`Xóa nhóm cha [${parentName}] sẽ xóa luôn tất cả nhóm con. Sếp có chắc không?`)) {
+            delete appConfig.categories[currentMainType][parentName];
+            syncConfigToBackend();
+            switchCategoryTab(currentMainType);
+        }
+    }
+
+    function deleteChildCategory(parentName, childIdx) {
+        if(confirm("Sếp có chắc muốn xóa nhóm con này?")) {
+            appConfig.categories[currentMainType][parentName].splice(childIdx, 1);
+            syncConfigToBackend();
+            switchCategoryTab(currentMainType);
+        }
     }
 
     function renderQueue() {
@@ -2897,11 +3097,11 @@
     }
     let aiParsedResults = [];
     function getAiCatIcon(fullCatName, type) {
-      if(!appConfig || !appConfig.categories[type]) return "📊";
+      if(!appConfig || !appConfig.categories[type]) return "🌻";
       const childName = fullCatName.split(' - ').pop();
       for (const parent in appConfig.categories[type]) {
         const found = appConfig.categories[type][parent].find(c => c.name === childName);
-        if (found) return found.icon;
+        if (found) return getIconHtml(found.icon); 
       }
       return "📊";
     }
@@ -6382,6 +6582,62 @@
       appConfig.totalLimitMode=activeLimitMode;
       appConfig.totalLimit=parseInt(document.getElementById('setting-limit-total').value.replace(/\D/g,'')||0);
       syncConfigToBackend();
+    }
+    // === TỪ ĐIỂN ÁNH XẠ ICON ===
+    const iconMapping = {
+        "food": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`,
+        "home": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
+        "car": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>`,
+        "shopping": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>`,
+        "health": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>`,
+        "bill": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+        "gift": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>`,
+        "edu": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
+        "entertainment": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>`,
+        "transfer": `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>`
+    };
+
+    function getIconHtml(iconData) {
+        if (!iconData) return "✨";
+        if (iconMapping[iconData]) return iconMapping[iconData];
+        return iconData;
+    }
+    let currentIconCallback = null;
+    function openIconPicker(mode, callback) {
+        currentIconCallback = callback;
+        const grid = document.getElementById('iconGrid');
+        grid.innerHTML = '';
+        
+        if(mode === 'select') {
+            grid.innerHTML += `<div class="icon-box" onclick="selectCustomEmoji()"><span style="font-size:24px; margin-bottom:4px;">😊</span><div style="font-size:10px; font-weight:bold; color:var(--text-muted);">Tùy chỉnh</div></div>`;
+        }
+        
+        for(let key in iconMapping) {
+            let box = document.createElement('div');
+            box.className = 'icon-box';
+            box.innerHTML = iconMapping[key];
+            if(mode === 'select') {
+                box.onclick = () => {
+                    closeIconPicker();
+                    if(currentIconCallback) currentIconCallback(key); // Chỉ lưu cái KEY (ID) thôi sếp nhé
+                };
+            }
+            grid.appendChild(box);
+        }
+        document.getElementById('iconPickerModal').classList.add('open');
+    }
+
+    
+    function closeIconPicker() { document.getElementById('iconPickerModal').classList.remove('open'); }
+    
+    function selectCustomEmoji() {
+        closeIconPicker();
+        setTimeout(() => {
+            let emoji = prompt("Nhập 1 Emoji từ bàn phím:");
+            if(emoji && emoji.trim() !== '' && currentIconCallback) {
+                currentIconCallback(emoji.trim());
+            }
+        }, 300);
     }
   </script>
 </body>
