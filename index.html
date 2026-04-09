@@ -1387,10 +1387,35 @@
     .icon-box { background: var(--form-bg); border: 1px solid var(--border-color); border-radius: 16px; height: 65px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-main); cursor: pointer; transition: 0.2s; }
     .icon-box:active { transform: scale(0.9); }
     .icon-box svg { width: 28px; height: 28px; stroke-width: 2; margin-bottom: 4px; }
+    #splashScreen {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: var(--bg-main); display: flex; flex-direction: column;
+        justify-content: center; align-items: center; z-index: 9999;
+    }
+    #splashTagline {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 8px; 
+        font-weight: 400;
+        letter-spacing: 0.5px; 
+        opacity: 0.8; 
+    }
+    .loader-dots { display: flex; gap: 5px; margin-top: 30px; } 
+    .dot { width: 10px; height: 10px; background: #007aff; border-radius: 50%; animation: pulse 1.5s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.5); opacity: 1; } }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body data-theme="light" ontouchstart="">
+  <div id="splashScreen">
+    <div style="font-size: 26px; font-weight: 700; color: #007aff; letter-spacing: -0.5px;">PEIH ADVISORY</div>
+    <div id="splashTagline">Personal Finance Intelligence</div>
+    <div class="loader-dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
   <div id="loginScreen">
     <div class="login-container">
       <div class="login-title">PEIH FINANCE</div>
@@ -2307,36 +2332,36 @@
     async function checkAutoLogin() {
         const savedEmail = localStorage.getItem('peih_email');
         const savedHash = localStorage.getItem('peih_hash');
-        
-        if (savedEmail && savedHash) {
-            document.getElementById('emailInput').value = savedEmail;
-            const loginBtn = document.querySelector('.btn-submit');
-            loginBtn.innerText = "ĐANG XÁC THỰC TỰ ĐỘNG...";
-            loginBtn.disabled = true;
-            
-            try {
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "LOGIN", email: savedEmail, hash: savedHash }),
-                    headers: { "Content-Type": "text/plain;charset=utf-8" }
-                });
-                const data = await response.json();
-                
-                if (data.status === "success") {
-                    showToast("✅ Xác thực tự động thành công!");
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'flex';
-                    loadLedgerData();
-                    loadAppConfig(); 
-                } else {
-                    showToast("Phiên đăng nhập hết hạn hoặc mật khẩu đã đổi!");
-                    logout(); 
-                }
-            } catch (e) {
-                showToast("Lỗi mạng! Không thể xác thực tự động.");
-                loginBtn.innerText = "XÁC NHẬN VÀO HỆ THỐNG";
-                loginBtn.disabled = false;
+        const splash = document.getElementById('splashScreen');
+        const loginScreen = document.getElementById('loginScreen');
+        if (!savedEmail || !savedHash) {
+            splash.style.display = 'none'; 
+            loginScreen.style.display = 'flex'; 
+            return;
+        }
+        try {
+            const response = await fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "LOGIN", email: savedEmail, hash: savedHash }),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            const data = await response.json();
+
+            if (data.status === "success") {
+                splash.style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                loadLedgerData();
+                loadAppConfig();
+            } else {
+                logout(); 
+                splash.style.display = 'none';
+                loginScreen.style.display = 'flex';
+                showToast("Phiên đăng nhập hết hạn, sếp vào lại nhé!");
             }
+        } catch (e) {
+            splash.style.display = 'none';
+            loginScreen.style.display = 'flex';
+            showToast("Lỗi kết nối, sếp kiểm tra mạng nhé!");
         }
     }
 
