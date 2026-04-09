@@ -1728,6 +1728,18 @@
           <span class="arrow">›</span>
         </div>
       </div>
+      <div class="section-title">PEIH HEALTH & FITNESS</div>
+      <div class="card" style="padding: 5px 20px; margin-bottom: 20px;">
+        <div class="form-row" style="padding:12px 0; border-bottom:none; cursor:pointer;" onclick="openHealthAnalysis()">
+          <div class="row-left">
+            <span style="margin-right:12px; display:flex; align-items:center; color:#ff9500;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 7.65l.77.78L12 21l7.65-7.65.77-.78a5.4 5.4 0 0 0 0-7.65z"></path></svg>
+            </span>
+            <span style="font-weight:600; font-size:15px;">Phân tích Calo & Sức khỏe ✨</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+      </div>
       <div class="card">
         <button class="settings-btn" onclick="logout()" style="color: #ff4d4d; border-color: #ff4d4d;">ĐĂNG XUẤT</button>
       </div>
@@ -7045,6 +7057,57 @@
             currSelect.style.appearance = 'none';
         }
     }
+    function openHealthAnalysis() {
+        document.getElementById('healthReportModal').classList.add('open');
+        document.getElementById('health-height').value = localStorage.getItem('peih_h_height') || '';
+        document.getElementById('health-weight').value = localStorage.getItem('peih_h_weight') || '';
+        document.getElementById('health-goal').value = localStorage.getItem('peih_h_goal') || '';
+    }
+
+    async function processHealthAnalysis(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const h = document.getElementById('health-height').value;
+        const w = document.getElementById('health-weight').value;
+        const g = document.getElementById('health-goal').value;
+        localStorage.setItem('peih_h_height', h); localStorage.setItem('peih_h_weight', w); localStorage.setItem('peih_h_goal', g);
+        const healthResultDiv = document.getElementById('healthAiResult');
+        healthResultDiv.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Peih đang soi món ăn và tra cứu dữ liệu...</div>';
+        const reader = new FileReader(); reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const base64Data = reader.result.split(',')[1];
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "ANALYZE_HEALTH", image: base64Data, mimeType: file.type,
+                        userProfile: { height: h || 'Không rõ', weight: w || 'Không rõ', goal: g || 'Sức khỏe tổng quát' }
+                    }),
+                    headers: { "Content-Type": "text/plain;charset=utf-8" }
+                });
+                const data = await response.json();
+                if (data.status === "success") {
+                    healthResultDiv.innerHTML = `<div class="card" style="padding:15px; background:var(--form-bg); border-left: 4px solid #ff9500; border-radius:12px;">${data.report.replace(/\n/g, '<br>')}</div>`;
+                } else { healthResultDiv.innerHTML = "😫 Lỗi: " + data.message; }
+            } catch (e) { healthResultDiv.innerHTML = "😭 Lỗi kết nối!"; }
+        };
+        event.target.value = '';
+    }
   </script>
+  <div id="healthReportModal" class="sub-modal">
+    <div class="sub-modal-header"><button class="btn-icon-circle" onclick="document.getElementById('healthReportModal').classList.remove('open')">‹</button><span>Peih Health ✨</span><div style="width:38px;"></div></div>
+    <div class="modal-content" style="background:var(--bg-main); padding: 20px; overflow-y: auto;">
+      <div class="section-title" style="margin-top:0;">CHỈ SỐ CỦA SẾP (TÙY CHỌN)</div>
+      <div class="form-container" style="padding: 15px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Chiều cao (cm)</div><input type="number" id="health-height" placeholder="177" style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none;"></div>
+        <div><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Cân nặng (kg)</div><input type="number" id="health-weight" placeholder="85" style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none;"></div>
+        <div style="grid-column: span 2;"><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Mục tiêu sức khỏe</div><input type="text" id="health-goal" placeholder="VD: Giảm cân, tăng cơ, chạy bộ..." style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none;"></div>
+      </div>
+      <div id="healthAiResult" style="line-height: 1.6; font-size: 14px; min-height: 100px; margin-bottom: 20px;"><div style="text-align:center; padding:20px; color:var(--text-muted); border: 1px dashed var(--border-color); border-radius: 16px;">Sếp chụp món ăn để Peih soi nhé!</div></div>
+      <div style="position: sticky; bottom: 0; background: var(--bg-main); padding-top: 10px;">
+        <button onclick="document.getElementById('healthPhotoInput').click()" style="width:100%; background:#ff9500; color:white; border:none; padding:16px; border-radius:16px; font-weight:bold; font-size:16px; box-shadow: 0 4px 15px rgba(255,149,0,0.3);">📸 PHÂN TÍCH MÓN ĂN</button>
+        <input type="file" id="healthPhotoInput" accept="image/*" style="display:none;" onchange="processHealthAnalysis(event)">
+      </div>
+  </div>
+</div>
 </body>
 </html>
