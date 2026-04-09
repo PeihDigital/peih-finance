@@ -2345,7 +2345,7 @@
 
             if (data.status === "success") {
                 localStorage.setItem('peih_email', email);
-                localStorage.setItem('peih_hash', hashedPass);
+                localStorage.setItem('peih_session', data.sessionToken);
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'flex';
                 loadLedgerData();
@@ -2363,47 +2363,49 @@
     }
 
     async function checkAutoLogin() {
-        const savedEmail = localStorage.getItem('peih_email');
-        const savedHash = localStorage.getItem('peih_hash');
-        const splash = document.getElementById('splashScreen');
-        const loginScreen = document.getElementById('loginScreen');
-        const mainApp = document.getElementById('mainApp');
-        if (!savedEmail || !savedHash) {
-            if (splash) splash.style.display = 'none';
-            mainApp.style.display = 'none'; 
-            loginScreen.style.display = 'flex'; 
-            return; 
-        }
-        try {
-            const response = await fetch(GAS_WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "LOGIN", email: savedEmail, hash: savedHash }),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            const data = await response.json();
+      const savedEmail = localStorage.getItem('peih_email');
+      const savedSession = localStorage.getItem('peih_session');
+      const splash = document.getElementById('splashScreen');
+      const loginScreen = document.getElementById('loginScreen');
+      const mainApp = document.getElementById('mainApp');
+    
+      if (!savedEmail || !savedSession) {
+          if (splash) splash.style.display = 'none';
+          mainApp.style.display = 'none'; 
+          loginScreen.style.display = 'flex'; 
+          return; 
+      }
+    
+      try {
+          const response = await fetch(GAS_WEB_APP_URL, {
+              method: "POST",
+              body: JSON.stringify({ action: "VERIFY_SESSION", email: savedEmail }),
+              headers: { "Content-Type": "text/plain;charset=utf-8" }
+          });
+          const data = await response.json();
 
-            if (data.status === "success") {
-                if (splash) splash.style.display = 'none';
-                loginScreen.style.display = 'none';
-                mainApp.style.display = 'flex'; 
-                loadLedgerData();
-                loadAppConfig();
-            } else {
-                logout(); 
-                if (splash) splash.style.display = 'none';
-                showToast("Phiên đăng nhập hết hạn, sếp vào lại nhé!");
-            }
-        } catch (e) {
-            if (splash) splash.style.display = 'none';
-            loginScreen.style.display = 'flex';
-            mainApp.style.display = 'none';
-            showToast("Lỗi kết nối, sếp kiểm tra mạng nhé!");
-        }
+          if (data.status === "success") {
+              if (splash) splash.style.display = 'none';
+              loginScreen.style.display = 'none';
+              mainApp.style.display = 'flex'; 
+              loadLedgerData();
+              loadAppConfig();
+          } else {
+              logout(); 
+              if (splash) splash.style.display = 'none';
+              showToast("Phiên làm việc đã hết hạn hoặc bị hủy. Sếp đăng nhập lại nhé!");
+          }
+      } catch (e) {
+          if (splash) splash.style.display = 'none';
+          loginScreen.style.display = 'flex';
+          mainApp.style.display = 'none';
+          showToast("Lỗi kết nối, sếp kiểm tra mạng nhé!");
+      }
     }
 
     function logout() {
         localStorage.removeItem('peih_email');
-        localStorage.removeItem('peih_hash');
+        localStorage.removeItem('peih_session');
         document.getElementById('passwordInput').value = ''; 
         document.getElementById('mainApp').style.display = 'none'; 
         document.getElementById('loginScreen').style.display = 'flex'; 
@@ -2674,18 +2676,18 @@
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwMlOvI6Fbw4AqnAf-09WgFlviIH9XOecyP6LBzgILvPnIXcXpTkwWKUqHjrwYaBi2kuw/exec";
     const originalFetch = window.fetch;
     window.fetch = async function(resource, config) {
-      if (resource === GAS_WEB_APP_URL && config && config.method === "POST" && config.body) {
-        try {
-          let bodyData = JSON.parse(config.body);
-          const email = localStorage.getItem('peih_email') || bodyData.email || "";
-          const baseHash = localStorage.getItem('peih_hash') || bodyData.hash || "";
+    if (resource === GAS_WEB_APP_URL && config && config.method === "POST" && config.body) {
+      try {
+        let bodyData = JSON.parse(config.body);
+        const email = localStorage.getItem('peih_email') || bodyData.email || "";
+        const sessionToken = localStorage.getItem('peih_session') || "";
 
-          if (bodyData.action === "LOGIN") {
-            bodyData.token = bodyData.hash; 
+        if (bodyData.action === "LOGIN") {
+          bodyData.token = bodyData.hash; 
           } else {
-            const nowTs = Math.floor(Date.now() / 60000);
-            bodyData.token = await hashPassword(baseHash + nowTs);
-            bodyData.email = email;
+          const nowTs = Math.floor(Date.now() / 60000);
+          bodyData.token = await hashPassword(sessionToken + nowTs);
+          bodyData.email = email;
           }
           config.body = JSON.stringify(bodyData);
         } catch(e) { console.error("Middleware Error:", e); }
