@@ -1441,6 +1441,51 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
+    .rule-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 15px;
+      margin-bottom: 12px;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .rule-card.expanded {
+      padding-bottom: 20px;
+      border-color: var(--accent-bg);
+      transform: scale(1.02);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .advice-content {
+      max-height: 0;
+      opacity: 0;
+      transition: all 0.3s ease;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      padding-top: 0;
+    }
+
+    .rule-card.expanded .advice-content {
+      max-height: 200px;
+      opacity: 1;
+      padding-top: 15px;
+      border-top: 1px dashed var(--border-color);
+      margin-top: 12px;
+    }
+
+    .peih-tag {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #007aff;
+      margin-bottom: 4px;
+      display: block;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -1565,7 +1610,35 @@
       <button id="btnBackToToday" class="btn-back-today" onclick="backToToday()">Trở về hiện tại</button>
       
     </div>
-    <div id="tab-pantry" class="tab-content">...</div>
+    <div id="tab-pantry" class="tab-content" style="padding-bottom: 150px;">
+      <div class="dashboard-header" style="margin-bottom: 20px;">
+        <div class="header-label">PEIH ADVISORY ✨</div>
+        <div class="total-amount" style="font-size: 26px;">Sức Mạnh Tài Chính</div>
+      </div>
+
+      <div class="card" style="padding: 20px; display: flex; justify-content: center; align-items: center; background: var(--bg-card); margin-bottom: 25px;">
+        <canvas id="financialRadarChart" style="max-width: 100%; max-height: 300px;"></canvas>
+      </div>
+
+      <div class="section-title" style="color: #ff3b30; display: flex; align-items: center; gap: 8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+        TẦNG 1: SINH TỒN (SURVIVAL)
+      </div>
+      <div id="tier-survival" class="tier-container">
+        </div>
+
+      <div class="section-title" style="color: #007aff; display: flex; align-items: center; gap: 8px; margin-top: 30px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+        TẦNG 2: TĂNG TRƯỞNG (GROWTH)
+      </div>
+      <div id="tier-growth" class="tier-container"></div>
+
+      <div class="section-title" style="color: #af52de; display: flex; align-items: center; gap: 8px; margin-top: 30px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+        TẦNG 3: TỰ DO (FREEDOM)
+      </div>
+      <div id="tier-freedom" class="tier-container"></div>
+    </div>
     <div id="tab-budget" class="tab-content">
       <div class="dashboard-header" style="margin-bottom: 20px;">
         <div class="header-label" style="font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Kế hoạch tài chính</div>
@@ -1681,11 +1754,42 @@
         <div class="type-btn" id="btnThemeAuto" onclick="setThemePreference('auto')">Tự động</div>
       </div>
       <div class="section-title">DỮ LIỆU CÁ NHÂN</div>
-      <div class="glass-scroll-box">
-        <div class="form-row" style="padding:12px 0; border-bottom:1px dashed var(--border-color); cursor:pointer;" onclick="openSettingsWalletModal()"><div class="row-left"><span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></span><span style="font-weight:600; font-size:15px;">Quản lý Ví</span></div><span class="arrow">›</span></div>
-        <div class="form-row" style="padding:12px 0; border-bottom:1px dashed var(--border-color); cursor:pointer;" onclick="openCategoryModal()"><div class="row-left"><span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span><span style="font-weight:600; font-size:15px;">Quản lý Nhóm</span></div><span class="arrow">›</span></div>
+      <div class="card" style="padding: 5px 20px; margin-bottom: 20px;">
+        <div class="form-row" style="padding:12px 0; border-bottom:1px dashed var(--border-color); cursor:pointer;" onclick="openProfileModal()">
+          <div class="row-left">
+            <span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+            <span style="font-weight:600; font-size:15px;">Hồ sơ tài chính</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
 
-        <div class="form-row" style="padding:12px 0; border-bottom:none;"><div class="row-left"><span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><line x1="12" y1="18" x2="12" y2="22"></line><line x1="12" y1="2" x2="12" y2="6"></line></svg></span><span style="font-weight:600; font-size:15px;">Tiền tệ mặc định</span></div><select id="defaultCurrencySetting" class="currency-select" style="margin-top:0; background:var(--form-bg);" onchange="changeDefaultCurrency(this.value)"><option value="VND">VND</option><option value="JPY">JPY</option><option value="USD">USD</option></select></div>
+        <div class="form-row" style="padding:12px 0; border-bottom:1px dashed var(--border-color); cursor:pointer;" onclick="openSettingsWalletModal()">
+          <div class="row-left">
+            <span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></span>
+            <span style="font-weight:600; font-size:15px;">Quản lý Ví</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+
+        <div class="form-row" style="padding:12px 0; border-bottom:1px dashed var(--border-color); cursor:pointer;" onclick="openCategoryModal()">
+          <div class="row-left">
+            <span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span>
+            <span style="font-weight:600; font-size:15px;">Quản lý Nhóm</span>
+          </div>
+          <span class="arrow">›</span>
+        </div>
+
+        <div class="form-row" style="padding:12px 0; border-bottom:none;">
+          <div class="row-left">
+            <span style="margin-right:12px; display:flex; align-items:center; color:var(--text-muted);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><line x1="12" y1="18" x2="12" y2="22"></line><line x1="12" y1="2" x2="12" y2="6"></line></svg></span>
+            <span style="font-weight:600; font-size:15px;">Tiền tệ mặc định</span>
+          </div>
+          <select id="defaultCurrencySetting" class="currency-select" style="margin-top:0; background:var(--form-bg);" onchange="changeDefaultCurrency(this.value)">
+            <option value="VND">VND</option>
+            <option value="JPY">JPY</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
       </div>
       <div class="card" style="padding: 5px 20px; margin-bottom: 20px;">
         <div class="form-row" style="padding:12px 0; border-bottom:none; cursor:pointer;" onclick="openIconPicker('view')">
@@ -1762,8 +1866,8 @@
         <div class="nav-text">Sổ sách</div>
       </div>
       <div class="nav-item" onclick="switchTab('pantry', this)">
-        <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></div>
-        <div class="nav-text">Đi chợ</div>
+        <div class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9l-5 5-4-4-5 5"></path></svg></div>
+        <div class="nav-text">Tích Luỹ</div>
       </div>
       <div class="nav-item" onclick="switchTab('budget', this)">
         <div class="nav-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div>
@@ -2005,6 +2109,49 @@
       </div>
      </div>
     </div> 
+    <div id="profileModal" class="sub-modal">
+      <div class="sub-modal-header">
+        <button class="btn-icon-circle" onclick="closeProfileModal()">‹</button>
+        <span>Hồ sơ tài chính</span>
+        <div style="width: 38px;"></div>
+      </div>
+      <div class="modal-content" style="background: var(--bg-main); padding-top: 15px;">
+        
+        <div class="section-title">THÔNG TIN CÁ NHÂN</div>
+        <div class="form-container" style="padding: 0 15px; margin-bottom: 20px;">
+          <div class="form-row" style="padding: 15px 0; border-bottom: none;">
+            <div class="row-left" style="font-size: 14px; font-weight: 600;">Sinh tháng / năm</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="password" id="birthMonth" placeholder="Tháng" oninput="saveProfileData()" class="limit-inline-input" style="width: 45px; text-align: center;">
+              <span style="color: var(--text-muted);">/</span>
+              <input type="password" id="birthYear" placeholder="Năm" oninput="saveProfileData()" class="limit-inline-input" style="width: 60px; text-align: center;">
+              <button onclick="toggleDobEye()" id="btnDobEye" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding-left: 5px; display: flex; align-items: center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">TÍCH LŨY HIỆN TẠI</div>
+        <div class="form-container" style="padding: 0 15px; margin-bottom: 20px;">
+          <div class="form-row" style="padding: 15px 0; border-bottom: none;">
+            <div class="row-left" style="font-size: 14px; font-weight: 600;">Tổng số dư quỹ</div>
+            <input type="text" id="profileSavings" inputmode="numeric" oninput="formatCurrency(this); saveProfileData()" class="limit-inline-input" placeholder="0">
+          </div>
+        </div>
+
+        <div class="section-title">DÒNG TIỀN HÀNG THÁNG</div>
+        <div class="form-container" style="padding: 0 15px; margin-bottom: 20px;">
+          <div class="form-row" style="padding: 15px 0; border-bottom: 1px dashed var(--border-color);">
+            <div class="row-left" style="font-size: 14px; font-weight: 600;">Thu nhập trung bình</div>
+            <input type="text" id="profileIncome" inputmode="numeric" oninput="formatCurrency(this); saveProfileData()" class="limit-inline-input" placeholder="0">
+          </div>
+          <div class="form-row" style="padding: 15px 0; border-bottom: none;">
+            <div class="row-left" style="font-size: 14px; font-weight: 600;">Chi tiêu trung bình</div>
+            <input type="text" id="profileExpense" inputmode="numeric" oninput="formatCurrency(this); saveProfileData()" class="limit-inline-input" placeholder="0">
+          </div>
+        </div>
+
+      </div>
+    </div>
     <div id="categoryModal" class="sub-modal">
     <div class="sub-modal-header">
       <button class="btn-icon-circle" onclick="closeCategoryModal()">‹</button>
@@ -7142,6 +7289,156 @@
             } else { resultDiv.innerHTML = "😫 Lỗi: " + data.message; }
         } catch (e) { resultDiv.innerHTML = "😭 Lỗi kết nối!"; }
     }
+
+    function openProfileModal() {
+      document.getElementById('profileModal').classList.add('open');
+    }
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.remove('open');
+    }
+
+    function toggleDobEye() {
+      const mInput = document.getElementById('birthMonth');
+      const yInput = document.getElementById('birthYear');
+      const eyeBtn = document.getElementById('btnDobEye');
+      const isHidden = mInput.type === 'password';
+      
+      mInput.type = isHidden ? 'text' : 'password';
+      yInput.type = isHidden ? 'text' : 'password';
+      
+      eyeBtn.innerHTML = isHidden 
+        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+    }
+
+    function saveProfileData() {
+      const month = parseInt(document.getElementById('birthMonth').value) || 0;
+      const year = parseInt(document.getElementById('birthYear').value) || 0;
+      let age = 25;
+
+      if (year > 1900) {
+        const now = new Date();
+        age = now.getFullYear() - year;
+        if (now.getMonth() + 1 < month) age--;
+      }
+
+      const savings = document.getElementById('profileSavings').value.replace(/\D/g, '');
+      const income = document.getElementById('profileIncome').value.replace(/\D/g, '');
+      const expense = document.getElementById('profileExpense').value.replace(/\D/g, '');
+
+      localStorage.setItem('peih_birth_month', month);
+      localStorage.setItem('peih_birth_year', year);
+      localStorage.setItem('peih_rule_age', age);
+      localStorage.setItem('peih_rule_savings', savings);
+      localStorage.setItem('peih_rule_income', income);
+      localStorage.setItem('peih_rule_expense', expense);
+      
+      calculateAllRules();
+    }
+
+    function loadProfileData() {
+      document.getElementById('birthMonth').value = localStorage.getItem('peih_birth_month') || '';
+      document.getElementById('birthYear').value = localStorage.getItem('peih_birth_year') || '';
+      document.getElementById('profileSavings').value = parseInt(localStorage.getItem('peih_rule_savings') || '0').toLocaleString();
+      document.getElementById('profileIncome').value = parseInt(localStorage.getItem('peih_rule_income') || '0').toLocaleString();
+      document.getElementById('profileExpense').value = parseInt(localStorage.getItem('peih_rule_expense') || '0').toLocaleString();
+      calculateAllRules();
+    }
+
+    let financialRadar;
+
+    function calculateAllRules() {
+      const age = parseInt(localStorage.getItem('peih_rule_age')) || 25;
+      const savings = parseFloat(localStorage.getItem('peih_rule_savings')) || 0;
+      const income = parseFloat(localStorage.getItem('peih_rule_income')) || 0;
+      const expense = parseFloat(localStorage.getItem('peih_rule_expense')) || 1; // tránh chia cho 0
+      const rules = [
+        { id: 1, tier: 1, name: "Dự phòng 3X", val: savings, target: expense * 3, unit: "JPY", advice: `Sếp cần ít nhất ${(expense * 3).toLocaleString()} JPY để an tâm nếu có biến cố. ${savings < expense * 3 ? 'Sếp còn thiếu ' + (expense * 3 - savings).toLocaleString() + ' nữa, cố lên!' : 'Sếp đã làm rất tốt!'}` },
+        { id: 3, tier: 1, name: "Ngân sách 50/30/20", val: income - expense, target: income * 0.2, unit: "JPY", advice: `Mỗi tháng sếp nên để dành ít nhất ${(income * 0.2).toLocaleString()} JPY cho tích lũy. Hiện tại sếp đang dư ${(income - expense).toLocaleString()}.` },
+        { id: 7, tier: 1, name: "28% Vay nhà", val: income * 0.28, target: income * 0.28, unit: "Tối đa", advice: `Tiền thuê nhà hoặc trả góp chỉ nên nằm trong khoảng ${(income * 0.28).toLocaleString()} JPY để không bị áp lực.` },
+        { id: 8, tier: 1, name: "1% Bảo trì", val: 1, target: 1, unit: "%", advice: "Nếu sếp có tài sản lớn, hãy luôn trích 1% giá trị mỗi năm để sửa chữa, tránh hụt tiền đột ngột." },
+        
+        { id: 2, tier: 2, name: "Trả mình trước", val: income * 0.2, target: income * 0.2, unit: "20%", advice: "Ngay khi lương về, hãy bắn ngay 20% vào quỹ đầu tư trước khi kịp tiêu xài gì sếp nhé!" },
+        { id: 5, tier: 2, name: "100 - Tuổi", val: 100 - age, target: 100, unit: "% Cổ phiếu", advice: `Ở tuổi ${age}, sếp nên có ${100 - age}% tài sản ở các kênh tăng trưởng mạnh như Cổ phiếu.` },
+        { id: 4, tier: 2, name: "Quy tắc 72", val: 7.2, target: 7.2, unit: "Năm", advice: "Với lãi suất 10%/năm, tiền của sếp sẽ tự nhân đôi sau mỗi 7.2 năm. Hãy kiên nhẫn!" },
+        
+        { id: 6, tier: 3, name: "Mục tiêu 10X", val: savings, target: income * 12 * 10, unit: "JPY", advice: `Để nghỉ hưu giàu có, sếp cần ${(income * 12 * 10).toLocaleString()} JPY. Sếp đã đi được ${Math.round(savings/(income*12*10)*100)}% quãng đường.` },
+        { id: 9, tier: 3, name: "Cột mốc 1000", val: 0, target: 1000, unit: "USD Thụ động", advice: "Hãy xây dựng danh mục để mỗi tháng nhận 1000 USD mà không cần làm việc. Đó là tự do!" },
+        { id: 10, tier: 3, name: "Rút 4%", val: savings * 0.04, target: expense * 12, unit: "Dòng tiền", advice: `Với số vốn hiện tại, mỗi năm sếp chỉ nên rút ${(savings * 0.04).toLocaleString()} JPY để quỹ không bao giờ cạn.` }
+      ];
+      renderTier('tier-survival', rules.filter(r => r.tier === 1));
+      renderTier('tier-growth', rules.filter(r => r.tier === 2));
+      renderTier('tier-freedom', rules.filter(r => r.tier === 3));
+      const scores = rules.map(r => Math.min(100, Math.max(10, (r.val / r.target) * 100)));
+      updateRadar(scores);
+    }
+
+    function renderTier(containerId, tierRules) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      tierRules.forEach(r => {
+        const pct = Math.min(100, (r.val / r.target) * 100);
+        const html = `
+          <div class="rule-card" onclick="this.classList.toggle('expanded')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 700; font-size: 15px; color: var(--text-main);">${r.name}</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                  ${r.val.toLocaleString()} / ${r.target.toLocaleString()} ${r.unit}
+                </div>
+              </div>
+              <div style="font-weight: 800; color: ${pct >= 100 ? '#34c759' : '#ff9500'}">${Math.round(pct)}%</div>
+            </div>
+            <div class="budget-progress-wrap" style="height: 4px; background: var(--bg-main); margin-top: 10px;">
+              <div class="budget-fill" style="width: ${pct}%; background: ${pct >= 100 ? '#34c759' : '#ff9500'}"></div>
+            </div>
+            <div class="advice-content">
+              <span class="peih-tag">Peih Advisory</span>
+              ${r.advice}
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+      });
+    }
+
+    function updateRadar(scores) {
+      const ctx = document.getElementById('financialRadarChart').getContext('2d');
+      const labels = ["Dự phòng", "Ngân sách", "Nợ nhà", "Bảo trì", "Tiết kiệm", "Phân bổ", "Lãi kép", "Hưu trí", "Thụ động", "Rút 4%"];
+      
+      if (financialRadar) financialRadar.destroy();
+
+      financialRadar = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Sức mạnh tài chính',
+            data: scores,
+            backgroundColor: 'rgba(0, 122, 255, 0.2)',
+            borderColor: '#007aff',
+            borderWidth: 2,
+            pointBackgroundColor: '#007aff'
+          }]
+        },
+        options: {
+          scales: {
+            r: {
+              min: 0, max: 100, beginAtZero: true,
+              ticks: { display: false },
+              grid: { color: 'rgba(128, 128, 128, 0.1)' },
+              angleLines: { color: 'rgba(128, 128, 128, 0.1)' },
+              pointLabels: { font: { size: 9 }, color: '#888' }
+            }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadProfileData();
+    });
   </script>
   <div id="healthReportModal" class="sub-modal">
     <div class="sub-modal-header">
