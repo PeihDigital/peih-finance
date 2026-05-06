@@ -1500,7 +1500,7 @@
     </div>
   </div>
 
-  <div id="mainApp" style="display: none; padding-bottom: 90px; overflow-y: auto; height: 100vh;">
+  <div id="mainApp" style="display: none; width: 100%; height: 100vh;">
     
     <div id="tab-dashboard" class="tab-content active">
       <div class="dashboard-header">
@@ -1604,11 +1604,21 @@
     <div id="tab-pantry" class="tab-content" style="padding-bottom: 150px;">
       <div class="dashboard-header" style="margin-bottom: 20px;">
         <div class="header-label">PEIH ADVISORY ✨</div>
-        <div class="total-amount" style="font-size: 26px;">Sức Mạnh Tài Chính</div>
+        <div class="total-amount" style="font-size: 26px;">Sức Khoẻ Tài Chính</div>
       </div>
 
-      <div class="card" style="padding: 20px; display: flex; justify-content: center; align-items: center; background: var(--bg-card); margin-bottom: 15px;">
+      <div class="card" style="padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--bg-card); margin-bottom: 15px;">
         <canvas id="financialRadarChart" style="max-width: 100%; max-height: 300px;"></canvas>
+        <div style="width: 100%; margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase;">
+            <span style="color: #34c759;">An Toàn</span>
+            <span style="color: #ff3b30;">Rủi ro</span>
+          </div>
+          <div style="position: relative; width: 100%; height: 8px; border-radius: 4px; background: linear-gradient(to right, #34c759, #ffcc00, #ff3b30);">
+            <div id="health-indicator-marker" style="position: absolute; top: -6px; left: 50%; width: 4px; height: 20px; background: var(--text-main); border-radius: 2px; box-shadow: 0 0 5px rgba(0,0,0,0.5); transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateX(-50%);"></div>
+          </div>
+          <div id="health-indicator-text" style="text-align: center; font-size: 13px; font-weight: 600; color: var(--text-main); margin-top: 15px; line-height: 1.4;">Đang đánh giá...</div>
+        </div>
       </div>
 
       <button class="btn-3d-portfolio" onclick="document.getElementById('portfolioModal').classList.add('open')">
@@ -7368,10 +7378,10 @@
         : `Đây là ưu tiên số 1: Xây dựng quỹ dự phòng 3 tháng chi tiêu (${t3.toLocaleString()} JPY). Khi đạt mốc này, sếp sẽ có một vùng an toàn cực kỳ vững chắc để tự tin theo đuổi các mục tiêu lớn hơn!`;
 
       const rules = [
-        { id: 1, tier: 1, name: r1Name, val: savings, target: t6, visualPct: visualPct, unit: "JPY", advice: r1Adv, milestone: markerPos },
-        { id: 3, tier: 1, name: "Ngân sách 50/30/20", val: income - expense, target: income * 0.2, unit: "JPY", advice: `Mỗi tháng sếp nên để dành ít nhất ${(income * 0.2).toLocaleString()} JPY cho tích lũy. Hiện tại sếp đang dư ${(income - expense).toLocaleString()}.` },
-        { id: 7, tier: 1, name: "28% Vay nhà", val: income * 0.28, target: income * 0.28, unit: "Tối đa", advice: `Tiền thuê nhà hoặc trả góp chỉ nên nằm trong khoảng ${(income * 0.28).toLocaleString()} JPY để không bị áp lực.` },
-        { id: 8, tier: 1, name: "1% Bảo trì", val: 1, target: 1, unit: "%", advice: "Nếu sếp có tài sản lớn, hãy luôn trích 1% giá trị mỗi năm để sửa chữa, tránh hụt tiền đột ngột." },
+        { id: 1, tier: 1, name: r1Name, val: savings, target: is3xDone ? t6 : t3, visualPct: visualPct, unit: "JPY", advice: r1Adv, milestone: markerPos },
+        { id: 3, tier: 1, name: "Phân bổ tiêu chuẩn", val: income - expense, target: income * 0.2, unit: "JPY", advice: `Mỗi tháng sếp nên để dành ít nhất ${(income * 0.2).toLocaleString()} JPY cho tích lũy. Hiện tại sếp đang dư ${(income - expense).toLocaleString()}.` },
+        { id: 7, tier: 1, name: "Tỷ lệ vay/thuê nhà 28%", val: income * 0.28, target: income * 0.28, unit: "Tối đa", advice: `Tiền thuê nhà hoặc trả góp chỉ nên nằm trong khoảng ${(income * 0.28).toLocaleString()} JPY để không bị áp lực.` },
+        { id: 8, tier: 1, name: "Quỹ bảo trì tài sản (1%)", val: 1, target: 1, unit: "%", advice: "Nếu sếp có tài sản lớn, hãy luôn trích 1% giá trị mỗi năm để sửa chữa, tránh hụt tiền đột ngột." },
         
         { id: 2, tier: 2, name: "Trả mình trước", val: income * 0.2, target: income * 0.2, unit: "20%", advice: "Ngay khi lương về, hãy bắn ngay 20% vào quỹ đầu tư trước khi kịp tiêu xài gì sếp nhé!" },
         { id: 5, tier: 2, name: "100 - Tuổi", val: 100 - age, target: 100, unit: "% Cổ phiếu", advice: `Ở tuổi ${age}, sếp nên có ${100 - age}% tài sản ở các kênh tăng trưởng mạnh như Cổ phiếu.` },
@@ -7381,11 +7391,61 @@
         { id: 9, tier: 3, name: "Cột mốc 1000", val: 0, target: 1000, unit: "USD Thụ động", advice: "Hãy xây dựng danh mục để mỗi tháng nhận 1000 USD mà không cần làm việc. Đó là tự do!" },
         { id: 10, tier: 3, name: "Rút 4%", val: savings * 0.04, target: expense * 12, unit: "Dòng tiền", advice: `Với số vốn hiện tại, mỗi năm sếp chỉ nên rút ${(savings * 0.04).toLocaleString()} JPY để quỹ không bao giờ cạn.` }
       ];
+      
       renderTier('tier-survival', rules.filter(r => r.tier === 1));
       renderTier('tier-growth', rules.filter(r => r.tier === 2));
       renderTier('tier-freedom', rules.filter(r => r.tier === 3));
-      const scores = rules.map(r => Math.min(100, Math.max(10, (r.val / r.target) * 100)));
-      updateRadar(scores);
+      
+      const radarRules = rules.filter(r => ![8, 5, 4].includes(r.id));
+      const scores = radarRules.map(r => {
+        let percentage = (r.val / r.target) * 100;
+        return Math.max(5, Math.min(130, percentage)); 
+      });
+      
+      updateRadar(scores, radarRules);
+      updateMaintenanceInPortfolio(expense);
+
+      const r1 = rules.find(r => r.id === 1); 
+      const r2 = rules.find(r => r.id === 2); 
+      const r3 = rules.find(r => r.id === 3); 
+      
+      const p1 = Math.min(100, (r1.val / r1.target) * 100);
+      const p2 = Math.min(100, (r2.val / r2.target) * 100);
+      const p3 = Math.min(100, (r3.val / r3.target) * 100);
+      
+      let weightedScore = (p1 * 0.6) + (p2 * 0.25) + (p3 * 0.15);
+      let indicatorPos = 100 - weightedScore; 
+      
+      let markerEl = document.getElementById('health-indicator-marker');
+      let textEl = document.getElementById('health-indicator-text');
+      
+      if (markerEl && textEl) {
+        markerEl.style.left = indicatorPos + '%';
+        
+        let statusColor = "";
+        let adviceText = "";
+        if (weightedScore >= 90) {
+          statusColor = "#34c759";
+          adviceText = "Hệ thống cực kỳ vững chãi. Sếp có thể tự tin đầu tư mạnh tay.";
+        } else if (weightedScore >= 70) {
+          statusColor = "#34c759"; 
+          adviceText = "Sức khỏe tài chính ổn định. Hãy duy trì kỷ luật tích lũy.";
+        } else if (weightedScore >= 40) {
+          statusColor = "#ffcc00"; 
+          adviceText = "Cảnh báo: Các quỹ ngắn hạn chưa đạt ngưỡng an toàn.";
+        } else {
+          statusColor = "#ff3b30"; 
+          adviceText = "Rủi ro cao! Sếp cần thắt chặt chi tiêu để đắp vào quỹ dự phòng ngay.";
+        }
+        if (p1 < 20) {
+          statusColor = "#ff3b30";
+          adviceText = "⚠️ Cực kỳ rủi ro: Quỹ dự phòng của sếp đang quá thấp!";
+          if (indicatorPos < 70) markerEl.style.left = '85%';
+        }
+
+        textEl.style.color = statusColor;
+        textEl.innerText = adviceText;
+      }
     }
 
     function renderTier(containerId, tierRules) {
@@ -7419,10 +7479,17 @@
         container.insertAdjacentHTML('beforeend', html);
       });
     }
+    function updateMaintenanceInPortfolio(monthlyExpense) {
+      const maintenanceVal = Math.round(monthlyExpense * 12 * 0.01);
+      const displayEl = document.getElementById('maintenance-value');
+      if (displayEl) {
+        displayEl.innerText = maintenanceVal.toLocaleString() + ' JPY';
+      }
+    }
 
-    function updateRadar(scores) {
+    function updateRadar(scores, rules) {
       const ctx = document.getElementById('financialRadarChart').getContext('2d');
-      const labels = ["Dự phòng", "Ngân sách", "Nợ nhà", "Bảo trì", "Tiết kiệm", "Phân bổ", "Lãi kép", "Hưu trí", "Thụ động", "Rút 4%"];
+      const labels = ["Dự phòng", "Ngân sách", "Vay nhà", "Trả mình trước", "Hưu trí 10X", "Thụ động", "Rút 4%"];
       
       if (financialRadar) financialRadar.destroy();
 
@@ -7430,26 +7497,42 @@
         type: 'radar',
         data: {
           labels: labels,
-          datasets: [{
-            label: 'Sức mạnh tài chính',
-            data: scores,
-            backgroundColor: 'rgba(0, 122, 255, 0.2)',
-            borderColor: '#007aff',
-            borderWidth: 2,
-            pointBackgroundColor: '#007aff'
-          }]
+          datasets: [
+            {
+              label: 'Mục tiêu',
+              data: [100, 100, 100, 100, 100, 100, 100],
+              backgroundColor: 'transparent', 
+              pointRadius: 2,
+              borderColor: '#007aff',
+              borderWidth: 1.5,
+              borderDash: [5, 5],
+              pointBackgroundColor: 'transparent'
+            },
+            {
+              label: 'Thực tế',
+              data: scores,
+              backgroundColor: 'rgba(255, 59, 48, 0.2)',
+              borderColor: '#ff3b30',
+              borderWidth: 2,
+              pointBackgroundColor: '#ff3b30'
+            }
+          ]
         },
         options: {
+          events: [], // Tắt hoàn toàn mọi sự kiện chạm/hover
           scales: {
             r: {
-              min: 0, max: 100, beginAtZero: true,
+              min: 0, suggestedMax: 100, beginAtZero: true,
               ticks: { display: false },
               grid: { color: 'rgba(128, 128, 128, 0.1)' },
               angleLines: { color: 'rgba(128, 128, 128, 0.1)' },
               pointLabels: { font: { size: 9 }, color: '#888' }
             }
           },
-          plugins: { legend: { display: false } }
+          plugins: { 
+            legend: { display: false }, // Tắt ghi chú
+            tooltip: { enabled: false } // Tắt khung thông tin khi chạm
+          }
         }
       });
     }
@@ -7507,6 +7590,16 @@
       <div class="section-title">TÀI SẢN CỐ ĐỊNH</div>
       <div class="form-container" style="padding: 15px; margin-bottom: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
         Sếp chưa khai báo Bất động sản hay Xe cộ.
+      </div>
+      <div class="section-title">QUỸ BẢO TRÌ TÀI SẢN (1%)</div>
+      <div id="maintenance-asset-box" class="form-container" style="padding: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+           <div style="font-size: 13px; color: var(--text-muted);">Ngân sách gợi ý hàng năm</div>
+           <div id="maintenance-value" style="font-weight: 800; color: #ff9500; font-size: 16px;">0 JPY</div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px; font-style: italic;">
+          * Dựa trên chi phí sinh hoạt hiện tại để đảm bảo tài sản luôn trong trạng thái tốt nhất.
+        </div>
       </div>
     </div>
   </div>
