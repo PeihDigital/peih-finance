@@ -7349,6 +7349,7 @@
       document.getElementById('profileIncome').value = parseInt(localStorage.getItem('peih_rule_income') || '0').toLocaleString();
       document.getElementById('profileExpense').value = parseInt(localStorage.getItem('peih_rule_expense') || '0').toLocaleString();
       calculateAllRules();
+      renderGoldAsset();
     }
 
     let financialRadar;
@@ -7540,7 +7541,238 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadProfileData();
     });
+    let goldTrendChart = null;
+    // Dữ liệu mẫu: Lịch sử mua vàng của sếp
+    const goldLots = [
+      { id: 'g1', date: '2024-11-15', type: 'SJC', qty: 2, buyPrice: 85000000, currentPrice: 92000000, currency: 'VND' },
+      { id: 'g2', date: '2025-02-10', type: 'Nhẫn trơn', qty: 1, buyPrice: 6500000, currentPrice: 7800000, currency: 'VND' }
+    ];
+
+    function renderGoldAsset() {
+      const isInflationEnabled = document.getElementById('inflation-toggle')?.checked;
+      const inflationRate = 0.04; // Giả định 4%/năm
+      let totalCost = 0;
+      let totalCurrentValue = 0;
+      let container = document.getElementById('gold-lots-container');
+      if(!container) return;
+      container.innerHTML = '';
+
+      goldLots.forEach(lot => {
+        let yearsHeld = (new Date() - new Date(lot.date)) / (1000 * 60 * 60 * 24 * 365);
+        let cost = lot.buyPrice * lot.qty;
+        let currentValue = lot.currentPrice * lot.qty;
+        
+        // Nếu bật lạm phát, vốn gốc sẽ bị "đẩy" cao lên theo thời gian
+        let adjustedCost = isInflationEnabled ? cost * Math.pow(1 + inflationRate, yearsHeld) : cost;
+        let pnl = currentValue - adjustedCost;
+        let pnlPct = (pnl / adjustedCost) * 100;
+
+        totalCost += adjustedCost;
+        totalCurrentValue += currentValue;
+
+        // Vẽ từng lô vàng
+        container.innerHTML += `
+          <div class="form-container" onclick="openGoldLotDetail('${lot.id}')" style="padding: 15px; cursor: pointer;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <div style="font-weight: 700; font-size: 14px; color: var(--text-main);">${lot.qty} ${lot.type}</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Mua ngày: ${new Date(lot.date).toLocaleDateString('vi-VN')}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-weight: 800; font-size: 15px; color: ${pnl >= 0 ? '#34c759' : '#ff3b30'};">
+                  ${pnl >= 0 ? '+' : ''}${Math.round(pnl).toLocaleString()} ${lot.currency}
+                </div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--text-muted);">${pnlPct.toFixed(1)}%</div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      // Cập nhật thẻ tổng quan (Quy đổi tạm thời sang JPY để khớp UI chung)
+      document.getElementById('gold-total-value').innerText = Math.round(totalCurrentValue / 165).toLocaleString() + ' JPY';
+      let totalPnl = (totalCurrentValue - totalCost) / 165;
+      const pnlEl = document.getElementById('gold-total-pnl');
+      pnlEl.innerText = (totalPnl >= 0 ? '+' : '') + Math.round(totalPnl).toLocaleString() + ' JPY';
+      pnlEl.style.color = totalPnl >= 0 ? '#34c759' : '#ff3b30';
+
+      updateGoldTrendChart();
+    }
+
+    function updateGoldTrendChart() {
+      const ctx = document.getElementById('goldTrendChart').getContext('2d');
+      if (goldTrendChart) goldTrendChart.destroy();
+
+      // Giả lập dữ liệu 6 tháng gần nhất
+      const labels = ['Tháng 11', 'Tháng 12', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4'];
+      const costData = [80, 80, 80, 100, 100, 100]; // Đường vốn gốc (tăng khi mua thêm)
+      const valueData = [82, 85, 84, 105, 115, 125]; // Đường giá trị thị trường
+
+      goldTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Giá trị thị trường',
+              data: valueData,
+              borderColor: '#ffcc00',
+              backgroundColor: 'rgba(255, 204, 0, 0.1)',
+              fill: true,
+              tension: 0.4,
+              borderWidth: 2,
+              pointRadius: 0
+            },
+            {
+              label: 'Vốn gốc',
+              data: costData,
+              borderColor: 'rgba(128, 128, 128, 0.5)',
+              borderDash: [5, 5],
+              tension: 0,
+              borderWidth: 1.5,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: {
+            x: { display: true, ticks: { color: '#888', font: { size: 9 } }, grid: { display: false } },
+            y: { display: false }
+          }
+        }
+      });
+    }
+
+    function openGoldLotDetail(lotId) {
+      const lot = goldLots.find(l => l.id === lotId);
+      const isInflationEnabled = document.getElementById('inflation-toggle').checked;
+      
+      let detailHtml = `
+        <div style="text-align: center; margin-bottom: 25px;">
+          <div style="font-size: 40px; margin-bottom: 10px;">💰</div>
+          <div style="font-size: 18px; font-weight: 800; color: var(--text-main);">Chi tiết lô: ${lot.qty} ${lot.type}</div>
+          <div style="font-size: 13px; color: var(--text-muted); margin-top: 5px;">Mã định danh: #${lot.id}</div>
+        </div>
+        
+        <div class="form-container" style="padding: 0 15px; background: var(--form-bg);">
+          <div class="form-row" style="padding: 15px 0; border-bottom: 1px solid var(--border-color);">
+            <div class="row-left" style="color: var(--text-muted);">Giá mua lúc đó</div>
+            <div style="font-weight: 700;">${lot.buyPrice.toLocaleString()} ${lot.currency}</div>
+          </div>
+          <div class="form-row" style="padding: 15px 0; border-bottom: 1px solid var(--border-color);">
+            <div class="row-left" style="color: var(--text-muted);">Giá thị trường hôm nay</div>
+            <div style="font-weight: 700; color: #ffcc00;">${lot.currentPrice.toLocaleString()} ${lot.currency}</div>
+          </div>
+          <div class="form-row" style="padding: 15px 0;">
+            <div class="row-left" style="color: var(--text-muted);">Lạm phát ước tính</div>
+            <div style="font-weight: 700;">${isInflationEnabled ? 'Đã trừ 4%/năm' : 'Chưa tính'}</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #1a1a1a 0%, #000 100%); border: 1px solid #ffcc00; text-align: center; padding: 20px;">
+           <div style="font-size: 11px; color: #ffcc00; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px;">HIỆU SUẤT ĐẦU TƯ</div>
+           <div style="font-size: 28px; font-weight: 900; color: #fff;">${(((lot.currentPrice - lot.buyPrice)/lot.buyPrice)*100).toFixed(2)}%</div>
+           <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 5px;">Vàng đã bảo vệ sếp khỏi sự mất giá của tiền tệ.</div>
+        </div>
+      `;
+      
+      document.getElementById('txDetailContent').innerHTML = detailHtml;
+      document.getElementById('txDetailSheet').classList.add('open');
+    }
+    function openAddGoldModal() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('goldInputDate').value = today;
+      document.getElementById('goldInputQty').value = "";
+      document.getElementById('goldInputPrice').value = "";
+      
+      document.getElementById('addGoldModal').classList.add('open');
+    }
+
+    function saveNewGoldLot() {
+      const type = document.getElementById('goldInputType').value;
+      const qty = parseFloat(document.getElementById('goldInputQty').value);
+      const buyPrice = parseInt(document.getElementById('goldInputPrice').value.replace(/\D/g, ''));
+      const currency = document.getElementById('goldInputCurrency').value;
+      const date = document.getElementById('goldInputDate').value;
+
+      if (!qty || !buyPrice || !date) {
+        showToast("Sếp vui lòng nhập đủ Khối lượng, Giá mua và Ngày mua nhé!");
+        return;
+      }
+
+      const newId = 'g_' + Date.now();
+      const currentPrice = buyPrice * 1.05; 
+
+      const newLot = {
+        id: newId,
+        date: date,
+        type: type,
+        qty: qty,
+        buyPrice: buyPrice,
+        currentPrice: currentPrice,
+        currency: currency
+      };
+      goldLots.push(newLot);
+      renderGoldAsset();
+      document.getElementById('addGoldModal').classList.remove('open');
+      showToast("Đã lưu thành công lô vàng mới!");
+    }
   </script>
+  <div id="addGoldModal" class="sub-modal">
+    <div class="sub-modal-header">
+      <button class="btn-icon-circle" onclick="document.getElementById('addGoldModal').classList.remove('open')">‹</button>
+      <span>Thêm Lô Vàng</span>
+      <div style="width: 38px;"></div>
+    </div>
+    
+    <div class="modal-content" style="background: var(--bg-main); padding-top: 15px;">
+      
+      <div class="form-container" style="padding: 0 15px; margin-bottom: 20px;">
+        <div class="form-row" style="padding: 15px 0; border-bottom: 1px dashed var(--border-color);">
+          <div class="row-left" style="font-weight: 600; font-size: 14px; width: 100px;">Loại Vàng</div>
+          <select id="goldInputType" style="flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 15px; font-weight: 600; outline: none; text-align: right; appearance: none; direction: rtl;">
+            <option value="SJC">Vàng miếng SJC</option>
+            <option value="Nhẫn trơn">Vàng nhẫn 9999</option>
+            <option value="Nữ trang">Vàng trang sức</option>
+            <option value="Khác">Loại khác</option>
+          </select>
+        </div>
+
+        <div class="form-row" style="padding: 15px 0; border-bottom: 1px dashed var(--border-color);">
+          <div class="row-left" style="font-weight: 600; font-size: 14px; width: 100px;">Số lượng</div>
+          <div style="display: flex; align-items: center; justify-content: flex-end; flex: 1; gap: 8px;">
+            <input type="number" id="goldInputQty" placeholder="0" style="width: 80px; background: transparent; border: none; color: var(--text-main); font-size: 16px; font-weight: 800; outline: none; text-align: right;" step="0.1">
+            <span style="color: var(--text-muted); font-size: 13px;">Lượng (cây)</span>
+          </div>
+        </div>
+
+        <div class="form-row" style="padding: 15px 0; border-bottom: 1px dashed var(--border-color);">
+          <div class="row-left" style="font-weight: 600; font-size: 14px; width: 100px;">Đơn giá Mua</div>
+          <div style="display: flex; align-items: center; justify-content: flex-end; flex: 1; gap: 8px;">
+            <input type="text" id="goldInputPrice" placeholder="0" oninput="formatCurrency(this)" style="width: 120px; background: transparent; border: none; color: var(--text-main); font-size: 16px; font-weight: 800; outline: none; text-align: right;" inputmode="numeric">
+            <select id="goldInputCurrency" style="background: transparent; border: none; color: var(--text-muted); font-size: 13px; font-weight: 600; outline: none; appearance: none;">
+              <option value="VND">VND</option>
+              <option value="JPY">JPY</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="padding: 15px 0; border-bottom: none;">
+          <div class="row-left" style="font-weight: 600; font-size: 14px; width: 100px;">Ngày mua</div>
+          <input type="date" id="goldInputDate" style="flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 15px; font-weight: 600; outline: none; text-align: right;">
+        </div>
+      </div>
+
+      <div style="position: sticky; bottom: 0; background: var(--bg-main); padding: 10px 0 20px; z-index: 10; margin-top: auto;">
+        <button onclick="saveNewGoldLot()" style="width: 100%; background-color: #007aff; color: white; border: none; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer;">Lưu Lô Vàng</button>
+      </div>
+
+    </div>
+  </div>
   <div id="healthReportModal" class="sub-modal">
     <div class="sub-modal-header">
       <button class="btn-icon-circle" onclick="document.getElementById('healthReportModal').classList.remove('open')">‹</button>
@@ -7582,10 +7814,39 @@
         Phần này sẽ tự động đồng bộ từ tổng số dư các Ví bên tab Sổ sách sếp nhé!
       </div>
 
-      <div class="section-title">ĐẦU TƯ TĂNG TRƯỞNG</div>
-      <div class="form-container" style="padding: 15px; margin-bottom: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
-        Sếp chưa thêm mã Chứng khoán / Crypto hay Vàng nào.
+      <div class="section-title">ĐẦU TƯ TĂNG TRƯỞNG (VÀNG)</div>
+      <div class="form-container" style="padding: 15px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+          <div>
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 800;">TỔNG GIÁ TRỊ VÀNG</div>
+            <div id="gold-total-value" style="font-size: 24px; font-weight: 900; color: var(--text-main);">0 JPY</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: 800;">LÃI / LỖ</div>
+            <div id="gold-total-pnl" style="font-size: 18px; font-weight: 800; color: #34c759;">+0 JPY</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 10px 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 16px;">📉</span>
+            <span style="font-size: 12px; font-weight: 700; color: var(--text-main);">Hiệu chỉnh lạm phát</span>
+          </div>
+          <input type="checkbox" id="inflation-toggle" class="ios-switch" onchange="renderGoldAsset()">
+        </div>
+
+        <div style="height: 180px; width: 100%; margin-bottom: 15px;">
+          <canvas id="goldTrendChart"></canvas>
+        </div>
       </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px;">
+        <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Lịch sử mua (Lô vàng)</span>
+        <button onclick="openAddGoldModal()" style="background: transparent; border: 1px solid #007aff; color: #007aff; font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 10px;">+ Thêm lô</button>
+      </div>
+      
+      <div id="gold-lots-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
+        </div>
 
       <div class="section-title">TÀI SẢN CỐ ĐỊNH</div>
       <div class="form-container" style="padding: 15px; margin-bottom: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
