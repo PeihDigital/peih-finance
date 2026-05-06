@@ -821,20 +821,11 @@
       font-weight: bold;
       cursor: pointer;
     }
-    .budget-progress-wrap {
-      width: 100%;
-      height: 6px;
-      background-color: var(--border-color);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .budget-fill {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.3s ease;
-    }
-
+    .btn-3d-portfolio { width:75%; margin:0 auto 15px auto; padding:12px 20px; border-radius:18px; background:rgba(255,255,255,0.25); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.4); color:var(--text-main); font-weight:700; font-size:13px; box-shadow:0 4px 0 var(--border-color), 0 10px 20px rgba(0,0,0,0.05); cursor:pointer; transition:all 0.15s ease; display:flex; justify-content:center; align-items:center; gap:8px; text-transform:uppercase; letter-spacing:0.5px; }
+    .btn-3d-portfolio:active { transform:translateY(4px); box-shadow:0 0 0 var(--border-color), 0 4px 10px rgba(0,0,0,0.05); }
+    .budget-progress-wrap { width:100%; height:6px; background-color:var(--border-color); border-radius:3px; overflow:hidden; position:relative; }
+    .progress-marker { position:absolute; top:0; bottom:0; width:2px; background-color:var(--text-main); opacity:0.5; z-index:2; border-radius:1px; transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .budget-fill { height:100%; border-radius:3px; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s ease; }
     .fill-safe { background-color: #34c759; }
     .fill-warn { background-color: #ff9500; }
     .fill-danger { background-color: #ff3b30; }
@@ -1455,9 +1446,9 @@
 
     .rule-card.expanded {
       padding-bottom: 20px;
-      border-color: var(--accent-bg);
+      border-color: #007aff; 
       transform: scale(1.02);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 25px rgba(0, 122, 255, 0.15); 
     }
 
     .advice-content {
@@ -1616,9 +1607,14 @@
         <div class="total-amount" style="font-size: 26px;">Sức Mạnh Tài Chính</div>
       </div>
 
-      <div class="card" style="padding: 20px; display: flex; justify-content: center; align-items: center; background: var(--bg-card); margin-bottom: 25px;">
+      <div class="card" style="padding: 20px; display: flex; justify-content: center; align-items: center; background: var(--bg-card); margin-bottom: 15px;">
         <canvas id="financialRadarChart" style="max-width: 100%; max-height: 300px;"></canvas>
       </div>
+
+      <button class="btn-3d-portfolio" onclick="document.getElementById('portfolioModal').classList.add('open')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        Quản lý danh mục tài sản
+      </button>
 
       <div class="section-title" style="color: #ff3b30; display: flex; align-items: center; gap: 8px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
@@ -1642,7 +1638,7 @@
     <div id="tab-budget" class="tab-content">
       <div class="dashboard-header" style="margin-bottom: 20px;">
         <div class="header-label" style="font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">Kế hoạch tài chính</div>
-        <div class="total-amount" style="font-size: 26px;">Tháng 4/2026</div>
+        <div class="total-amount" style="font-size: 26px;">Ngân Sách</div>
       </div>
 
       <div class="transaction-type-segment" id="budgetTabToggle" style="margin-bottom: 15px; border-radius: 30px;">
@@ -7351,9 +7347,28 @@
       const age = parseInt(localStorage.getItem('peih_rule_age')) || 25;
       const savings = parseFloat(localStorage.getItem('peih_rule_savings')) || 0;
       const income = parseFloat(localStorage.getItem('peih_rule_income')) || 0;
-      const expense = parseFloat(localStorage.getItem('peih_rule_expense')) || 1; // tránh chia cho 0
+      const expense = parseFloat(localStorage.getItem('peih_rule_expense')) || 1; 
+      const t3 = expense * 3;
+      const t6 = expense * 6;
+      const is3xDone = savings >= t3;
+      
+      let visualPct, markerPos;
+      if (!is3xDone) {
+        visualPct = (savings / t3) * 75;
+        markerPos = 75;
+      } else {
+        const extraPath = (savings - t3) / (t6 - t3);
+        visualPct = 50 + (Math.min(extraPath, 1) * 50);
+        markerPos = 50;
+      }
+
+      const r1Name = is3xDone ? "Dự phòng 6 tháng" : "Dự phòng 3 tháng";
+      const r1Adv = is3xDone 
+        ? `Tuyệt vời sếp ơi! "Tấm khiên" 3 tháng đã xong. Bây giờ là lúc xây dựng "Pháo đài" 6 tháng (${t6.toLocaleString()} JPY) để sếp hoàn toàn tự do và không còn bất kỳ nỗi lo nào trước mọi biến cố.` 
+        : `Đây là ưu tiên số 1: Xây dựng quỹ dự phòng 3 tháng chi tiêu (${t3.toLocaleString()} JPY). Khi đạt mốc này, sếp sẽ có một vùng an toàn cực kỳ vững chắc để tự tin theo đuổi các mục tiêu lớn hơn!`;
+
       const rules = [
-        { id: 1, tier: 1, name: "Dự phòng 3X", val: savings, target: expense * 3, unit: "JPY", advice: `Sếp cần ít nhất ${(expense * 3).toLocaleString()} JPY để an tâm nếu có biến cố. ${savings < expense * 3 ? 'Sếp còn thiếu ' + (expense * 3 - savings).toLocaleString() + ' nữa, cố lên!' : 'Sếp đã làm rất tốt!'}` },
+        { id: 1, tier: 1, name: r1Name, val: savings, target: t6, visualPct: visualPct, unit: "JPY", advice: r1Adv, milestone: markerPos },
         { id: 3, tier: 1, name: "Ngân sách 50/30/20", val: income - expense, target: income * 0.2, unit: "JPY", advice: `Mỗi tháng sếp nên để dành ít nhất ${(income * 0.2).toLocaleString()} JPY cho tích lũy. Hiện tại sếp đang dư ${(income - expense).toLocaleString()}.` },
         { id: 7, tier: 1, name: "28% Vay nhà", val: income * 0.28, target: income * 0.28, unit: "Tối đa", advice: `Tiền thuê nhà hoặc trả góp chỉ nên nằm trong khoảng ${(income * 0.28).toLocaleString()} JPY để không bị áp lực.` },
         { id: 8, tier: 1, name: "1% Bảo trì", val: 1, target: 1, unit: "%", advice: "Nếu sếp có tài sản lớn, hãy luôn trích 1% giá trị mỗi năm để sửa chữa, tránh hụt tiền đột ngột." },
@@ -7377,7 +7392,9 @@
       const container = document.getElementById(containerId);
       container.innerHTML = '';
       tierRules.forEach(r => {
-        const pct = Math.min(100, (r.val / r.target) * 100);
+        const pct = r.visualPct !== undefined ? r.visualPct : Math.min(100, (r.val / r.target) * 100);
+        const realProgressPct = Math.min(100, (r.val / r.target) * 100);
+        const markerHtml = r.milestone ? `<div class="progress-marker" style="left: ${r.milestone}%;"></div>` : '';
         const html = `
           <div class="rule-card" onclick="this.classList.toggle('expanded')">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -7387,10 +7404,11 @@
                   ${r.val.toLocaleString()} / ${r.target.toLocaleString()} ${r.unit}
                 </div>
               </div>
-              <div style="font-weight: 800; color: ${pct >= 100 ? '#34c759' : '#ff9500'}">${Math.round(pct)}%</div>
+              <div style="font-weight: 800; color: ${realProgressPct >= 100 ? '#34c759' : '#ff9500'}">${Math.round(realProgressPct)}%</div>
             </div>
             <div class="budget-progress-wrap" style="height: 4px; background: var(--bg-main); margin-top: 10px;">
-              <div class="budget-fill" style="width: ${pct}%; background: ${pct >= 100 ? '#34c759' : '#ff9500'}"></div>
+              ${markerHtml}
+              <div class="budget-fill" style="width: ${pct}%; background: ${realProgressPct >= 100 ? '#34c759' : '#ff9500'}"></div>
             </div>
             <div class="advice-content">
               <span class="peih-tag">Peih Advisory</span>
@@ -7465,6 +7483,30 @@
         <button onclick="document.getElementById('healthPhotoInput').click()" style="flex: 1; background: var(--form-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 16px; border-radius: 16px; font-weight: bold; font-size: 14px;">📸 THÊM ẢNH</button>
         <button id="btnStartHealthAi" onclick="startHealthAnalysis()" style="flex: 1.5; background: #ff9500; color: white; border: none; padding: 16px; border-radius: 16px; font-weight: bold; display: none; font-size: 14px;">🔥 PHÂN TÍCH NGAY</button>
         <input type="file" id="healthPhotoInput" accept="image/*" multiple style="display:none;" onchange="handleHealthImages(event)">
+      </div>
+    </div>
+  </div>
+  <div id="portfolioModal" class="sub-modal">
+    <div class="sub-modal-header">
+      <button class="btn-icon-circle" onclick="document.getElementById('portfolioModal').classList.remove('open')">‹</button>
+      <span>Danh mục tài sản</span>
+      <button class="btn-icon-circle" onclick="showToast('Tính năng thêm tài sản đang phát triển!')">+</button>
+    </div>
+    <div class="modal-content" style="background:var(--bg-main); padding-top:15px; overflow-y:auto; display: block;">
+      
+      <div class="section-title" style="margin-top: 0;">THANH KHOẢN TỨC THÌ (TIỀN MẶT & VÍ)</div>
+      <div class="form-container" style="padding: 15px; margin-bottom: 20px; text-align: center; color: var(--text-muted); font-size: 13px; font-style: italic;">
+        Phần này sẽ tự động đồng bộ từ tổng số dư các Ví bên tab Sổ sách sếp nhé!
+      </div>
+
+      <div class="section-title">ĐẦU TƯ TĂNG TRƯỞNG</div>
+      <div class="form-container" style="padding: 15px; margin-bottom: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
+        Sếp chưa thêm mã Chứng khoán / Crypto hay Vàng nào.
+      </div>
+
+      <div class="section-title">TÀI SẢN CỐ ĐỊNH</div>
+      <div class="form-container" style="padding: 15px; margin-bottom: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
+        Sếp chưa khai báo Bất động sản hay Xe cộ.
       </div>
     </div>
   </div>
